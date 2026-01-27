@@ -3,15 +3,17 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
-import { LogOut } from 'lucide-react'
+import { LogOut, LogIn } from 'lucide-react'
 
 export function AuthButton() {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
+      setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -21,12 +23,34 @@ export function AuthButton() {
     return () => subscription.unsubscribe()
   }, [supabase.auth])
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/login'
+  const handleSignIn = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
   }
 
-  if (!user) return null
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    window.location.reload()
+  }
+
+  if (loading) return null
+
+  if (!user) {
+    return (
+      <button
+        onClick={handleSignIn}
+        className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+        title="Sign in to sync data"
+      >
+        <LogIn className="w-4 h-4" />
+        <span>Sign in</span>
+      </button>
+    )
+  }
 
   return (
     <button
