@@ -1,11 +1,15 @@
 'use client'
 
-import { useTaskStore } from '@/stores/taskStore'
+import { useState } from 'react'
+import { format } from 'date-fns'
+import { useTaskStore, useTaskStoreHydrated } from '@/stores/taskStore'
 import { TaskColumn } from '@/components/tasks/TaskColumn'
 import { StepsColumn } from '@/components/tasks/StepsColumn'
 import { CompactTimerBar } from '@/components/timer/CompactTimerBar'
 
 export default function HomePage() {
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const hydrated = useTaskStoreHydrated()
   const {
     tasks,
     selectedTaskId,
@@ -13,7 +17,6 @@ export default function HomePage() {
     selectTask,
     addTask,
     deleteTask,
-    updateTaskTitle,
     addStep,
     updateStep,
     deleteStep,
@@ -26,6 +29,15 @@ export default function HomePage() {
   } = useTaskStore()
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId) || null
+
+  // Don't render until Zustand has hydrated from localStorage
+  if (!hydrated) {
+    return (
+      <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
+        <div className="text-muted">Loading...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex flex-col">
@@ -53,12 +65,13 @@ export default function HomePage() {
         <div className="bg-surface border border-border rounded-xl p-4 overflow-hidden">
           <StepsColumn
             task={selectedTask}
-            onAddStep={(text) => selectedTaskId && addStep(selectedTaskId, text)}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onAddStep={(text) => selectedTaskId && addStep(selectedTaskId, text, format(selectedDate, 'yyyy-MM-dd'))}
             onUpdateStep={(stepId, updates) => selectedTaskId && updateStep(selectedTaskId, stepId, updates)}
             onDeleteStep={(stepId) => selectedTaskId && deleteStep(selectedTaskId, stepId)}
             onToggleStep={(stepId) => selectedTaskId && toggleStep(selectedTaskId, stepId)}
             onReorderSteps={(stepIds) => selectedTaskId && reorderSteps(selectedTaskId, stepIds)}
-            onUpdateTitle={(title) => selectedTaskId && updateTaskTitle(selectedTaskId, title)}
           />
         </div>
       </div>

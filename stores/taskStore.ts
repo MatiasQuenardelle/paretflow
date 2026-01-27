@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useEffect, useState } from 'react'
 import { generateId } from '@/lib/utils'
 
 export interface Step {
@@ -39,7 +40,7 @@ interface TaskState {
   updateTaskNote: (id: string, note: string) => void
   clearCompletedTasks: () => void
 
-  addStep: (taskId: string, text: string) => void
+  addStep: (taskId: string, text: string, scheduledDate?: string) => void
   updateStep: (taskId: string, stepId: string, updates: Partial<Step>) => void
   deleteStep: (taskId: string, stepId: string) => void
   toggleStep: (taskId: string, stepId: string) => void
@@ -54,11 +55,16 @@ export const useTaskStore = create<TaskState>()(
       showCompleted: false,
 
       addTask: (title) => {
+        const today = new Date().toISOString().split('T')[0]
         const newTask: Task = {
           id: generateId(),
           title,
           createdAt: new Date().toISOString(),
-          steps: [],
+          steps: [
+            { id: generateId(), text: '', completed: false, order: 0, scheduledDate: today },
+            { id: generateId(), text: '', completed: false, order: 1, scheduledDate: today },
+            { id: generateId(), text: '', completed: false, order: 2, scheduledDate: today },
+          ],
           completed: false,
           estimatedPomodoros: 1,
           completedPomodoros: 0,
@@ -129,7 +135,7 @@ export const useTaskStore = create<TaskState>()(
         }))
       },
 
-      addStep: (taskId, text) => {
+      addStep: (taskId, text, scheduledDate) => {
         set(state => ({
           tasks: state.tasks.map(t => {
             if (t.id !== taskId) return t
@@ -138,6 +144,7 @@ export const useTaskStore = create<TaskState>()(
               text,
               completed: false,
               order: t.steps.length,
+              scheduledDate,
             }
             return { ...t, steps: [...t.steps, newStep] }
           }),
@@ -205,3 +212,26 @@ export const useTaskStore = create<TaskState>()(
     }
   )
 )
+
+// Hook to handle Zustand hydration with Next.js
+export function useTaskStoreHydrated() {
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    // Wait for Zustand to hydrate from localStorage
+    const unsubscribe = useTaskStore.persist.onFinishHydration(() => {
+      setHydrated(true)
+    })
+
+    // Check if already hydrated
+    if (useTaskStore.persist.hasHydrated()) {
+      setHydrated(true)
+    }
+
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
+  return hydrated
+}

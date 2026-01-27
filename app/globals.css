@@ -14,14 +14,19 @@
   --background: #0A0A0A;
   --foreground: #FAFAFA;
   --surface: #141414;
-  --border: #262626;
-  --muted: #737373;
+  --border: #404040;
+  --muted: #a3a3a3;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Improve touch responsiveness on mobile */
+button, [role="button"], .cursor-pointer {
+  touch-action: manipulation;
 }
 
 /* Custom scrollbar */

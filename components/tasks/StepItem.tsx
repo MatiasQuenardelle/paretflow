@@ -2,9 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { GripVertical, Trash2, Calendar } from 'lucide-react'
+import { format, isToday, isTomorrow, parseISO } from 'date-fns'
 import { Step } from '@/stores/taskStore'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { TimeInput } from './TimeInput'
+import { DatePicker } from './DatePicker'
 
 interface StepItemProps {
   step: Step
@@ -27,16 +29,23 @@ export function StepItem({
   onDragEnd,
   isDragging,
 }: StepItemProps) {
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(!step.text)
   const [text, setText] = useState(step.text)
+  const [showDatePicker, setShowDatePicker] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setText(step.text)
+  }, [step.text])
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus()
-      inputRef.current.select()
+      if (step.text) {
+        inputRef.current.select()
+      }
     }
-  }, [isEditing])
+  }, [isEditing, step.text])
 
   const handleSave = () => {
     if (text.trim() && text !== step.text) {
@@ -47,7 +56,12 @@ export function StepItem({
     setIsEditing(false)
   }
 
-  const today = new Date().toISOString().split('T')[0]
+  const formatDateDisplay = (dateStr: string) => {
+    const date = parseISO(dateStr)
+    if (isToday(date)) return 'Today'
+    if (isTomorrow(date)) return 'Tomorrow'
+    return format(date, 'MMM d')
+  }
 
   return (
     <div
@@ -81,14 +95,15 @@ export function StepItem({
                 setIsEditing(false)
               }
             }}
-            className="w-full bg-transparent border-none outline-none text-foreground"
+            placeholder="Enter step..."
+            className="w-full bg-transparent border-none outline-none text-foreground placeholder:text-muted"
           />
         ) : (
           <span
             onClick={() => setIsEditing(true)}
-            className={`cursor-text ${step.completed ? 'line-through text-muted' : ''}`}
+            className={`cursor-text ${step.completed ? 'line-through text-muted' : ''} ${!step.text ? 'text-muted italic' : ''}`}
           >
-            {step.text}
+            {step.text || 'Click to add step...'}
           </span>
         )}
       </div>
@@ -99,23 +114,33 @@ export function StepItem({
           onChange={(time) => onUpdate({ scheduledTime: time })}
         />
 
-        <button
-          onClick={() => onUpdate({
-            scheduledDate: step.scheduledDate === today ? undefined : today
-          })}
-          className={`p-1 rounded transition-colors ${
-            step.scheduledDate
-              ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/30'
-              : 'text-muted hover:text-foreground opacity-0 group-hover:opacity-100'
-          }`}
-          title={step.scheduledDate ? 'Scheduled' : 'Schedule for today'}
-        >
-          <Calendar size={14} />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs transition-colors ${
+              step.scheduledDate
+                ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/30'
+                : 'text-muted hover:text-foreground hover:bg-border/50'
+            }`}
+            title={step.scheduledDate ? `Scheduled for ${step.scheduledDate}` : 'Schedule'}
+          >
+            <Calendar size={14} />
+            {step.scheduledDate && (
+              <span>{formatDateDisplay(step.scheduledDate)}</span>
+            )}
+          </button>
+          {showDatePicker && (
+            <DatePicker
+              value={step.scheduledDate}
+              onChange={(date) => onUpdate({ scheduledDate: date })}
+              onClose={() => setShowDatePicker(false)}
+            />
+          )}
+        </div>
 
         <button
           onClick={onDelete}
-          className="p-1 text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="p-1 text-muted hover:text-red-500 transition-colors"
         >
           <Trash2 size={14} />
         </button>

@@ -86,13 +86,16 @@ export function TaskColumn({
       </div>
 
       {isAdding && (
-        <form onSubmit={handleSubmit} className="mb-4">
+        <form onSubmit={handleSubmit} className="mb-4 flex gap-2">
           <Input
             autoFocus
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             placeholder="What are you working on?"
-            onBlur={() => {
+            onBlur={(e) => {
+              // Don't close if clicking the submit button
+              const relatedTarget = e.relatedTarget as HTMLButtonElement | null
+              if (relatedTarget?.type === 'submit') return
               if (!newTaskTitle.trim()) setIsAdding(false)
             }}
             onKeyDown={(e) => {
@@ -101,7 +104,11 @@ export function TaskColumn({
                 setNewTaskTitle('')
               }
             }}
+            className="flex-1"
           />
+          <Button type="submit" disabled={!newTaskTitle.trim()}>
+            <Plus size={18} />
+          </Button>
         </form>
       )}
 
@@ -129,7 +136,13 @@ export function TaskColumn({
             <div
               key={task.id}
               onClick={() => onSelectTask(task.id)}
-              className={`p-3 rounded-lg border cursor-pointer transition-all group ${
+              onTouchEnd={(e) => {
+                // Ensure selection works on mobile touch
+                if (e.target === e.currentTarget || !(e.target as HTMLElement).closest('button')) {
+                  onSelectTask(task.id)
+                }
+              }}
+              className={`p-3 rounded-lg border cursor-pointer transition-all group touch-manipulation ${
                 isActive
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-500/20'
                   : isSelected
@@ -185,7 +198,7 @@ export function TaskColumn({
                         ))}
                       </div>
                       {/* +/- buttons */}
-                      <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-0.5 ml-1">
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
@@ -211,7 +224,7 @@ export function TaskColumn({
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1">
                   {!task.completed && !isActive && (
                     <button
                       onClick={(e) => {
