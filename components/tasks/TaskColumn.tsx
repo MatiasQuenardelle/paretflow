@@ -1,0 +1,277 @@
+'use client'
+
+import { useState } from 'react'
+import { Plus, Trash2, CheckCircle, Circle, Eye, EyeOff, Timer, Minus, Play } from 'lucide-react'
+import { Task } from '@/stores/taskStore'
+import { useTimerStore } from '@/stores/timerStore'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+
+interface TaskColumnProps {
+  tasks: Task[]
+  selectedTaskId: string | null
+  showCompleted: boolean
+  onSelectTask: (id: string | null) => void
+  onAddTask: (title: string) => void
+  onDeleteTask: (id: string) => void
+  onToggleCompleted: (id: string) => void
+  onSetShowCompleted: (show: boolean) => void
+  onUpdateEstimate: (id: string, estimate: number) => void
+  onClearCompleted?: () => void
+}
+
+export function TaskColumn({
+  tasks,
+  selectedTaskId,
+  showCompleted,
+  onSelectTask,
+  onAddTask,
+  onDeleteTask,
+  onToggleCompleted,
+  onSetShowCompleted,
+  onUpdateEstimate,
+  onClearCompleted,
+}: TaskColumnProps) {
+  const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [isAdding, setIsAdding] = useState(false)
+
+  const { activeTaskId, setActiveTask } = useTimerStore()
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newTaskTitle.trim()) {
+      onAddTask(newTaskTitle.trim())
+      setNewTaskTitle('')
+      setIsAdding(false)
+    }
+  }
+
+  // Sort tasks: incomplete first, then completed
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.completed === b.completed) return 0
+    return a.completed ? 1 : -1
+  })
+
+  // Filter out completed if not showing
+  const visibleTasks = showCompleted
+    ? sortedTasks
+    : sortedTasks.filter(t => !t.completed)
+
+  const completedCount = tasks.filter(t => t.completed).length
+  const incompleteTasks = tasks.filter(t => !t.completed)
+
+  // Calculate totals
+  const totalPomodoros = incompleteTasks.reduce((acc, t) => acc + (t.estimatedPomodoros || 1), 0)
+  const completedPomodoros = incompleteTasks.reduce((acc, t) => acc + (t.completedPomodoros || 0), 0)
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-semibold">Tasks</h2>
+          {incompleteTasks.length > 0 && (
+            <p className="text-xs text-muted">
+              {completedPomodoros}/{totalPomodoros} pomodoros
+            </p>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsAdding(true)}
+          className="text-blue-600"
+        >
+          <Plus size={18} />
+        </Button>
+      </div>
+
+      {isAdding && (
+        <form onSubmit={handleSubmit} className="mb-4">
+          <Input
+            autoFocus
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            placeholder="What are you working on?"
+            onBlur={() => {
+              if (!newTaskTitle.trim()) setIsAdding(false)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsAdding(false)
+                setNewTaskTitle('')
+              }
+            }}
+          />
+        </form>
+      )}
+
+      <div className="flex-1 overflow-y-auto space-y-2">
+        {visibleTasks.length === 0 && !isAdding && (
+          <div className="text-center py-8 text-muted">
+            <Timer className="w-10 h-10 mx-auto mb-3 opacity-50" />
+            <p className="text-sm">No tasks yet</p>
+            <button
+              onClick={() => setIsAdding(true)}
+              className="text-blue-600 text-sm hover:underline mt-2"
+            >
+              Add your first task
+            </button>
+          </div>
+        )}
+
+        {visibleTasks.map((task) => {
+          const isSelected = selectedTaskId === task.id
+          const isActive = activeTaskId === task.id
+          const pomodorosDone = task.completedPomodoros || 0
+          const pomodorosTotal = task.estimatedPomodoros || 1
+
+          return (
+            <div
+              key={task.id}
+              onClick={() => onSelectTask(task.id)}
+              className={`p-3 rounded-lg border cursor-pointer transition-all group ${
+                isActive
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-500/20'
+                  : isSelected
+                  ? 'border-blue-400 bg-blue-50/50 dark:bg-blue-900/10'
+                  : 'border-border hover:border-blue-300'
+              } ${task.completed ? 'opacity-60' : ''}`}
+            >
+              <div className="flex items-start gap-2">
+                {/* Completion checkbox */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onToggleCompleted(task.id)
+                  }}
+                  className={`mt-0.5 flex-shrink-0 transition-colors ${
+                    task.completed
+                      ? 'text-green-500 hover:text-green-600'
+                      : 'text-muted hover:text-blue-500'
+                  }`}
+                >
+                  {task.completed ? (
+                    <CheckCircle size={18} />
+                  ) : (
+                    <Circle size={18} />
+                  )}
+                </button>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className={`font-medium truncate ${
+                      task.completed ? 'line-through text-muted' : ''
+                    }`}>
+                      {task.title}
+                    </h3>
+                    {isActive && (
+                      <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                    )}
+                  </div>
+
+                  {/* Pomodoro counter */}
+                  {!task.completed && (
+                    <div className="flex items-center gap-1 mt-1.5">
+                      <div className="flex items-center">
+                        {Array.from({ length: pomodorosTotal }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-4 h-4 rounded-full border-2 mr-0.5 transition-colors ${
+                              i < pomodorosDone
+                                ? 'bg-red-500 border-red-500'
+                                : 'border-red-300 dark:border-red-800'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      {/* +/- buttons */}
+                      <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onUpdateEstimate(task.id, pomodorosTotal - 1)
+                          }}
+                          className="w-5 h-5 rounded flex items-center justify-center text-muted hover:text-foreground hover:bg-border/50"
+                          disabled={pomodorosTotal <= 1}
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onUpdateEstimate(task.id, pomodorosTotal + 1)
+                          }}
+                          className="w-5 h-5 rounded flex items-center justify-center text-muted hover:text-foreground hover:bg-border/50"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {!task.completed && !isActive && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setActiveTask(task.id)
+                        onSelectTask(task.id)
+                      }}
+                      className="p-1 text-muted hover:text-blue-500 transition-colors"
+                      title="Start focusing on this task"
+                    >
+                      <Play size={14} />
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDeleteTask(task.id)
+                    }}
+                    className="p-1 text-muted hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Footer actions */}
+      <div className="pt-3 border-t border-border mt-3 space-y-2">
+        {completedCount > 0 && (
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => onSetShowCompleted(!showCompleted)}
+              className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+            >
+              {showCompleted ? (
+                <>
+                  <EyeOff size={14} />
+                  Hide completed
+                </>
+              ) : (
+                <>
+                  <Eye size={14} />
+                  Show completed ({completedCount})
+                </>
+              )}
+            </button>
+            {showCompleted && onClearCompleted && (
+              <button
+                onClick={onClearCompleted}
+                className="text-sm text-red-500 hover:text-red-600 transition-colors"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
