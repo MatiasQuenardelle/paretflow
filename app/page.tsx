@@ -6,10 +6,11 @@ import { useTaskStore, useTaskStoreHydrated } from '@/stores/taskStore'
 import { TaskColumn } from '@/components/tasks/TaskColumn'
 import { StepsColumn } from '@/components/tasks/StepsColumn'
 import { CompactTimerBar } from '@/components/timer/CompactTimerBar'
-import { DayTimeline } from '@/components/tasks/DayTimeline'
+import { CalendarPopup } from '@/components/calendar/CalendarPopup'
 
 export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [showCalendar, setShowCalendar] = useState(false)
   const hydrated = useTaskStoreHydrated()
   const {
     tasks,
@@ -26,7 +27,6 @@ export default function HomePage() {
     toggleTaskCompleted,
     setShowCompleted,
     updateTaskEstimate,
-    updateTaskSchedule,
     clearCompletedTasks,
   } = useTaskStore()
 
@@ -66,13 +66,7 @@ export default function HomePage() {
             onSetShowCompleted={setShowCompleted}
             onUpdateEstimate={updateTaskEstimate}
             onClearCompleted={clearCompletedTasks}
-          />
-          {/* Day Timeline */}
-          <DayTimeline
-            tasks={tasksForDate}
-            selectedDate={selectedDate}
-            onSelectTask={selectTask}
-            onUpdateTaskSchedule={updateTaskSchedule}
+            onOpenCalendar={() => setShowCalendar(true)}
           />
         </div>
 
@@ -90,6 +84,15 @@ export default function HomePage() {
           />
         </div>
       </div>
+
+      {/* Calendar Popup */}
+      <CalendarPopup
+        isOpen={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        tasks={tasks}
+        selectedDate={selectedDate}
+        onSelectTask={selectTask}
+      />
     </div>
   )
 }

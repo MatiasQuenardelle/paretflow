@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { generateId } from '@/lib/utils'
+import { fetchUserTasks, saveUserTasks, getCurrentUser, onAuthStateChange } from '@/lib/supabase/sync'
 
 export interface Step {
   id: string
@@ -29,6 +30,8 @@ interface TaskState {
   tasks: Task[]
   selectedTaskId: string | null
   showCompleted: boolean
+  isSyncing: boolean
+  lastSyncedAt: string | null
 
   // Actions
   addTask: (title: string, scheduledDate?: string) => void
@@ -48,6 +51,11 @@ interface TaskState {
   deleteStep: (taskId: string, stepId: string) => void
   toggleStep: (taskId: string, stepId: string) => void
   reorderSteps: (taskId: string, stepIds: string[]) => void
+
+  // Sync actions
+  setTasks: (tasks: Task[]) => void
+  setSyncing: (syncing: boolean) => void
+  setLastSyncedAt: (date: string | null) => void
 }
 
 export const useTaskStore = create<TaskState>()(
@@ -56,6 +64,8 @@ export const useTaskStore = create<TaskState>()(
       tasks: [],
       selectedTaskId: null,
       showCompleted: false,
+      isSyncing: false,
+      lastSyncedAt: null,
 
       addTask: (title, scheduledDate) => {
         const dateToUse = scheduledDate || new Date().toISOString().split('T')[0]
@@ -218,9 +228,19 @@ export const useTaskStore = create<TaskState>()(
           }),
         }))
       },
+
+      // Sync actions
+      setTasks: (tasks) => set({ tasks }),
+      setSyncing: (isSyncing) => set({ isSyncing }),
+      setLastSyncedAt: (lastSyncedAt) => set({ lastSyncedAt }),
     }),
     {
       name: 'paretflow-tasks',
+      partialize: (state) => ({
+        tasks: state.tasks,
+        selectedTaskId: state.selectedTaskId,
+        showCompleted: state.showCompleted,
+      }),
     }
   )
 )
@@ -246,4 +266,85 @@ export function useTaskStoreHydrated() {
   }, [])
 
   return hydrated
+}
+
+// Hook to sync tasks with Supabase when user is logged in
+export function useTaskSync() {
+  const { tasks, setTasks, setSyncing, setLastSyncedAt } = useTaskStore()
+  const [user, setUser] = useState<any>(null)
+  const [initialized, setInitialized] = useState(false)
+
+  // Debounced save function
+  const saveTasksDebounced = useCallback(
+    debounce(async (tasksToSave: Task[]) => {
+      if (!user) return
+      setSyncing(true)
+      const success = await saveUserTasks(tasksToSave)
+      if (success) {
+        setLastSyncedAt(new Date().toISOString())
+      }
+      setSyncing(false)
+    }, 1000),
+    [user]
+  )
+
+  // Initial load and auth state changes
+  useEffect(() => {
+    const initSync = async () => {
+      const currentUser = await getCurrentUser()
+      setUser(currentUser)
+
+      if (currentUser) {
+        setSyncing(true)
+        const cloudTasks = await fetchUserTasks()
+        if (cloudTasks && cloudTasks.length > 0) {
+          // Cloud has tasks - use them
+          setTasks(cloudTasks)
+          setLastSyncedAt(new Date().toISOString())
+        } else if (tasks.length > 0) {
+          // No cloud tasks but local tasks exist - save local to cloud
+          await saveUserTasks(tasks)
+          setLastSyncedAt(new Date().toISOString())
+        }
+        setSyncing(false)
+      }
+      setInitialized(true)
+    }
+
+    initSync()
+
+    // Listen for auth changes
+    const { data: { subscription } } = onAuthStateChange(async (newUser) => {
+      setUser(newUser)
+      if (newUser && initialized) {
+        setSyncing(true)
+        const cloudTasks = await fetchUserTasks()
+        if (cloudTasks && cloudTasks.length > 0) {
+          setTasks(cloudTasks)
+          setLastSyncedAt(new Date().toISOString())
+        }
+        setSyncing(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Save to cloud when tasks change (debounced)
+  useEffect(() => {
+    if (user && initialized) {
+      saveTasksDebounced(tasks)
+    }
+  }, [tasks, user, initialized, saveTasksDebounced])
+
+  return { user, isSyncing: useTaskStore.getState().isSyncing }
+}
+
+// Simple debounce utility
+function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
+  let timeoutId: NodeJS.Timeout
+  return ((...args: Parameters<T>) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }) as T
 }

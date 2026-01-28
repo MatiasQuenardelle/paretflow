@@ -1,20 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { format, isToday } from 'date-fns'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Task, Step } from '@/stores/taskStore'
 
-interface DayViewProps {
-  date: Date
+interface CalendarPopupProps {
+  isOpen: boolean
+  onClose: () => void
   tasks: Task[]
-  onToggleStep: (taskId: string, stepId: string) => void
-  onSelectTask?: (taskId: string) => void
+  selectedDate: Date
+  onSelectTask: (id: string) => void
 }
 
 const START_HOUR = 6
 const END_HOUR = 23
-const HOUR_HEIGHT_COLLAPSED = 24
+const HOUR_HEIGHT_COLLAPSED = 20
 const HOUR_HEIGHT_EXPANDED = 48
 
 interface ScheduledStep {
@@ -24,21 +25,44 @@ interface ScheduledStep {
   minute: number
 }
 
-export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+export function CalendarPopup({ isOpen, onClose, tasks, selectedDate, onSelectTask }: CalendarPopupProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
   const hourHeight = isExpanded ? HOUR_HEIGHT_EXPANDED : HOUR_HEIGHT_COLLAPSED
 
-  const dateStr = format(date, 'yyyy-MM-dd')
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    if (isOpen) {
+      window.addEventListener('keydown', handleEscape)
+    }
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [isOpen, onClose])
+
+  if (!isOpen) return null
+
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
   const now = new Date()
   const currentHour = now.getHours()
   const currentMinute = now.getMinutes()
-  const showNowIndicator = isToday(date) && currentHour >= START_HOUR && currentHour <= END_HOUR
+  const showNowIndicator = isToday(selectedDate) && currentHour >= START_HOUR && currentHour <= END_HOUR
 
   // Collect all scheduled steps for the selected date
   const scheduledSteps: ScheduledStep[] = []
   tasks.forEach(task => {
     task.steps.forEach(step => {
-      if (step.scheduledDate === dateStr && step.scheduledTime && step.text) {
+      if (step.scheduledDate === selectedDateStr && step.scheduledTime && step.text) {
         const match = step.scheduledTime.match(/^(\d{1,2}):(\d{2})$/)
         if (match) {
           const hour = parseInt(match[1], 10)
@@ -72,7 +96,7 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
 
     scheduledSteps.forEach((item) => {
       const startMinutes = item.hour * 60 + item.minute
-      const duration = 45
+      const duration = 45 // 45 min default
       const endMinutes = startMinutes + duration
 
       let column = columns.findIndex(col => col.endMinutes <= startMinutes)
@@ -118,48 +142,59 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
   const totalHeight = (END_HOUR - START_HOUR) * hourHeight
   const stepBlocks = getStepBlocks()
 
-  // Hour labels
+  // Hour labels - show fewer in collapsed mode
   const hourLabels = isExpanded
     ? Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i)
     : [6, 9, 12, 15, 18, 21]
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">
-            {format(date, 'EEEE, MMMM d')}
-            {isToday(date) && (
-              <span className="ml-2 text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">
-                Today
-              </span>
-            )}
-          </h3>
-          <p className="text-sm text-muted">
-            {scheduledSteps.length} scheduled {scheduledSteps.length === 1 ? 'step' : 'steps'}
-          </p>
-        </div>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-border/30"
-        >
-          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          {isExpanded ? 'Compact' : 'Expand'}
-        </button>
-      </div>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-      {/* Calendar Grid */}
+      {/* Modal */}
       <div
-        className="flex-1 relative rounded-xl overflow-hidden"
+        className="relative w-full max-w-md rounded-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'linear-gradient(180deg, rgba(26,26,46,0.95) 0%, rgba(22,22,42,0.98) 100%)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)'
+          background: 'linear-gradient(180deg, #1a1a2e 0%, #16162a 100%)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
         }}
       >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div>
+            <h2 className="text-lg font-semibold text-white">
+              {format(selectedDate, 'EEEE')}
+            </h2>
+            <p className="text-sm text-white/50">
+              {format(selectedDate, 'MMMM d, yyyy')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              title={isExpanded ? 'Collapse' : 'Expand'}
+            >
+              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Calendar Grid */}
         <div
-          className="overflow-y-auto h-full"
-          style={{ maxHeight: 'calc(100vh - 280px)' }}
+          className="overflow-y-auto"
+          style={{ maxHeight: isExpanded ? '70vh' : '50vh' }}
         >
           <div className="flex">
             {/* Time Labels */}
@@ -207,30 +242,21 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
                 <button
                   key={item.step.id}
                   onClick={() => {
-                    if (onSelectTask) {
-                      onSelectTask(item.task.id)
-                    }
+                    onSelectTask(item.task.id)
+                    onClose()
                   }}
-                  className={`absolute rounded-lg transition-all hover:scale-[1.02] hover:brightness-110 overflow-hidden group ${
-                    item.step.completed ? 'opacity-50' : ''
-                  }`}
+                  className="absolute rounded-lg transition-all hover:scale-[1.02] hover:brightness-110 overflow-hidden group"
                   style={{
                     top: top + 2,
                     height: height - 4,
                     left: `calc(${left}% + 8px)`,
                     width: `calc(${width}% - 16px)`,
-                    background: item.step.completed
-                      ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
-                      : 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%)',
-                    boxShadow: item.step.completed
-                      ? 'none'
-                      : '0 4px 12px rgba(59, 130, 246, 0.3)'
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%)',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
                   }}
                 >
                   <div className="h-full w-full px-3 py-2 flex flex-col justify-center">
-                    <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'} ${
-                      item.step.completed ? 'line-through' : ''
-                    }`}>
+                    <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'}`}>
                       {item.step.text}
                     </span>
                     {isExpanded && (
@@ -254,23 +280,28 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 text-[10px] text-muted mt-3">
-        <div className="flex items-center gap-1.5">
-          <div
-            className="w-3 h-2 rounded-sm"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}
-          />
-          <span>Step</span>
-        </div>
-        {showNowIndicator && (
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-red-500" />
-            <span>Now</span>
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-[10px] text-white/40">
+            <div className="flex items-center gap-1.5">
+              <div
+                className="w-3 h-2 rounded-sm"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}
+              />
+              <span>Step</span>
+            </div>
+            {showNowIndicator && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span>Now</span>
+              </div>
+            )}
           </div>
-        )}
+          <span className="text-[10px] text-white/30">
+            {scheduledSteps.length} step{scheduledSteps.length !== 1 ? 's' : ''} scheduled
+          </span>
+        </div>
       </div>
     </div>
   )

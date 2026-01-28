@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { Play, Pause, RotateCcw, Settings, Coffee, Brain, Clock, Zap, SkipForward, Sun } from 'lucide-react'
+import { format } from 'date-fns'
 import { useTimerStore, TimerMode } from '@/stores/timerStore'
-import { useTaskStore } from '@/stores/taskStore'
+import { useTaskStore, Step, Task } from '@/stores/taskStore'
 
 export function CompactTimerBar() {
   const {
@@ -39,6 +40,28 @@ export function CompactTimerBar() {
 
   const activeTask = tasks.find(t => t.id === activeTaskId)
   const incompleteTasks = tasks.filter(t => !t.completed)
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+
+  // Get steps scheduled for today with their parent task
+  interface ScheduledStepItem {
+    step: Step
+    task: Task
+    displayTime: string
+  }
+
+  const scheduledStepsForToday: ScheduledStepItem[] = tasks.flatMap(task =>
+    task.steps
+      .filter(step => step.scheduledDate === todayStr && step.scheduledTime && !step.completed && step.text)
+      .map(step => {
+        const [h, m] = (step.scheduledTime || '').split(':').map(Number)
+        const displayTime = new Date(0, 0, 0, h, m).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+        return { step, task, displayTime }
+      })
+  ).sort((a, b) => {
+    const timeA = a.step.scheduledTime || ''
+    const timeB = b.step.scheduledTime || ''
+    return timeA.localeCompare(timeB)
+  })
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -240,21 +263,45 @@ export function CompactTimerBar() {
                   ({activeTask.completedPomodoros || 0}/{activeTask.estimatedPomodoros || 1})
                 </span>
               </p>
-            ) : incompleteTasks.length > 0 ? (
+            ) : (incompleteTasks.length > 0 || scheduledStepsForToday.length > 0) ? (
               <select
                 value=""
                 onChange={(e) => {
-                  setActiveTask(e.target.value)
-                  selectTask(e.target.value)
+                  const value = e.target.value
+                  if (value.startsWith('step:')) {
+                    // It's a step - find its parent task
+                    const stepId = value.replace('step:', '')
+                    const found = scheduledStepsForToday.find(s => s.step.id === stepId)
+                    if (found) {
+                      setActiveTask(found.task.id)
+                      selectTask(found.task.id)
+                    }
+                  } else {
+                    setActiveTask(value)
+                    selectTask(value)
+                  }
                 }}
                 className="text-sm bg-transparent border-none text-muted hover:text-foreground cursor-pointer focus:outline-none"
               >
                 <option value="">Select a task to focus on...</option>
-                {incompleteTasks.map(task => (
-                  <option key={task.id} value={task.id}>
-                    {task.title} ({task.completedPomodoros || 0}/{task.estimatedPomodoros || 1})
-                  </option>
-                ))}
+                {scheduledStepsForToday.length > 0 && (
+                  <optgroup label="Scheduled for today">
+                    {scheduledStepsForToday.map(({ step, task, displayTime }) => (
+                      <option key={step.id} value={`step:${step.id}`}>
+                        {displayTime} - {step.text} ({task.title})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {incompleteTasks.length > 0 && (
+                  <optgroup label="Tasks">
+                    {incompleteTasks.map(task => (
+                      <option key={task.id} value={task.id}>
+                        {task.title} ({task.completedPomodoros || 0}/{task.estimatedPomodoros || 1})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             ) : (
               <p className="text-sm text-muted">Add tasks to get started</p>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, CheckCircle, Circle, Eye, EyeOff, Timer, Minus, Play, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Trash2, CheckCircle, Circle, Eye, EyeOff, Timer, Minus, Play, Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 import { format, addDays, subDays, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Task } from '@/stores/taskStore'
 import { useTimerStore } from '@/stores/timerStore'
@@ -22,6 +22,7 @@ interface TaskColumnProps {
   onSetShowCompleted: (show: boolean) => void
   onUpdateEstimate: (id: string, estimate: number) => void
   onClearCompleted?: () => void
+  onOpenCalendar?: () => void
 }
 
 export function TaskColumn({
@@ -37,6 +38,7 @@ export function TaskColumn({
   onSetShowCompleted,
   onUpdateEstimate,
   onClearCompleted,
+  onOpenCalendar,
 }: TaskColumnProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
@@ -127,14 +129,41 @@ export function TaskColumn({
             </p>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsAdding(true)}
-          className="text-blue-600"
-        >
-          <Plus size={18} />
-        </Button>
+        <div className="flex items-center gap-2">
+          {onOpenCalendar && (() => {
+            const scheduledSteps = tasks.flatMap(t =>
+              t.steps.filter(s => s.scheduledDate === selectedDateStr && s.scheduledTime && !s.completed)
+            ).length
+            return (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenCalendar}
+                className={`relative transition-colors ${
+                  scheduledSteps > 0
+                    ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-500/10'
+                    : 'text-muted hover:text-foreground hover:bg-border/50'
+                }`}
+                title={scheduledSteps > 0 ? `${scheduledSteps} step${scheduledSteps !== 1 ? 's' : ''} scheduled` : 'View schedule'}
+              >
+                <Clock size={18} />
+                {scheduledSteps > 0 && (
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
+                    {scheduledSteps > 9 ? '9+' : scheduledSteps}
+                  </span>
+                )}
+              </Button>
+            )
+          })()}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsAdding(true)}
+            className="text-blue-600"
+          >
+            <Plus size={18} />
+          </Button>
+        </div>
       </div>
 
       {isAdding && (

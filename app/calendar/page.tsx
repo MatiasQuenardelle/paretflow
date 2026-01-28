@@ -11,10 +11,10 @@ import { WeekView } from '@/components/calendar/WeekView'
 type ViewMode = 'day' | 'week'
 
 export default function CalendarPage() {
-  const [viewMode, setViewMode] = useState<ViewMode>('week')
+  const [viewMode, setViewMode] = useState<ViewMode>('day')
   const [selectedDate, setSelectedDate] = useState(new Date())
 
-  const { tasks, toggleStep } = useTaskStore()
+  const { tasks, toggleStep, selectTask } = useTaskStore()
 
   const handlePrev = () => {
     if (viewMode === 'day') {
@@ -99,6 +99,7 @@ export default function CalendarPage() {
             date={selectedDate}
             tasks={tasks}
             onToggleStep={handleToggleStep}
+            onSelectTask={selectTask}
           />
         ) : (
           <WeekView
@@ -109,6 +110,7 @@ export default function CalendarPage() {
               setSelectedDate(day)
               setViewMode('day')
             }}
+            onSelectTask={selectTask}
           />
         )}
       </div>
