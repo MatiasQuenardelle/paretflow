@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Timer, ListTodo, Calendar, BarChart2, PanelLeftClose, PanelLeft } from 'lucide-react'
+import { Timer, ListTodo, Calendar, BarChart2, PanelLeftClose, PanelLeft, Sparkles } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
 import { AuthButton } from './AuthButton'
 import { useUIStore } from '@/stores/uiStore'
 
 const navItems = [
   { href: '/', label: 'Tasks', icon: ListTodo },
+  { href: '/habits', label: 'Power Habits', icon: Sparkles },
   { href: '/progress', label: 'Progress', icon: BarChart2 },
   { href: '/timer', label: 'Timer', icon: Timer },
   { href: '/calendar', label: 'Calendar', icon: Calendar },

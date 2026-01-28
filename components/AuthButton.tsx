@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { LogOut, LogIn } from 'lucide-react'
+import { useUIStore } from '@/stores/uiStore'
 
 export function AuthButton() {
+  const { sidebarCollapsed } = useUIStore()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -43,11 +45,11 @@ export function AuthButton() {
     return (
       <button
         onClick={handleSignIn}
-        className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+        className={`flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
         title="Sign in to sync data"
       >
-        <LogIn className="w-4 h-4" />
-        <span>Sign in</span>
+        <LogIn className="w-5 h-5" />
+        {!sidebarCollapsed && <span>Sign in</span>}
       </button>
     )
   }
@@ -55,7 +57,7 @@ export function AuthButton() {
   return (
     <button
       onClick={handleSignOut}
-      className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+      className={`flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
       title="Sign out"
     >
       <img
@@ -63,7 +65,7 @@ export function AuthButton() {
         alt=""
         className="w-6 h-6 rounded-full"
       />
-      <LogOut className="w-4 h-4" />
+      {!sidebarCollapsed && <LogOut className="w-4 h-4" />}
     </button>
   )
 }

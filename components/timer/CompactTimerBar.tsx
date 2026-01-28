@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Play, Pause, RotateCcw, Settings, Coffee, Brain, Clock, Zap, SkipForward, Sun } from 'lucide-react'
+import { Play, Pause, RotateCcw, Settings, Coffee, Brain, Clock, Zap, SkipForward, Sun, ChevronUp, ChevronDown } from 'lucide-react'
 import { format } from 'date-fns'
 import { useTimerStore, TimerMode } from '@/stores/timerStore'
 import { useTaskStore, Step, Task } from '@/stores/taskStore'
+import { useUIStore } from '@/stores/uiStore'
 
 export function CompactTimerBar() {
   const {
@@ -33,6 +34,7 @@ export function CompactTimerBar() {
   } = useTimerStore()
 
   const { tasks, incrementTaskPomodoro, selectTask } = useTaskStore()
+  const { timerCollapsed, toggleTimer } = useUIStore()
 
   const [showMenu, setShowMenu] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -201,6 +203,62 @@ export function CompactTimerBar() {
 
   const c = colorClasses[color]
 
+  // Collapsed view - minimal timer bar
+  if (timerCollapsed) {
+    return (
+      <div className={`rounded-2xl px-4 py-2 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+        <div className="flex items-center gap-3">
+          {/* Small icon */}
+          <div className="flex items-center justify-center">
+            {isLongBreak ? (
+              <Sun className="w-4 h-4 text-amber-500" />
+            ) : isBreak ? (
+              <Coffee className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <Brain className="w-4 h-4 text-blue-500" />
+            )}
+          </div>
+
+          {/* Time */}
+          <span className={`font-mono text-lg font-bold ${c.text}`}>
+            {formatTime(timeRemaining)}
+          </span>
+
+          {/* Status badge */}
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.badge}`}>
+            {isLongBreak ? 'Long Break' : isBreak ? 'Break' : 'Focus'}
+          </span>
+
+          {/* Active task name (truncated) */}
+          {activeTask && (
+            <span className="text-sm text-muted truncate max-w-[150px] hidden sm:inline">
+              {activeTask.title}
+            </span>
+          )}
+
+          <div className="flex-1" />
+
+          {/* Play/Pause */}
+          <button
+            onClick={isRunning ? pause : start}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-gradient-to-br ${c.button} text-white`}
+          >
+            {isRunning ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+          </button>
+
+          {/* Expand button */}
+          <button
+            onClick={toggleTimer}
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface border border-border text-muted hover:text-foreground hover:bg-border/50 transition-all duration-200"
+            title="Expand timer"
+          >
+            <ChevronDown size={16} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`rounded-2xl p-4 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
       <div className="flex items-center gap-5">
@@ -320,6 +378,15 @@ export function CompactTimerBar() {
 
         {/* Controls */}
         <div className="flex items-center gap-2">
+          {/* Collapse Button */}
+          <button
+            onClick={toggleTimer}
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-surface border border-border text-muted hover:text-foreground hover:bg-border/50 transition-all duration-200 active:scale-95"
+            title="Minimize timer"
+          >
+            <ChevronUp size={18} />
+          </button>
+
           {/* Play/Pause Button */}
           <button
             onClick={isRunning ? pause : start}

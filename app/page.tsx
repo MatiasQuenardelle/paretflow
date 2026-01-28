@@ -33,8 +33,10 @@ export default function HomePage() {
   const selectedTask = tasks.find(t => t.id === selectedTaskId) || null
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
 
-  // Filter tasks for the selected date
-  const tasksForDate = tasks.filter(t => t.scheduledDate === selectedDateStr)
+  // Show all incomplete tasks (persist across days) + completed tasks only for selected date
+  const tasksForDate = tasks.filter(t =>
+    !t.completed || t.scheduledDate === selectedDateStr
+  )
 
   // Don't render until Zustand has hydrated from localStorage
   if (!hydrated) {
