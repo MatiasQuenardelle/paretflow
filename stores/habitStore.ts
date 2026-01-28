@@ -11,6 +11,7 @@ export interface HabitDefinition {
   icon: string // lucide icon name
   color: string // tailwind color
   points: number
+  illustration: string // URL for illustration image
 }
 
 export interface HabitCompletion {
@@ -37,6 +38,7 @@ export const POWER_HABITS: HabitDefinition[] = [
     icon: 'Brain',
     color: 'purple',
     points: 10,
+    illustration: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
   },
   {
     id: 'magnesium',
@@ -47,6 +49,7 @@ export const POWER_HABITS: HabitDefinition[] = [
     icon: 'Pill',
     color: 'cyan',
     points: 5,
+    illustration: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&q=80',
   },
 ]
 

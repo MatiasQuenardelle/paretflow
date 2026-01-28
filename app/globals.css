@@ -63,3 +63,25 @@ button, [role="button"], .cursor-pointer {
 .animate-pulse-ring {
   animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Habit card animations */
+@keyframes checkmark-draw {
+  0% { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.animate-checkmark {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: checkmark-draw 0.3s ease-out forwards;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.3s ease-out;
+}

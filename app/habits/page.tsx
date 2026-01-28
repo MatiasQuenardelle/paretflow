@@ -1,18 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import { format } from 'date-fns'
-import { Sparkles, Trophy, Flame, Target } from 'lucide-react'
+import { ChevronUp, Flame, Target } from 'lucide-react'
 import { HabitCard } from '@/components/habits/HabitCard'
 import { POWER_HABITS, useHabitStore } from '@/stores/habitStore'
 
-export default function HabitsPage() {
-  const { getTodayScore, completions, getCompletionsForDate } = useHabitStore()
+function StatsFooter() {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const { getTodayScore, completions } = useHabitStore()
 
   const today = format(new Date(), 'yyyy-MM-dd')
   const todayScore = getTodayScore()
-  const todayCompletions = getCompletionsForDate(today)
-  const completedCount = todayCompletions.length
-  const totalHabits = POWER_HABITS.length
   const maxPossibleScore = POWER_HABITS.reduce((sum, h) => sum + h.points, 0)
 
   // Calculate streak (consecutive days with at least one completion)
@@ -39,90 +38,91 @@ export default function HabitsPage() {
   const streak = calculateStreak()
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
-        {/* Header with Score */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="w-8 h-8 text-yellow-500" />
-            <h1 className="text-2xl md:text-3xl font-bold">Pareto Power Habits</h1>
-          </div>
-          <p className="text-muted">
-            Small habits, big impact. Focus on the 20% that gives 80% of results.
-          </p>
+    <div className="border-t border-border bg-surface/50 backdrop-blur-sm">
+      {/* Collapsed preview */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-3 flex items-center justify-between text-sm"
+      >
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5">
+            <Target className="w-4 h-4 text-yellow-500" />
+            <span className="text-muted">Today:</span>
+            <span className="font-medium">{todayScore}/{maxPossibleScore} pts</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Flame className="w-4 h-4 text-orange-500" />
+            <span className="font-medium">{streak} day streak</span>
+          </span>
         </div>
+        <ChevronUp
+          className={`w-5 h-5 text-muted transition-transform duration-300 ${
+            isExpanded ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
 
-        {/* Score Card */}
-        <div className="rounded-2xl p-6 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted uppercase tracking-wider">Today's Score</p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-4xl font-bold text-yellow-600 dark:text-yellow-400">
-                  {todayScore}
-                </span>
-                <span className="text-lg text-muted">/ {maxPossibleScore}</span>
-              </div>
-              <p className="text-sm text-muted mt-1">
-                {completedCount} of {totalHabits} habits completed
-              </p>
-            </div>
-            <div className="text-right">
-              <Trophy className="w-12 h-12 text-yellow-500 mb-2 ml-auto" />
-              {todayScore >= maxPossibleScore && (
-                <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                  Perfect Day!
-                </span>
-              )}
+      {/* Expanded stats */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          isExpanded ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl p-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              {todayScore}
+            </p>
+            <p className="text-xs text-muted">Points Today</p>
+            <div className="mt-2 h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
+                style={{ width: `${(todayScore / maxPossibleScore) * 100}%` }}
+              />
             </div>
           </div>
-
-          {/* Progress bar */}
-          <div className="mt-4 h-3 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
-              style={{ width: `${(todayScore / maxPossibleScore) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-xl p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20">
-            <div className="flex items-center gap-3">
-              <Flame className="w-8 h-8 text-orange-500" />
-              <div>
-                <p className="text-2xl font-bold">{streak}</p>
-                <p className="text-sm text-muted">Day Streak</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-xl p-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/20">
-            <div className="flex items-center gap-3">
-              <Target className="w-8 h-8 text-blue-500" />
-              <div>
-                <p className="text-2xl font-bold">{completions.length}</p>
-                <p className="text-sm text-muted">Total Completions</p>
-              </div>
-            </div>
+          <div className="rounded-xl p-3 bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20">
+            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              {streak}
+            </p>
+            <p className="text-xs text-muted">Day Streak</p>
+            <p className="text-xs text-muted mt-2">
+              {completions.length} total completions
+            </p>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
 
-        {/* Habit Cards */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Power Habits</h2>
+export default function HabitsPage() {
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-lg mx-auto p-4 space-y-2">
+          {/* Header */}
+          <div className="mb-4">
+            <h1 className="text-xl font-bold">Power Habits</h1>
+            <p className="text-sm text-muted">Tap to expand</p>
+          </div>
+
+          {/* Habit Cards */}
           {POWER_HABITS.map(habit => (
             <HabitCard key={habit.id} habit={habit} />
           ))}
-        </div>
 
-        {/* Coming Soon */}
-        <div className="rounded-xl p-4 bg-border/30 border border-border text-center">
-          <p className="text-sm text-muted">
-            More power habits coming soon... Stay focused on these first!
-          </p>
+          {/* Coming Soon */}
+          <div className="pt-4">
+            <p className="text-xs text-center text-muted">
+              More habits coming soon...
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* Stats Footer */}
+      <StatsFooter />
     </div>
   )
 }
