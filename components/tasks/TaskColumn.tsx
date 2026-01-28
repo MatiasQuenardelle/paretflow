@@ -1,18 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, CheckCircle, Circle, Eye, EyeOff, Timer, Minus, Play } from 'lucide-react'
+import { Plus, Trash2, CheckCircle, Circle, Eye, EyeOff, Timer, Minus, Play, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
+import { format, addDays, subDays, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Task } from '@/stores/taskStore'
 import { useTimerStore } from '@/stores/timerStore'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { DatePicker } from './DatePicker'
 
 interface TaskColumnProps {
   tasks: Task[]
   selectedTaskId: string | null
   showCompleted: boolean
+  selectedDate: Date
+  onDateChange: (date: Date) => void
   onSelectTask: (id: string | null) => void
-  onAddTask: (title: string) => void
+  onAddTask: (title: string, scheduledDate: string) => void
   onDeleteTask: (id: string) => void
   onToggleCompleted: (id: string) => void
   onSetShowCompleted: (show: boolean) => void
@@ -24,6 +28,8 @@ export function TaskColumn({
   tasks,
   selectedTaskId,
   showCompleted,
+  selectedDate,
+  onDateChange,
   onSelectTask,
   onAddTask,
   onDeleteTask,
@@ -34,13 +40,24 @@ export function TaskColumn({
 }: TaskColumnProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
   const { activeTaskId, setActiveTask } = useTimerStore()
+
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
+
+  // Helper to format the date label
+  const getDateLabel = () => {
+    if (isToday(selectedDate)) return 'Today'
+    if (isTomorrow(selectedDate)) return 'Tomorrow'
+    if (isYesterday(selectedDate)) return 'Yesterday'
+    return format(selectedDate, 'MMM d')
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (newTaskTitle.trim()) {
-      onAddTask(newTaskTitle.trim())
+      onAddTask(newTaskTitle.trim(), selectedDateStr)
       setNewTaskTitle('')
       setIsAdding(false)
     }
@@ -66,6 +83,41 @@ export function TaskColumn({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Date Navigation */}
+      <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
+        <button
+          onClick={() => onDateChange(subDays(selectedDate, 1))}
+          className="p-1.5 rounded-lg hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-border/50 transition-colors"
+          >
+            <Calendar size={16} className="text-muted" />
+            <span className="font-medium">{getDateLabel()}</span>
+          </button>
+          {showDatePicker && (
+            <DatePicker
+              value={selectedDateStr}
+              onChange={(date) => {
+                if (date) onDateChange(new Date(date))
+                setShowDatePicker(false)
+              }}
+              onClose={() => setShowDatePicker(false)}
+            />
+          )}
+        </div>
+        <button
+          onClick={() => onDateChange(addDays(selectedDate, 1))}
+          className="p-1.5 rounded-lg hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold">Tasks</h2>

@@ -6,6 +6,7 @@ import { useTaskStore, useTaskStoreHydrated } from '@/stores/taskStore'
 import { TaskColumn } from '@/components/tasks/TaskColumn'
 import { StepsColumn } from '@/components/tasks/StepsColumn'
 import { CompactTimerBar } from '@/components/timer/CompactTimerBar'
+import { DayTimeline } from '@/components/tasks/DayTimeline'
 
 export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -25,10 +26,15 @@ export default function HomePage() {
     toggleTaskCompleted,
     setShowCompleted,
     updateTaskEstimate,
+    updateTaskSchedule,
     clearCompletedTasks,
   } = useTaskStore()
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId) || null
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
+
+  // Filter tasks for the selected date
+  const tasksForDate = tasks.filter(t => t.scheduledDate === selectedDateStr)
 
   // Don't render until Zustand has hydrated from localStorage
   if (!hydrated) {
@@ -46,11 +52,13 @@ export default function HomePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-6 flex-1 min-h-0">
         {/* Tasks Column */}
-        <div className="bg-surface border border-border rounded-xl p-4 overflow-hidden">
+        <div className="bg-surface border border-border rounded-xl p-4 overflow-hidden flex flex-col">
           <TaskColumn
-            tasks={tasks}
+            tasks={tasksForDate}
             selectedTaskId={selectedTaskId}
             showCompleted={showCompleted}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
             onSelectTask={selectTask}
             onAddTask={addTask}
             onDeleteTask={deleteTask}
@@ -58,6 +66,13 @@ export default function HomePage() {
             onSetShowCompleted={setShowCompleted}
             onUpdateEstimate={updateTaskEstimate}
             onClearCompleted={clearCompletedTasks}
+          />
+          {/* Day Timeline */}
+          <DayTimeline
+            tasks={tasksForDate}
+            selectedDate={selectedDate}
+            onSelectTask={selectTask}
+            onUpdateTaskSchedule={updateTaskSchedule}
           />
         </div>
 

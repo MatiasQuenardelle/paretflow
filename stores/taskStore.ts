@@ -16,6 +16,8 @@ export interface Task {
   id: string
   title: string
   createdAt: string
+  scheduledDate?: string // The date this task is scheduled for (YYYY-MM-DD)
+  scheduledTime?: string // Optional time (HH:MM)
   steps: Step[]
   completed: boolean
   estimatedPomodoros: number
@@ -29,7 +31,8 @@ interface TaskState {
   showCompleted: boolean
 
   // Actions
-  addTask: (title: string) => void
+  addTask: (title: string, scheduledDate?: string) => void
+  updateTaskSchedule: (id: string, scheduledDate?: string, scheduledTime?: string) => void
   deleteTask: (id: string) => void
   updateTaskTitle: (id: string, title: string) => void
   selectTask: (id: string | null) => void
@@ -54,16 +57,17 @@ export const useTaskStore = create<TaskState>()(
       selectedTaskId: null,
       showCompleted: false,
 
-      addTask: (title) => {
-        const today = new Date().toISOString().split('T')[0]
+      addTask: (title, scheduledDate) => {
+        const dateToUse = scheduledDate || new Date().toISOString().split('T')[0]
         const newTask: Task = {
           id: generateId(),
           title,
           createdAt: new Date().toISOString(),
+          scheduledDate: dateToUse,
           steps: [
-            { id: generateId(), text: '', completed: false, order: 0, scheduledDate: today },
-            { id: generateId(), text: '', completed: false, order: 1, scheduledDate: today },
-            { id: generateId(), text: '', completed: false, order: 2, scheduledDate: today },
+            { id: generateId(), text: '', completed: false, order: 0, scheduledDate: dateToUse },
+            { id: generateId(), text: '', completed: false, order: 1, scheduledDate: dateToUse },
+            { id: generateId(), text: '', completed: false, order: 2, scheduledDate: dateToUse },
           ],
           completed: false,
           estimatedPomodoros: 1,
@@ -72,6 +76,14 @@ export const useTaskStore = create<TaskState>()(
         set(state => ({
           tasks: [newTask, ...state.tasks],
           selectedTaskId: newTask.id,
+        }))
+      },
+
+      updateTaskSchedule: (id, scheduledDate, scheduledTime) => {
+        set(state => ({
+          tasks: state.tasks.map(t =>
+            t.id === id ? { ...t, scheduledDate, scheduledTime } : t
+          ),
         }))
       },
 
