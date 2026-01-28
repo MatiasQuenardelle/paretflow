@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { format, startOfWeek, addDays, isToday, isSameDay } from 'date-fns'
-import { Task, Step } from '@/stores/taskStore'
+import { Task, Step, useTaskStore } from '@/stores/taskStore'
+import { StepDetailPopup } from './StepDetailPopup'
 
 interface WeekViewProps {
   date: Date
@@ -17,6 +19,8 @@ interface ScheduledStep {
 }
 
 export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask }: WeekViewProps) {
+  const [selectedStep, setSelectedStep] = useState<{ step: Step; task: Task } | null>(null)
+  const { updateStep, toggleStep } = useTaskStore()
   const weekStart = startOfWeek(date, { weekStartsOn: 1 }) // Monday start
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -110,9 +114,7 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask 
                       key={step.id}
                       onClick={(e) => {
                         e.stopPropagation()
-                        if (onSelectTask) {
-                          onSelectTask(task.id)
-                        }
+                        setSelectedStep({ step, task })
                       }}
                       className={`w-full text-left rounded-md px-1.5 py-1 transition-all hover:scale-[1.02] ${
                         step.completed ? 'opacity-50' : ''
@@ -169,6 +171,19 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask 
           <span>Today</span>
         </div>
       </div>
+
+      {/* Step Detail Popup */}
+      {selectedStep && (
+        <StepDetailPopup
+          isOpen={!!selectedStep}
+          onClose={() => setSelectedStep(null)}
+          step={selectedStep.step}
+          task={selectedStep.task}
+          onToggleStep={() => toggleStep(selectedStep.task.id, selectedStep.step.id)}
+          onUpdateStep={(updates) => updateStep(selectedStep.task.id, selectedStep.step.id, updates)}
+          onSelectTask={() => onSelectTask?.(selectedStep.task.id)}
+        />
+      )}
     </div>
   )
 }

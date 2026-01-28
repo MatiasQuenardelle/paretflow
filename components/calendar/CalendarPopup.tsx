@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { format, isToday } from 'date-fns'
 import { X, ChevronDown, ChevronUp } from 'lucide-react'
-import { Task, Step } from '@/stores/taskStore'
+import { Task, Step, useTaskStore } from '@/stores/taskStore'
+import { StepDetailPopup } from './StepDetailPopup'
 
 interface CalendarPopupProps {
   isOpen: boolean
@@ -27,6 +28,8 @@ interface ScheduledStep {
 
 export function CalendarPopup({ isOpen, onClose, tasks, selectedDate, onSelectTask }: CalendarPopupProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [selectedStep, setSelectedStep] = useState<{ step: Step; task: Task } | null>(null)
+  const { updateStep, toggleStep } = useTaskStore()
   const hourHeight = isExpanded ? HOUR_HEIGHT_EXPANDED : HOUR_HEIGHT_COLLAPSED
 
   useEffect(() => {
@@ -241,22 +244,27 @@ export function CalendarPopup({ isOpen, onClose, tasks, selectedDate, onSelectTa
               {stepBlocks.map(({ item, top, height, left, width }) => (
                 <button
                   key={item.step.id}
-                  onClick={() => {
-                    onSelectTask(item.task.id)
-                    onClose()
-                  }}
-                  className="absolute rounded-lg transition-all hover:scale-[1.02] hover:brightness-110 overflow-hidden group"
+                  onClick={() => setSelectedStep(item)}
+                  className={`absolute rounded-lg transition-all hover:scale-[1.02] hover:brightness-110 overflow-hidden group ${
+                    item.step.completed ? 'opacity-50' : ''
+                  }`}
                   style={{
                     top: top + 2,
                     height: height - 4,
                     left: `calc(${left}% + 8px)`,
                     width: `calc(${width}% - 16px)`,
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%)',
-                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                    background: item.step.completed
+                      ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
+                      : 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%)',
+                    boxShadow: item.step.completed
+                      ? 'none'
+                      : '0 4px 12px rgba(59, 130, 246, 0.3)'
                   }}
                 >
                   <div className="h-full w-full px-3 py-2 flex flex-col justify-center">
-                    <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'}`}>
+                    <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'} ${
+                      item.step.completed ? 'line-through' : ''
+                    }`}>
                       {item.step.text}
                     </span>
                     {isExpanded && (
@@ -303,6 +311,23 @@ export function CalendarPopup({ isOpen, onClose, tasks, selectedDate, onSelectTa
           </span>
         </div>
       </div>
+
+      {/* Step Detail Popup */}
+      {selectedStep && (
+        <StepDetailPopup
+          isOpen={!!selectedStep}
+          onClose={() => setSelectedStep(null)}
+          step={selectedStep.step}
+          task={selectedStep.task}
+          onToggleStep={() => toggleStep(selectedStep.task.id, selectedStep.step.id)}
+          onUpdateStep={(updates) => updateStep(selectedStep.task.id, selectedStep.step.id, updates)}
+          onSelectTask={() => {
+            onSelectTask(selectedStep.task.id)
+            setSelectedStep(null)
+            onClose()
+          }}
+        />
+      )}
     </div>
   )
 }

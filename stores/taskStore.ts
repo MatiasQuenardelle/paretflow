@@ -7,6 +7,7 @@ import { fetchUserTasks, saveUserTasks, getCurrentUser, onAuthStateChange } from
 export interface Step {
   id: string
   text: string
+  description?: string
   completed: boolean
   scheduledTime?: string
   scheduledDate?: string

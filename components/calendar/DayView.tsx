@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { format, isToday } from 'date-fns'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { Task, Step } from '@/stores/taskStore'
+import { Task, Step, useTaskStore } from '@/stores/taskStore'
+import { StepDetailPopup } from './StepDetailPopup'
 
 interface DayViewProps {
   date: Date
@@ -26,6 +27,8 @@ interface ScheduledStep {
 
 export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProps) {
   const [isExpanded, setIsExpanded] = useState(true)
+  const [selectedStep, setSelectedStep] = useState<{ step: Step; task: Task } | null>(null)
+  const { updateStep } = useTaskStore()
   const hourHeight = isExpanded ? HOUR_HEIGHT_EXPANDED : HOUR_HEIGHT_COLLAPSED
 
   const dateStr = format(date, 'yyyy-MM-dd')
@@ -206,11 +209,7 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
               {stepBlocks.map(({ item, top, height, left, width }) => (
                 <button
                   key={item.step.id}
-                  onClick={() => {
-                    if (onSelectTask) {
-                      onSelectTask(item.task.id)
-                    }
-                  }}
+                  onClick={() => setSelectedStep(item)}
                   className={`absolute rounded-lg transition-all hover:scale-[1.02] hover:brightness-110 overflow-hidden group ${
                     item.step.completed ? 'opacity-50' : ''
                   }`}
@@ -272,6 +271,19 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
           </div>
         )}
       </div>
+
+      {/* Step Detail Popup */}
+      {selectedStep && (
+        <StepDetailPopup
+          isOpen={!!selectedStep}
+          onClose={() => setSelectedStep(null)}
+          step={selectedStep.step}
+          task={selectedStep.task}
+          onToggleStep={() => onToggleStep(selectedStep.task.id, selectedStep.step.id)}
+          onUpdateStep={(updates) => updateStep(selectedStep.task.id, selectedStep.step.id, updates)}
+          onSelectTask={() => onSelectTask?.(selectedStep.task.id)}
+        />
+      )}
     </div>
   )
 }
