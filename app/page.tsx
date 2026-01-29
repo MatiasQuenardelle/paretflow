@@ -1,12 +1,72 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { useTaskStore, useTaskStoreHydrated } from '@/stores/taskStore'
 import { TaskColumn } from '@/components/tasks/TaskColumn'
 import { StepsColumn } from '@/components/tasks/StepsColumn'
 import { CompactTimerBar } from '@/components/timer/CompactTimerBar'
 import { CalendarPopup } from '@/components/calendar/CalendarPopup'
+import { createClient } from '@/lib/supabase/client'
+
+// Debug component to show sync status - tap 5 times on "Tasks" header to show
+function SyncDebug({ taskCount }: { taskCount: number }) {
+  const [show, setShow] = useState(false)
+  const [tapCount, setTapCount] = useState(0)
+  const [debugInfo, setDebugInfo] = useState<any>({})
+  const { isSyncing, lastSyncedAt } = useTaskStore()
+
+  useEffect(() => {
+    if (tapCount >= 5) {
+      setShow(true)
+      setTapCount(0)
+      // Fetch debug info
+      const fetchDebug = async () => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        const { data, error } = user ? await supabase
+          .from('tasks')
+          .select('data')
+          .eq('user_id', user.id)
+          .single() : { data: null, error: null }
+
+        setDebugInfo({
+          userId: user?.id?.slice(0, 8) || 'none',
+          email: user?.email || 'none',
+          cloudTasks: data?.data?.length ?? (error?.code === 'PGRST116' ? 0 : 'error: ' + error?.message),
+          localTasks: taskCount,
+          lastSync: lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString() : 'never',
+          isSyncing,
+        })
+      }
+      fetchDebug()
+    }
+  }, [tapCount, taskCount, lastSyncedAt, isSyncing])
+
+  if (!show) {
+    return (
+      <div
+        className="absolute top-0 left-0 w-20 h-10 z-50"
+        onClick={() => setTapCount(c => c + 1)}
+      />
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 p-4 text-white text-sm font-mono" onClick={() => setShow(false)}>
+      <div className="bg-gray-900 p-4 rounded-lg" onClick={e => e.stopPropagation()}>
+        <h3 className="font-bold mb-2">Sync Debug (tap outside to close)</h3>
+        <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+        <button
+          className="mt-4 px-4 py-2 bg-blue-600 rounded"
+          onClick={() => window.location.reload()}
+        >
+          Force Refresh
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -48,7 +108,10 @@ export default function HomePage() {
   }
 
   return (
-    <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex flex-col">
+    <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex flex-col relative">
+      {/* Debug - tap 5 times in top-left corner to show */}
+      <SyncDebug taskCount={tasks.length} />
+
       {/* Compact Timer Bar */}
       <CompactTimerBar />
 
