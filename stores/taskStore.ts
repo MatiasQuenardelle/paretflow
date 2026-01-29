@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { generateId } from '@/lib/utils'
 import { fetchUserTasks, saveUserTasks, getCurrentUser, onAuthStateChange } from '@/lib/supabase/sync'
 
@@ -271,81 +271,105 @@ export function useTaskStoreHydrated() {
 
 // Hook to sync tasks with Supabase when user is logged in
 export function useTaskSync() {
-  const { tasks, setTasks, setSyncing, setLastSyncedAt } = useTaskStore()
+  const { setTasks, setSyncing, setLastSyncedAt } = useTaskStore()
   const [user, setUser] = useState<any>(null)
   const [initialized, setInitialized] = useState(false)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const hasSyncedRef = useRef(false)
 
-  // Debounced save function
-  const saveTasksDebounced = useCallback(
-    debounce(async (tasksToSave: Task[]) => {
-      if (!user) return
+  // Sync tasks from cloud
+  const syncFromCloud = useCallback(async (currentUser: any) => {
+    if (!currentUser || hasSyncedRef.current) return
+
+    hasSyncedRef.current = true
+    setSyncing(true)
+
+    try {
+      const cloudTasks = await fetchUserTasks()
+      const localTasks = useTaskStore.getState().tasks
+
+      if (cloudTasks && cloudTasks.length > 0) {
+        // Cloud has tasks - use them (cloud is source of truth)
+        setTasks(cloudTasks)
+        setLastSyncedAt(new Date().toISOString())
+      } else if (localTasks.length > 0) {
+        // No cloud tasks but local tasks exist - push local to cloud
+        await saveUserTasks(localTasks)
+        setLastSyncedAt(new Date().toISOString())
+      }
+    } catch (error) {
+      console.error('Error syncing tasks:', error)
+      hasSyncedRef.current = false // Allow retry on error
+    } finally {
+      setSyncing(false)
+      setInitialized(true)
+    }
+  }, [setTasks, setSyncing, setLastSyncedAt])
+
+  // Debounced save function using ref to avoid stale closure issues
+  const saveTasksDebounced = useCallback((tasksToSave: Task[]) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+    saveTimeoutRef.current = setTimeout(async () => {
+      // Get fresh user from Supabase instead of relying on closure
+      const currentUser = await getCurrentUser()
+      if (!currentUser) return
+
       setSyncing(true)
       const success = await saveUserTasks(tasksToSave)
       if (success) {
         setLastSyncedAt(new Date().toISOString())
       }
       setSyncing(false)
-    }, 1000),
-    [user]
-  )
+    }, 1000)
+  }, [setSyncing, setLastSyncedAt])
 
-  // Initial load and auth state changes
+  // Cleanup timeout on unmount
   useEffect(() => {
-    const initSync = async () => {
-      const currentUser = await getCurrentUser()
-      setUser(currentUser)
-
-      if (currentUser) {
-        setSyncing(true)
-        const cloudTasks = await fetchUserTasks()
-        if (cloudTasks && cloudTasks.length > 0) {
-          // Cloud has tasks - use them
-          setTasks(cloudTasks)
-          setLastSyncedAt(new Date().toISOString())
-        } else if (tasks.length > 0) {
-          // No cloud tasks but local tasks exist - save local to cloud
-          await saveUserTasks(tasks)
-          setLastSyncedAt(new Date().toISOString())
-        }
-        setSyncing(false)
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
       }
-      setInitialized(true)
     }
+  }, [])
 
-    initSync()
-
-    // Listen for auth changes
+  // Listen for auth state changes - this is the primary way to detect session restoration
+  // onAuthStateChange fires with INITIAL_SESSION when session is restored from storage
+  useEffect(() => {
     const { data: { subscription } } = onAuthStateChange(async (newUser) => {
       setUser(newUser)
-      if (newUser && initialized) {
-        setSyncing(true)
-        const cloudTasks = await fetchUserTasks()
-        if (cloudTasks && cloudTasks.length > 0) {
-          setTasks(cloudTasks)
-          setLastSyncedAt(new Date().toISOString())
-        }
-        setSyncing(false)
+
+      if (newUser) {
+        await syncFromCloud(newUser)
+      } else {
+        // User logged out - reset sync state
+        hasSyncedRef.current = false
+        setInitialized(true)
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [syncFromCloud])
 
   // Save to cloud when tasks change (debounced)
+  // Subscribe directly to store to get fresh tasks
   useEffect(() => {
-    if (user && initialized) {
-      saveTasksDebounced(tasks)
-    }
-  }, [tasks, user, initialized, saveTasksDebounced])
+    if (!initialized) return
+
+    const unsubscribe = useTaskStore.subscribe((state, prevState) => {
+      if (state.tasks !== prevState.tasks) {
+        // Only save if user is logged in (check fresh)
+        getCurrentUser().then(currentUser => {
+          if (currentUser) {
+            saveTasksDebounced(state.tasks)
+          }
+        })
+      }
+    })
+
+    return () => unsubscribe()
+  }, [initialized, saveTasksDebounced])
 
   return { user, isSyncing: useTaskStore.getState().isSyncing }
-}
-
-// Simple debounce utility
-function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
-  let timeoutId: NodeJS.Timeout
-  return ((...args: Parameters<T>) => {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => fn(...args), delay)
-  }) as T
 }
