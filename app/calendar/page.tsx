@@ -41,10 +41,6 @@ export default function CalendarPage() {
     }
   }
 
-  const handleToday = () => {
-    setSelectedDate(new Date())
-  }
-
   const handleToggleStep = (taskId: string, stepId: string) => {
     toggleStep(taskId, stepId)
   }
@@ -57,9 +53,9 @@ export default function CalendarPage() {
           <Button variant="ghost" size="sm" onClick={handlePrev}>
             <ChevronLeft size={18} />
           </Button>
-          <Button variant="secondary" size="sm" onClick={handleToday}>
-            Today
-          </Button>
+          <span className="text-sm font-medium text-foreground min-w-[140px] text-center">
+            {format(selectedDate, 'MMMM d, yyyy')}
+          </span>
           <Button variant="ghost" size="sm" onClick={handleNext}>
             <ChevronRight size={18} />
           </Button>
@@ -75,7 +71,7 @@ export default function CalendarPage() {
             }`}
           >
             <CalendarDays size={16} />
-            {format(selectedDate, 'MMMM d, yyyy')}
+            Day
           </button>
           <button
             onClick={() => setViewMode('week')}
@@ -86,7 +82,7 @@ export default function CalendarPage() {
             }`}
           >
             <LayoutGrid size={16} />
-            {format(selectedDate, 'MMMM yyyy')}
+            Week
           </button>
         </div>
       </div>

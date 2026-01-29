@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { format, isToday } from 'date-fns'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Task, Step, useTaskStore } from '@/stores/taskStore'
+import { useHabitStore, POWER_HABITS, HabitDefinition } from '@/stores/habitStore'
 import { StepDetailPopup } from './StepDetailPopup'
 
 interface DayViewProps {
@@ -25,10 +26,18 @@ interface ScheduledStep {
   minute: number
 }
 
+interface ScheduledHabitItem {
+  habit: HabitDefinition
+  hour: number
+  minute: number
+  completed: boolean
+}
+
 export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [selectedStep, setSelectedStep] = useState<{ step: Step; task: Task } | null>(null)
   const { updateStep } = useTaskStore()
+  const { getScheduledForDate, getCompletionsForDate } = useHabitStore()
   const hourHeight = isExpanded ? HOUR_HEIGHT_EXPANDED : HOUR_HEIGHT_COLLAPSED
 
   const dateStr = format(date, 'yyyy-MM-dd')
@@ -57,6 +66,24 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
   // Sort by time
   scheduledSteps.sort((a, b) => (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute))
 
+  // Collect all scheduled habits for the selected date
+  const scheduledHabitsForDate = getScheduledForDate(dateStr)
+  const completionsForDate = getCompletionsForDate(dateStr)
+  const scheduledHabits: ScheduledHabitItem[] = scheduledHabitsForDate
+    .map(scheduled => {
+      const habit = POWER_HABITS.find(h => h.id === scheduled.habitId)
+      if (!habit) return null
+      const match = scheduled.time.match(/^(\d{1,2}):(\d{2})$/)
+      if (!match) return null
+      const hour = parseInt(match[1], 10)
+      const minute = parseInt(match[2], 10)
+      if (hour < START_HOUR || hour > END_HOUR) return null
+      const completed = completionsForDate.some(c => c.habitId === habit.id)
+      return { habit, hour, minute, completed }
+    })
+    .filter((item): item is ScheduledHabitItem => item !== null)
+    .sort((a, b) => (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute))
+
   const getTimePosition = (hour: number, minute: number = 0) => {
     return ((hour - START_HOUR) * 60 + minute) / 60 * hourHeight
   }
@@ -69,12 +96,34 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
   }
 
   // Calculate block positions with overlap handling
-  const getStepBlocks = () => {
-    const blocks: { item: ScheduledStep; top: number; height: number; left: number; width: number }[] = []
+  type CalendarBlock = {
+    type: 'step'
+    item: ScheduledStep
+    top: number
+    height: number
+    left: number
+    width: number
+  } | {
+    type: 'habit'
+    item: ScheduledHabitItem
+    top: number
+    height: number
+    left: number
+    width: number
+  }
+
+  const getCalendarBlocks = () => {
+    const blocks: CalendarBlock[] = []
     const columns: { endMinutes: number }[] = []
 
-    scheduledSteps.forEach((item) => {
-      const startMinutes = item.hour * 60 + item.minute
+    // Combine steps and habits into a single list sorted by time
+    const allItems: Array<{ type: 'step' | 'habit'; hour: number; minute: number; data: ScheduledStep | ScheduledHabitItem }> = [
+      ...scheduledSteps.map(item => ({ type: 'step' as const, hour: item.hour, minute: item.minute, data: item })),
+      ...scheduledHabits.map(item => ({ type: 'habit' as const, hour: item.hour, minute: item.minute, data: item })),
+    ].sort((a, b) => (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute))
+
+    allItems.forEach(({ type, hour, minute, data }) => {
+      const startMinutes = hour * 60 + minute
       const duration = 45
       const endMinutes = startMinutes + duration
 
@@ -86,16 +135,28 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
         columns[column].endMinutes = endMinutes
       }
 
-      const top = getTimePosition(item.hour, item.minute)
+      const top = getTimePosition(hour, minute)
       const height = (duration / 60) * hourHeight
 
-      blocks.push({
-        item,
-        top,
-        height: Math.max(height, isExpanded ? 36 : 18),
-        left: 0,
-        width: 100
-      })
+      if (type === 'step') {
+        blocks.push({
+          type: 'step',
+          item: data as ScheduledStep,
+          top,
+          height: Math.max(height, isExpanded ? 36 : 18),
+          left: 0,
+          width: 100
+        })
+      } else {
+        blocks.push({
+          type: 'habit',
+          item: data as ScheduledHabitItem,
+          top,
+          height: Math.max(height, isExpanded ? 36 : 18),
+          left: 0,
+          width: 100
+        })
+      }
     })
 
     // Recalculate widths for overlapping blocks
@@ -119,7 +180,8 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
   }
 
   const totalHeight = (END_HOUR - START_HOUR) * hourHeight
-  const stepBlocks = getStepBlocks()
+  const calendarBlocks = getCalendarBlocks()
+  const totalScheduledItems = scheduledSteps.length + scheduledHabits.length
 
   // Hour labels
   const hourLabels = isExpanded
@@ -130,19 +192,9 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10 dark:border-white/5">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">
-            {format(date, 'EEEE, MMMM d')}
-            {isToday(date) && (
-              <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-0.5 rounded-full shadow-lg shadow-blue-500/25">
-                Today
-              </span>
-            )}
-          </h3>
-          <p className="text-sm text-muted">
-            {scheduledSteps.length} scheduled {scheduledSteps.length === 1 ? 'step' : 'steps'}
-          </p>
-        </div>
+        <p className="text-sm text-muted">
+          {totalScheduledItems} scheduled {totalScheduledItems === 1 ? 'item' : 'items'}
+        </p>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-all duration-200 px-2 py-1 rounded-lg hover:bg-white/10 active:scale-95"
@@ -205,48 +257,88 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
                 </div>
               )}
 
-              {/* Step Blocks */}
-              {stepBlocks.map(({ item, top, height, left, width }) => (
-                <button
-                  key={item.step.id}
-                  onClick={() => setSelectedStep(item)}
-                  className={`absolute rounded-lg transition-all hover:scale-[1.02] hover:brightness-110 overflow-hidden group ${
-                    item.step.completed ? 'opacity-50' : ''
-                  }`}
-                  style={{
-                    top: top + 2,
-                    height: height - 4,
-                    left: `calc(${left}% + 8px)`,
-                    width: `calc(${width}% - 16px)`,
-                    background: item.step.completed
-                      ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
-                      : 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%)',
-                    boxShadow: item.step.completed
-                      ? 'none'
-                      : '0 4px 12px rgba(59, 130, 246, 0.3)'
-                  }}
-                >
-                  <div className="h-full w-full px-3 py-2 flex flex-col justify-center">
-                    <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'} ${
-                      item.step.completed ? 'line-through' : ''
-                    }`}>
-                      {item.step.text}
-                    </span>
-                    {isExpanded && (
-                      <span className="text-[10px] text-white/70 mt-0.5 truncate">
-                        {item.task.title} - {format(new Date().setHours(item.hour, item.minute), 'h:mm a')}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
+              {/* Calendar Blocks (Steps and Habits) */}
+              {calendarBlocks.map((block) => {
+                if (block.type === 'step') {
+                  const { item, top, height, left, width } = block
+                  return (
+                    <button
+                      key={item.step.id}
+                      onClick={() => setSelectedStep(item)}
+                      className={`absolute rounded-lg transition-all hover:scale-[1.02] hover:brightness-110 overflow-hidden group ${
+                        item.step.completed ? 'opacity-50' : ''
+                      }`}
+                      style={{
+                        top: top + 2,
+                        height: height - 4,
+                        left: `calc(${left}% + 8px)`,
+                        width: `calc(${width}% - 16px)`,
+                        background: item.step.completed
+                          ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
+                          : 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%)',
+                        boxShadow: item.step.completed
+                          ? 'none'
+                          : '0 4px 12px rgba(59, 130, 246, 0.3)'
+                      }}
+                    >
+                      <div className="h-full w-full px-3 py-2 flex flex-col justify-center">
+                        <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'} ${
+                          item.step.completed ? 'line-through' : ''
+                        }`}>
+                          {item.step.text}
+                        </span>
+                        {isExpanded && (
+                          <span className="text-[10px] text-white/70 mt-0.5 truncate">
+                            {item.task.title} - {format(new Date().setHours(item.hour, item.minute), 'h:mm a')}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  )
+                } else {
+                  const { item, top, height, left, width } = block
+                  return (
+                    <div
+                      key={`habit-${item.habit.id}`}
+                      className={`absolute rounded-lg transition-all hover:scale-[1.02] hover:brightness-110 overflow-hidden ${
+                        item.completed ? 'opacity-50' : ''
+                      }`}
+                      style={{
+                        top: top + 2,
+                        height: height - 4,
+                        left: `calc(${left}% + 8px)`,
+                        width: `calc(${width}% - 16px)`,
+                        background: item.completed
+                          ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
+                          : 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+                        boxShadow: item.completed
+                          ? 'none'
+                          : '0 4px 12px rgba(245, 158, 11, 0.3)'
+                      }}
+                    >
+                      <div className="h-full w-full px-3 py-2 flex flex-col justify-center">
+                        <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'} ${
+                          item.completed ? 'line-through' : ''
+                        }`}>
+                          {item.habit.name}
+                        </span>
+                        {isExpanded && (
+                          <span className="text-[10px] text-white/70 mt-0.5 truncate">
+                            Power Habit - {format(new Date().setHours(item.hour, item.minute), 'h:mm a')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                }
+              })}
 
               {/* Empty state */}
-              {scheduledSteps.length === 0 && (
+              {totalScheduledItems === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <p className="text-sm text-white/40">No scheduled steps</p>
-                    <p className="text-xs text-white/25 mt-1">Add time to your steps to see them here</p>
+                    <p className="text-sm text-white/40">No scheduled items</p>
+                    <p className="text-xs text-white/25 mt-1">Add time to your steps or habits to see them here</p>
                   </div>
                 </div>
               )}
@@ -263,6 +355,13 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
             style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}
           />
           <span>Step</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div
+            className="w-3 h-2 rounded-sm"
+            style={{ background: 'linear-gradient(135deg, #f59e0b, #b45309)' }}
+          />
+          <span>Habit</span>
         </div>
         {showNowIndicator && (
           <div className="flex items-center gap-1.5">
