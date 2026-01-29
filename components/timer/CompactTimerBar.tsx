@@ -203,65 +203,110 @@ export function CompactTimerBar() {
 
   const c = colorClasses[color]
 
-  // Collapsed view - minimal timer bar
+  // Mobile always shows compact bar (regardless of timerCollapsed state)
+  // Desktop shows collapsed or expanded based on timerCollapsed
+  const MobileCompactBar = () => (
+    <div className={`md:hidden rounded-xl px-2 py-1.5 mb-2 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+      <div className="flex items-center gap-2">
+        {/* Small icon */}
+        <div className="flex items-center justify-center">
+          {isLongBreak ? (
+            <Sun className="w-3.5 h-3.5 text-amber-500" />
+          ) : isBreak ? (
+            <Coffee className="w-3.5 h-3.5 text-emerald-500" />
+          ) : (
+            <Brain className="w-3.5 h-3.5 text-blue-500" />
+          )}
+        </div>
+
+        {/* Time */}
+        <span className={`font-mono text-base font-bold ${c.text}`}>
+          {formatTime(timeRemaining)}
+        </span>
+
+        {/* Status badge - smaller on mobile */}
+        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${c.badge}`}>
+          {isLongBreak ? 'Long' : isBreak ? 'Break' : 'Focus'}
+        </span>
+
+        <div className="flex-1" />
+
+        {/* Play/Pause */}
+        <button
+          onClick={isRunning ? pause : start}
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 bg-gradient-to-br ${c.button} text-white`}
+        >
+          {isRunning ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+        </button>
+      </div>
+    </div>
+  )
+
+  // Desktop collapsed view
   if (timerCollapsed) {
     return (
-      <div className={`rounded-2xl px-4 py-2 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
-        <div className="flex items-center gap-3">
-          {/* Small icon */}
-          <div className="flex items-center justify-center">
-            {isLongBreak ? (
-              <Sun className="w-4 h-4 text-amber-500" />
-            ) : isBreak ? (
-              <Coffee className="w-4 h-4 text-emerald-500" />
-            ) : (
-              <Brain className="w-4 h-4 text-blue-500" />
-            )}
-          </div>
+      <>
+        <MobileCompactBar />
+        <div className={`hidden md:block rounded-2xl px-4 py-2 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+          <div className="flex items-center gap-3">
+            {/* Small icon */}
+            <div className="flex items-center justify-center">
+              {isLongBreak ? (
+                <Sun className="w-4 h-4 text-amber-500" />
+              ) : isBreak ? (
+                <Coffee className="w-4 h-4 text-emerald-500" />
+              ) : (
+                <Brain className="w-4 h-4 text-blue-500" />
+              )}
+            </div>
 
-          {/* Time */}
-          <span className={`font-mono text-lg font-bold ${c.text}`}>
-            {formatTime(timeRemaining)}
-          </span>
-
-          {/* Status badge */}
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.badge}`}>
-            {isLongBreak ? 'Long Break' : isBreak ? 'Break' : 'Focus'}
-          </span>
-
-          {/* Active task name (truncated) */}
-          {activeTask && (
-            <span className="text-sm text-muted truncate max-w-[150px] hidden sm:inline">
-              {activeTask.title}
+            {/* Time */}
+            <span className={`font-mono text-lg font-bold ${c.text}`}>
+              {formatTime(timeRemaining)}
             </span>
-          )}
 
-          <div className="flex-1" />
+            {/* Status badge */}
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.badge}`}>
+              {isLongBreak ? 'Long Break' : isBreak ? 'Break' : 'Focus'}
+            </span>
 
-          {/* Play/Pause */}
-          <button
-            onClick={isRunning ? pause : start}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-gradient-to-br ${c.button} text-white`}
-          >
-            {isRunning ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
-          </button>
+            {/* Active task name */}
+            {activeTask && (
+              <span className="text-sm text-muted truncate max-w-[150px]">
+                {activeTask.title}
+              </span>
+            )}
 
-          {/* Expand button */}
-          <button
-            onClick={toggleTimer}
-            className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface border border-border text-muted hover:text-foreground hover:bg-border/50 transition-all duration-200"
-            title="Expand timer"
-          >
-            <ChevronDown size={16} />
-          </button>
+            <div className="flex-1" />
+
+            {/* Play/Pause */}
+            <button
+              onClick={isRunning ? pause : start}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-gradient-to-br ${c.button} text-white`}
+            >
+              {isRunning ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+            </button>
+
+            {/* Expand button */}
+            <button
+              onClick={toggleTimer}
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface border border-border text-muted hover:text-foreground hover:bg-border/50 transition-all duration-200"
+              title="Expand timer"
+            >
+              <ChevronDown size={16} />
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
+  // Expanded view - hidden on mobile, only shows on desktop
   return (
-    <div className={`rounded-2xl p-4 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
-      <div className="flex items-center gap-5">
+    <>
+      <MobileCompactBar />
+      <div className={`hidden md:block rounded-2xl p-4 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+        <div className="flex items-center gap-5">
         {/* Circular Progress with Time */}
         <div className="relative flex items-center justify-center">
           <svg className="w-16 h-16 -rotate-90" viewBox="0 0 48 48">
@@ -617,6 +662,7 @@ export function CompactTimerBar() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

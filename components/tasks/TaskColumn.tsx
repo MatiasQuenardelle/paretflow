@@ -86,20 +86,20 @@ export function TaskColumn({
   return (
     <div className="h-full flex flex-col">
       {/* Date Navigation */}
-      <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
+      <div className="flex items-center justify-between mb-2 md:mb-3 pb-2 md:pb-3 border-b border-border">
         <button
           onClick={() => onDateChange(subDays(selectedDate, 1))}
-          className="p-1.5 rounded-lg hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+          className="p-1 md:p-1.5 rounded-lg hover:bg-border/50 text-muted hover:text-foreground transition-colors"
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={16} className="md:w-[18px] md:h-[18px]" />
         </button>
         <div className="relative">
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-border/50 transition-colors"
+            className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg hover:bg-border/50 transition-colors"
           >
-            <Calendar size={16} className="text-muted" />
-            <span className="font-medium">{getDateLabel()}</span>
+            <Calendar size={14} className="md:w-4 md:h-4 text-muted" />
+            <span className="font-medium text-sm md:text-base">{getDateLabel()}</span>
           </button>
           {showDatePicker && (
             <DatePicker
@@ -114,17 +114,17 @@ export function TaskColumn({
         </div>
         <button
           onClick={() => onDateChange(addDays(selectedDate, 1))}
-          className="p-1.5 rounded-lg hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+          className="p-1 md:p-1.5 rounded-lg hover:bg-border/50 text-muted hover:text-foreground transition-colors"
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={16} className="md:w-[18px] md:h-[18px]" />
         </button>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2 md:mb-4">
         <div>
-          <h2 className="text-lg font-semibold">Tasks</h2>
+          <h2 className="text-base md:text-lg font-semibold">Tasks</h2>
           {incompleteTasks.length > 0 && (
-            <p className="text-xs text-muted">
+            <p className="text-[10px] md:text-xs text-muted">
               {completedPomodoros}/{totalPomodoros} pomodoros
             </p>
           )}
@@ -167,7 +167,7 @@ export function TaskColumn({
       </div>
 
       {isAdding && (
-        <form onSubmit={handleSubmit} className="mb-4 flex gap-2">
+        <form onSubmit={handleSubmit} className="mb-2 md:mb-4 flex gap-2">
           <Input
             autoFocus
             value={newTaskTitle}
@@ -185,18 +185,18 @@ export function TaskColumn({
                 setNewTaskTitle('')
               }
             }}
-            className="flex-1"
+            className="flex-1 text-sm md:text-base"
           />
           <Button type="submit" disabled={!newTaskTitle.trim()}>
-            <Plus size={18} />
+            <Plus size={16} className="md:w-[18px] md:h-[18px]" />
           </Button>
         </form>
       )}
 
-      <div className="flex-1 overflow-y-auto space-y-2">
+      <div className="flex-1 overflow-y-auto space-y-1.5 md:space-y-2">
         {visibleTasks.length === 0 && !isAdding && (
-          <div className="text-center py-8 text-muted">
-            <Timer className="w-10 h-10 mx-auto mb-3 opacity-50" />
+          <div className="text-center py-6 md:py-8 text-muted">
+            <Timer className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 md:mb-3 opacity-50" />
             <p className="text-sm">No tasks yet</p>
             <button
               onClick={() => setIsAdding(true)}
@@ -223,15 +223,15 @@ export function TaskColumn({
                   onSelectTask(task.id)
                 }
               }}
-              className={`p-3 rounded-lg border cursor-pointer transition-all group touch-manipulation ${
+              className={`p-2 md:p-3 rounded-lg border cursor-pointer transition-all group touch-manipulation ${
                 isActive
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-500/20'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 md:ring-2 ring-blue-500/20'
                   : isSelected
                   ? 'border-blue-400 bg-blue-50/50 dark:bg-blue-900/10'
                   : 'border-border hover:border-blue-300'
               } ${task.completed ? 'opacity-60' : ''}`}
             >
-              <div className="flex items-start gap-2">
+              <div className="flex items-start gap-1.5 md:gap-2">
                 {/* Completion checkbox */}
                 <button
                   onClick={(e) => {
@@ -245,32 +245,32 @@ export function TaskColumn({
                   }`}
                 >
                   {task.completed ? (
-                    <CheckCircle size={18} />
+                    <CheckCircle size={16} className="md:w-[18px] md:h-[18px]" />
                   ) : (
-                    <Circle size={18} />
+                    <Circle size={16} className="md:w-[18px] md:h-[18px]" />
                   )}
                 </button>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className={`font-medium truncate ${
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <h3 className={`text-sm md:text-base font-medium truncate ${
                       task.completed ? 'line-through text-muted' : ''
                     }`}>
                       {task.title}
                     </h3>
                     {isActive && (
-                      <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                      <span className="flex-shrink-0 w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-blue-500 animate-pulse" />
                     )}
                   </div>
 
                   {/* Pomodoro counter */}
                   {!task.completed && (
-                    <div className="flex items-center gap-1 mt-1.5">
+                    <div className="flex items-center gap-1 mt-1 md:mt-1.5">
                       <div className="flex items-center">
                         {Array.from({ length: pomodorosTotal }).map((_, i) => (
                           <div
                             key={i}
-                            className={`w-4 h-4 rounded-full border-2 mr-0.5 transition-colors ${
+                            className={`w-3 h-3 md:w-4 md:h-4 rounded-full border-[1.5px] md:border-2 mr-0.5 transition-colors ${
                               i < pomodorosDone
                                 ? 'bg-red-500 border-red-500'
                                 : 'border-red-300 dark:border-red-800'
@@ -288,7 +288,7 @@ export function TaskColumn({
                           className="w-5 h-5 rounded flex items-center justify-center text-muted hover:text-foreground hover:bg-border/50"
                           disabled={pomodorosTotal <= 1}
                         >
-                          <Minus size={12} />
+                          <Minus size={10} className="md:w-3 md:h-3" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -297,7 +297,7 @@ export function TaskColumn({
                           }}
                           className="w-5 h-5 rounded flex items-center justify-center text-muted hover:text-foreground hover:bg-border/50"
                         >
-                          <Plus size={12} />
+                          <Plus size={10} className="md:w-3 md:h-3" />
                         </button>
                       </div>
                     </div>
@@ -305,7 +305,7 @@ export function TaskColumn({
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 md:gap-1">
                   {!task.completed && !isActive && (
                     <button
                       onClick={(e) => {
@@ -316,7 +316,7 @@ export function TaskColumn({
                       className="p-1 text-muted hover:text-blue-500 transition-colors"
                       title="Start focusing on this task"
                     >
-                      <Play size={14} />
+                      <Play size={12} className="md:w-[14px] md:h-[14px]" />
                     </button>
                   )}
                   <button
@@ -326,7 +326,7 @@ export function TaskColumn({
                     }}
                     className="p-1 text-muted hover:text-red-500 transition-colors"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={12} className="md:w-[14px] md:h-[14px]" />
                   </button>
                 </div>
               </div>
@@ -336,21 +336,21 @@ export function TaskColumn({
       </div>
 
       {/* Footer actions */}
-      <div className="pt-3 border-t border-border mt-3 space-y-2">
+      <div className="pt-2 md:pt-3 border-t border-border mt-2 md:mt-3 space-y-1 md:space-y-2">
         {completedCount > 0 && (
           <div className="flex items-center justify-between">
             <button
               onClick={() => onSetShowCompleted(!showCompleted)}
-              className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-muted hover:text-foreground transition-colors"
             >
               {showCompleted ? (
                 <>
-                  <EyeOff size={14} />
+                  <EyeOff size={12} className="md:w-[14px] md:h-[14px]" />
                   Hide completed
                 </>
               ) : (
                 <>
-                  <Eye size={14} />
+                  <Eye size={12} className="md:w-[14px] md:h-[14px]" />
                   Show completed ({completedCount})
                 </>
               )}
@@ -358,7 +358,7 @@ export function TaskColumn({
             {showCompleted && onClearCompleted && (
               <button
                 onClick={onClearCompleted}
-                className="text-sm text-red-500 hover:text-red-600 transition-colors"
+                className="text-xs md:text-sm text-red-500 hover:text-red-600 transition-colors"
               >
                 Clear all
               </button>

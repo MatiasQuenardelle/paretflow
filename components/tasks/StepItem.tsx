@@ -70,12 +70,12 @@ export function StepItem({
       onDragEnter={onDragEnter}
       onDragEnd={onDragEnd}
       onDragOver={(e) => e.preventDefault()}
-      className={`flex items-center gap-3 p-3 bg-surface border border-border rounded-lg group transition-all ${
+      className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface border border-border rounded-lg group transition-all ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${step.completed ? 'opacity-60' : ''}`}
     >
       <div className="cursor-grab active:cursor-grabbing text-muted hover:text-foreground">
-        <GripVertical size={16} />
+        <GripVertical size={14} className="md:w-4 md:h-4" />
       </div>
 
       <Checkbox checked={step.completed} onChange={onToggle} />
@@ -96,19 +96,19 @@ export function StepItem({
               }
             }}
             placeholder="Enter step..."
-            className="w-full bg-transparent border-none outline-none text-foreground placeholder:text-muted"
+            className="w-full bg-transparent border-none outline-none text-sm md:text-base text-foreground placeholder:text-muted"
           />
         ) : (
           <span
             onClick={() => setIsEditing(true)}
-            className={`cursor-text ${step.completed ? 'line-through text-muted' : ''} ${!step.text ? 'text-muted italic' : ''}`}
+            className={`cursor-text text-sm md:text-base ${step.completed ? 'line-through text-muted' : ''} ${!step.text ? 'text-muted italic' : ''}`}
           >
             {step.text || 'Click to add step...'}
           </span>
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 md:gap-2">
         <TimeInput
           value={step.scheduledTime}
           onChange={(time) => onUpdate({ scheduledTime: time })}
@@ -117,16 +117,16 @@ export function StepItem({
         <div className="relative">
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs transition-colors ${
+            className={`flex items-center gap-0.5 md:gap-1 px-1 md:px-1.5 py-0.5 rounded text-[10px] md:text-xs transition-colors ${
               step.scheduledDate
                 ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/30'
                 : 'text-muted hover:text-foreground hover:bg-border/50'
             }`}
             title={step.scheduledDate ? `Scheduled for ${step.scheduledDate}` : 'Schedule'}
           >
-            <Calendar size={14} />
+            <Calendar size={12} className="md:w-[14px] md:h-[14px]" />
             {step.scheduledDate && (
-              <span>{formatDateDisplay(step.scheduledDate)}</span>
+              <span className="hidden sm:inline">{formatDateDisplay(step.scheduledDate)}</span>
             )}
           </button>
           {showDatePicker && (
@@ -140,9 +140,9 @@ export function StepItem({
 
         <button
           onClick={onDelete}
-          className="p-1 text-muted hover:text-red-500 transition-colors"
+          className="p-0.5 md:p-1 text-muted hover:text-red-500 transition-colors"
         >
-          <Trash2 size={14} />
+          <Trash2 size={12} className="md:w-[14px] md:h-[14px]" />
         </button>
       </div>
     </div>

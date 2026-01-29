@@ -172,8 +172,6 @@ export const useTaskStore = create<TaskState>()(
           scheduledDate: dateToUse,
           steps: [
             { id: generateId(), text: '', completed: false, order: 0, scheduledDate: dateToUse },
-            { id: generateId(), text: '', completed: false, order: 1, scheduledDate: dateToUse },
-            { id: generateId(), text: '', completed: false, order: 2, scheduledDate: dateToUse },
           ],
           completed: false,
           estimatedPomodoros: 1,

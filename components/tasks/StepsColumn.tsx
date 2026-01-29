@@ -4,8 +4,6 @@ import { useState, useRef } from 'react'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { format, addDays, subDays, isToday } from 'date-fns'
 import { Task, Step } from '@/stores/taskStore'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { StepItem } from './StepItem'
 
 interface StepsColumnProps {
@@ -29,7 +27,6 @@ export function StepsColumn({
   onToggleStep,
   onReorderSteps,
 }: StepsColumnProps) {
-  const [newStepText, setNewStepText] = useState('')
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const dragOverIndex = useRef<number | null>(null)
 
@@ -43,12 +40,8 @@ export function StepsColumn({
     step.scheduledDate === selectedDateStr
   ) || []
 
-  const handleAddStep = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newStepText.trim()) {
-      onAddStep(newStepText.trim())
-      setNewStepText('')
-    }
+  const handleAddStep = () => {
+    onAddStep('')
   }
 
   const handleDragStart = (index: number) => {
@@ -84,9 +77,9 @@ export function StepsColumn({
   if (!task) {
     return (
       <div className="h-full flex items-center justify-center text-muted">
-        <div className="text-center">
-          <p className="mb-2">Select a task to view steps</p>
-          <p className="text-sm">or create a new task from the left panel</p>
+        <div className="text-center px-4">
+          <p className="mb-2 text-sm md:text-base">Select a task to view steps</p>
+          <p className="text-xs md:text-sm">or create a new task from the Tasks tab</p>
         </div>
       </div>
     )
@@ -95,43 +88,57 @@ export function StepsColumn({
   return (
     <div className="h-full flex flex-col">
       {/* Date Navigation */}
-      <div className="mb-4 flex items-center gap-3">
+      <div className="mb-2 md:mb-4 flex items-center gap-2 md:gap-3">
         <button
           onClick={handlePrevDay}
-          className="p-1.5 rounded-lg border border-border hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+          className="p-1 md:p-1.5 rounded-lg border border-border hover:bg-border/50 text-muted hover:text-foreground transition-colors"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={16} className="md:w-5 md:h-5" />
         </button>
         <div className="flex-1 text-center">
-          <h2 className="text-xl font-semibold text-foreground">
+          <h2 className="text-base md:text-xl font-semibold text-foreground">
             {dateFormatted}
           </h2>
           {isTodaySelected && (
-            <span className="text-xs text-blue-600 font-medium">Today</span>
+            <span className="text-[10px] md:text-xs text-blue-600 font-medium">Today</span>
           )}
         </div>
         <button
           onClick={handleNextDay}
-          className="p-1.5 rounded-lg border border-border hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+          className="p-1 md:p-1.5 rounded-lg border border-border hover:bg-border/50 text-muted hover:text-foreground transition-colors"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={16} className="md:w-5 md:h-5" />
+        </button>
+        <button
+          onClick={handleAddStep}
+          className="p-1 md:p-1.5 rounded-lg border border-border hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+          title="Add step"
+        >
+          <Plus size={16} className="md:w-5 md:h-5" />
         </button>
         {!isTodaySelected && (
           <button
             onClick={handleToday}
-            className="px-3 py-1.5 text-sm rounded-lg border border-border hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+            className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm rounded-lg border border-border hover:bg-border/50 text-muted hover:text-foreground transition-colors"
           >
             Today
           </button>
         )}
       </div>
 
+      {/* Task title indicator */}
+      <div className="mb-2 px-1">
+        <p className="text-xs text-muted truncate">
+          Steps for: <span className="text-foreground font-medium">{task.title}</span>
+        </p>
+      </div>
+
       {/* Steps List */}
-      <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+      <div className="flex-1 overflow-y-auto space-y-1.5 md:space-y-2 mb-2 md:mb-4">
         {filteredSteps.length === 0 ? (
-          <div className="text-center py-8 text-muted">
+          <div className="text-center py-6 md:py-8 text-muted">
             <p className="text-sm">No steps scheduled for this day</p>
-            <p className="text-xs mt-1">Add a step below to get started</p>
+            <p className="text-xs mt-1">Click the + button to add a step</p>
           </div>
         ) : (
           filteredSteps
@@ -152,18 +159,6 @@ export function StepsColumn({
         )}
       </div>
 
-      {/* Add Step Form */}
-      <form onSubmit={handleAddStep} className="flex gap-2">
-        <Input
-          value={newStepText}
-          onChange={(e) => setNewStepText(e.target.value)}
-          placeholder="Add a step..."
-          className="flex-1"
-        />
-        <Button type="submit" disabled={!newStepText.trim()}>
-          <Plus size={18} />
-        </Button>
-      </form>
     </div>
   )
 }
