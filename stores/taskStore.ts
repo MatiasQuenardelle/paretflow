@@ -352,6 +352,21 @@ export function useTaskSync() {
   useEffect(() => {
     console.log('[TaskSync] Setting up auth state listener')
 
+    // Also check current session immediately in case onAuthStateChange already fired
+    const checkExistingSession = async () => {
+      console.log('[TaskSync] Checking for existing session...')
+      const currentUser = await getCurrentUser()
+      console.log('[TaskSync] Existing session check:', { userId: currentUser?.id, email: currentUser?.email })
+      if (currentUser && !hasSyncedRef.current) {
+        setUser(currentUser)
+        await syncFromCloud(currentUser)
+      } else if (!currentUser) {
+        setInitialized(true)
+      }
+    }
+
+    checkExistingSession()
+
     const { data: { subscription } } = onAuthStateChange(async (newUser) => {
       console.log('[TaskSync] Auth state changed', { userId: newUser?.id, email: newUser?.email })
       setUser(newUser)
