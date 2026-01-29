@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { Navigation } from './Navigation'
 import { TopHeader } from './TopHeader'
 import { useTaskStore } from '@/stores/taskStore'
+import { useUIStore } from '@/stores/uiStore'
 import { getCurrentUser, onAuthStateChange } from '@/lib/supabase/sync'
 
 interface AppLayoutProps {
@@ -12,6 +13,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { isSaving, initializeCloud, initializeGuest } = useTaskStore()
+  const { sidebarCollapsed } = useUIStore()
 
   // Initialize task store based on auth state
   useEffect(() => {
@@ -38,11 +40,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [initializeCloud, initializeGuest])
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
+    <div className="min-h-screen">
       <Navigation />
-      <div className="flex-1 flex flex-col">
+      <div className={`flex flex-col min-h-screen transition-all duration-300 ${
+        sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'
+      }`}>
         <TopHeader isSyncing={isSaving} />
-        <main className="flex-1 pb-20 md:pb-0 overflow-auto">
+        <main className="flex-1 pb-24 md:pb-0 overflow-auto">
           {children}
         </main>
       </div>
