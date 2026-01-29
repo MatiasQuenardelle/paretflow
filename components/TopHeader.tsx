@@ -42,7 +42,7 @@ export function TopHeader({ isSyncing = false }: TopHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-md border-b border-border px-3 py-1.5 md:hidden">
+    <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-white/10 dark:border-white/5 px-3 py-1.5 md:hidden">
       <div className="flex items-center justify-between">
         <h1 className="text-base font-bold text-foreground">Paretflow</h1>
 

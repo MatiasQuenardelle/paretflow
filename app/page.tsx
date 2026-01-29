@@ -147,13 +147,13 @@ export default function HomePage() {
       </div>
 
       {/* Mobile Tab Navigation */}
-      <div className="md:hidden flex border-b border-border bg-surface">
+      <div className="md:hidden flex border-b border-white/10 dark:border-white/5 bg-surface/80 backdrop-blur-xl">
         <button
           onClick={() => setMobileTab('tasks')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all duration-200 ${
             mobileTab === 'tasks'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/20'
-              : 'text-muted'
+              ? 'text-blue-500 border-b-2 border-blue-500 bg-gradient-to-t from-blue-500/10 to-transparent'
+              : 'text-muted hover:text-foreground'
           }`}
         >
           <ListTodo size={16} />
@@ -161,16 +161,16 @@ export default function HomePage() {
         </button>
         <button
           onClick={() => setMobileTab('steps')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all duration-200 ${
             mobileTab === 'steps'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/20'
-              : 'text-muted'
+              ? 'text-blue-500 border-b-2 border-blue-500 bg-gradient-to-t from-blue-500/10 to-transparent'
+              : 'text-muted hover:text-foreground'
           }`}
         >
           <CheckSquare size={16} />
           Steps
           {selectedTask && (
-            <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded-full">
               {selectedTask.steps.filter(s => s.scheduledDate === format(selectedDate, 'yyyy-MM-dd')).length}
             </span>
           )}
@@ -180,7 +180,7 @@ export default function HomePage() {
       {/* Desktop: Two-column layout */}
       <div className="hidden md:grid md:grid-cols-[320px_1fr] gap-6 flex-1 min-h-0">
         {/* Tasks Column */}
-        <div className="bg-surface border border-border rounded-xl p-4 overflow-hidden flex flex-col">
+        <div className="bg-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-xl p-4 overflow-hidden flex flex-col shadow-xl shadow-black/5 dark:shadow-black/20">
           <TaskColumn
             tasks={tasksForDate}
             selectedTaskId={selectedTaskId}
@@ -199,7 +199,7 @@ export default function HomePage() {
         </div>
 
         {/* Steps Column */}
-        <div className="bg-surface border border-border rounded-xl p-4 overflow-hidden">
+        <div className="bg-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-xl p-4 overflow-hidden shadow-xl shadow-black/5 dark:shadow-black/20">
           <StepsColumn
             task={selectedTask}
             selectedDate={selectedDate}

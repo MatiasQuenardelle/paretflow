@@ -70,7 +70,7 @@ export function StepItem({
       onDragEnter={onDragEnter}
       onDragEnd={onDragEnd}
       onDragOver={(e) => e.preventDefault()}
-      className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface border border-border rounded-lg group transition-all ${
+      className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-xl group transition-all duration-200 hover:bg-white/5 ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${step.completed ? 'opacity-60' : ''}`}
     >
@@ -117,10 +117,10 @@ export function StepItem({
         <div className="relative">
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
-            className={`flex items-center gap-0.5 md:gap-1 px-1 md:px-1.5 py-0.5 rounded text-[10px] md:text-xs transition-colors ${
+            className={`flex items-center gap-0.5 md:gap-1 px-1 md:px-1.5 py-0.5 rounded-md text-[10px] md:text-xs transition-all duration-200 ${
               step.scheduledDate
-                ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/30'
-                : 'text-muted hover:text-foreground hover:bg-border/50'
+                ? 'text-blue-500 bg-blue-500/10 border border-blue-500/20'
+                : 'text-muted hover:text-foreground hover:bg-white/10'
             }`}
             title={step.scheduledDate ? `Scheduled for ${step.scheduledDate}` : 'Schedule'}
           >

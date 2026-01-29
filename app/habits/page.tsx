@@ -38,11 +38,11 @@ function StatsFooter() {
   const streak = calculateStreak()
 
   return (
-    <div className="border-t border-border bg-surface/50 backdrop-blur-sm">
+    <div className="border-t border-white/10 dark:border-white/5 bg-surface/80 backdrop-blur-xl">
       {/* Collapsed preview */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between text-sm"
+        className="w-full px-4 py-3 flex items-center justify-between text-sm hover:bg-white/5 transition-colors"
       >
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">

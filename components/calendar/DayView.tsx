@@ -129,12 +129,12 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10 dark:border-white/5">
         <div>
           <h3 className="text-lg font-semibold text-foreground">
             {format(date, 'EEEE, MMMM d')}
             {isToday(date) && (
-              <span className="ml-2 text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">
+              <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-0.5 rounded-full shadow-lg shadow-blue-500/25">
                 Today
               </span>
             )}
@@ -145,7 +145,7 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-border/30"
+          className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-all duration-200 px-2 py-1 rounded-lg hover:bg-white/10 active:scale-95"
         >
           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           {isExpanded ? 'Compact' : 'Expand'}

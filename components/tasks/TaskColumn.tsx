@@ -86,17 +86,17 @@ export function TaskColumn({
   return (
     <div className="h-full flex flex-col">
       {/* Date Navigation */}
-      <div className="flex items-center justify-between mb-2 md:mb-3 pb-2 md:pb-3 border-b border-border">
+      <div className="flex items-center justify-between mb-2 md:mb-3 pb-2 md:pb-3 border-b border-white/10 dark:border-white/5">
         <button
           onClick={() => onDateChange(subDays(selectedDate, 1))}
-          className="p-1 md:p-1.5 rounded-lg hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+          className="p-1 md:p-1.5 rounded-lg hover:bg-white/10 text-muted hover:text-foreground transition-all duration-200 active:scale-95"
         >
           <ChevronLeft size={16} className="md:w-[18px] md:h-[18px]" />
         </button>
         <div className="relative">
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
-            className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg hover:bg-border/50 transition-colors"
+            className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg hover:bg-white/10 transition-all duration-200"
           >
             <Calendar size={14} className="md:w-4 md:h-4 text-muted" />
             <span className="font-medium text-sm md:text-base">{getDateLabel()}</span>
@@ -114,7 +114,7 @@ export function TaskColumn({
         </div>
         <button
           onClick={() => onDateChange(addDays(selectedDate, 1))}
-          className="p-1 md:p-1.5 rounded-lg hover:bg-border/50 text-muted hover:text-foreground transition-colors"
+          className="p-1 md:p-1.5 rounded-lg hover:bg-white/10 text-muted hover:text-foreground transition-all duration-200 active:scale-95"
         >
           <ChevronRight size={16} className="md:w-[18px] md:h-[18px]" />
         </button>
@@ -223,12 +223,12 @@ export function TaskColumn({
                   onSelectTask(task.id)
                 }
               }}
-              className={`p-2 md:p-3 rounded-lg border cursor-pointer transition-all group touch-manipulation ${
+              className={`p-2 md:p-3 rounded-xl border cursor-pointer transition-all duration-200 group touch-manipulation ${
                 isActive
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 md:ring-2 ring-blue-500/20'
+                  ? 'border-blue-500/50 bg-gradient-to-r from-blue-500/10 to-purple-500/10 ring-1 md:ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/10'
                   : isSelected
-                  ? 'border-blue-400 bg-blue-50/50 dark:bg-blue-900/10'
-                  : 'border-border hover:border-blue-300'
+                  ? 'border-blue-400/50 bg-blue-500/5'
+                  : 'border-white/10 dark:border-white/5 hover:border-blue-400/50 hover:bg-white/5'
               } ${task.completed ? 'opacity-60' : ''}`}
             >
               <div className="flex items-start gap-1.5 md:gap-2">
@@ -336,7 +336,7 @@ export function TaskColumn({
       </div>
 
       {/* Footer actions */}
-      <div className="pt-2 md:pt-3 border-t border-border mt-2 md:mt-3 space-y-1 md:space-y-2">
+      <div className="pt-2 md:pt-3 border-t border-white/10 dark:border-white/5 mt-2 md:mt-3 space-y-1 md:space-y-2">
         {completedCount > 0 && (
           <div className="flex items-center justify-between">
             <button

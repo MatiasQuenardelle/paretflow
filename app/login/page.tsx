@@ -16,8 +16,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="bg-surface border border-border rounded-xl p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-foreground mb-2 text-center">
+      {/* Glow effect behind card */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-96 h-96 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-full blur-3xl animate-glow-pulse" />
+      </div>
+
+      <div className="relative bg-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-2xl p-8 w-full max-w-sm shadow-2xl shadow-black/20">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent mb-2 text-center">
           Paretflow
         </h1>
         <p className="text-muted text-sm mb-8 text-center">
@@ -26,7 +31,7 @@ export default function LoginPage() {
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 border border-gray-300 rounded-lg px-4 py-3 font-medium hover:bg-gray-50 transition-colors"
+          className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 border border-gray-200 rounded-xl px-4 py-3 font-medium hover:bg-gray-50 hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path

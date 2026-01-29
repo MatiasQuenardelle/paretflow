@@ -75,13 +75,13 @@ export default function CalendarPage() {
           </span>
         </div>
 
-        <div className="flex items-center gap-1 bg-surface border border-border rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-xl p-1">
           <button
             onClick={() => setViewMode('day')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${
               viewMode === 'day'
-                ? 'bg-blue-600 text-white'
-                : 'text-muted hover:text-foreground'
+                ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
+                : 'text-muted hover:text-foreground hover:bg-white/10'
             }`}
           >
             <CalendarDays size={16} />
@@ -89,10 +89,10 @@ export default function CalendarPage() {
           </button>
           <button
             onClick={() => setViewMode('week')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${
               viewMode === 'week'
-                ? 'bg-blue-600 text-white'
-                : 'text-muted hover:text-foreground'
+                ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
+                : 'text-muted hover:text-foreground hover:bg-white/10'
             }`}
           >
             <LayoutGrid size={16} />
@@ -102,7 +102,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar View */}
-      <div className="flex-1 bg-surface border border-border rounded-xl p-4 overflow-hidden">
+      <div className="flex-1 bg-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-xl p-4 overflow-hidden shadow-xl shadow-black/5 dark:shadow-black/20">
         {viewMode === 'day' ? (
           <DayView
             date={selectedDate}

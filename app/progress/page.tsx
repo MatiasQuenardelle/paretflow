@@ -77,7 +77,11 @@ export default function ProgressPage() {
 
       {/* Daily Progress Ring */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="md:col-span-1 flex flex-col items-center justify-center py-6">
+        <Card className="md:col-span-1 flex flex-col items-center justify-center py-6 relative overflow-hidden">
+          {/* Glow behind progress ring */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-40 h-40 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-full blur-2xl animate-glow-pulse" />
+          </div>
           <div className="relative w-32 h-32">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
               <circle
@@ -85,7 +89,7 @@ export default function ProgressPage() {
                 cy="50"
                 r="40"
                 fill="none"
-                className="stroke-border"
+                className="stroke-white/10 dark:stroke-white/5"
                 strokeWidth="8"
               />
               <circle
@@ -93,12 +97,19 @@ export default function ProgressPage() {
                 cy="50"
                 r="40"
                 fill="none"
-                className="stroke-blue-500"
+                stroke="url(#progressGradientRing)"
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray={2 * Math.PI * 40}
                 strokeDashoffset={2 * Math.PI * 40 * (1 - dailyProgress / 100)}
+                style={{ filter: 'drop-shadow(0 0 6px rgb(59, 130, 246))' }}
               />
+              <defs>
+                <linearGradient id="progressGradientRing" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
+              </defs>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-bold">{todaySessions.length}</span>
@@ -112,8 +123,8 @@ export default function ProgressPage() {
         {/* Stats Cards */}
         <div className="md:col-span-2 grid grid-cols-2 gap-4">
           <Card className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-              <Timer className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <Timer className="w-6 h-6 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold">{todaySessions.length}</p>
@@ -122,8 +133,8 @@ export default function ProgressPage() {
           </Card>
 
           <Card className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+              <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold">{weekSessions.length}</p>
@@ -132,8 +143,8 @@ export default function ProgressPage() {
           </Card>
 
           <Card className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
+              <CheckCircle className="w-6 h-6 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold">{completedTasks}/{totalTasks}</p>
@@ -142,8 +153,8 @@ export default function ProgressPage() {
           </Card>
 
           <Card className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-              <Target className="w-6 h-6 text-orange-600" />
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/25">
+              <Target className="w-6 h-6 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold">{Math.round(weekMinutes / 60)}h</p>

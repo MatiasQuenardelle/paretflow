@@ -31,8 +31,8 @@ function AnimatedCheckbox({
       }}
       className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 shrink-0 ${
         checked
-          ? `${colorClasses[color] || colorClasses.purple} animate-bounce-in`
-          : 'border-2 border-muted hover:border-foreground'
+          ? `${colorClasses[color] || colorClasses.purple} animate-bounce-in shadow-lg ${color === 'purple' ? 'shadow-purple-500/40' : 'shadow-cyan-500/40'}`
+          : 'border-2 border-white/20 hover:border-white/40 dark:border-white/10 dark:hover:border-white/20'
       }`}
     >
       {checked && (
@@ -92,8 +92,8 @@ export function HabitCard({ habit }: HabitCardProps) {
   return (
     <>
       <div
-        className={`rounded-xl border border-border bg-surface overflow-hidden transition-all duration-300 ${
-          isExpanded ? 'shadow-lg' : 'shadow-sm'
+        className={`rounded-xl border border-white/10 dark:border-white/5 bg-surface/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ${
+          isExpanded ? 'shadow-2xl shadow-black/10 dark:shadow-black/30' : 'shadow-lg shadow-black/5 dark:shadow-black/20'
         }`}
       >
         {/* Always visible: checkbox row */}
@@ -146,7 +146,7 @@ export function HabitCard({ habit }: HabitCardProps) {
             <p className="text-sm text-muted">{habit.description}</p>
 
             {/* Why This Matters */}
-            <div className="rounded-lg bg-border/30 p-3">
+            <div className="rounded-lg bg-white/5 dark:bg-white/5 border border-white/10 dark:border-white/5 p-3">
               <p className="text-xs text-muted uppercase tracking-wider mb-1">
                 Why This Matters
               </p>
@@ -154,7 +154,7 @@ export function HabitCard({ habit }: HabitCardProps) {
             </div>
 
             {/* Schedule section */}
-            <div className="flex items-center justify-between pt-2 border-t border-border">
+            <div className="flex items-center justify-between pt-2 border-t border-white/10 dark:border-white/5">
               <div className="flex items-center gap-2 text-sm text-muted">
                 <Clock className="w-4 h-4" />
                 <span>
@@ -168,7 +168,7 @@ export function HabitCard({ habit }: HabitCardProps) {
                   e.stopPropagation()
                   setShowSchedulePopup(true)
                 }}
-                className="text-sm px-3 py-1 rounded-lg bg-border/50 hover:bg-border transition-colors"
+                className="text-sm px-3 py-1 rounded-lg bg-white/5 border border-white/10 dark:border-white/5 hover:bg-white/10 transition-colors"
               >
                 Edit
               </button>
@@ -183,18 +183,18 @@ export function HabitCard({ habit }: HabitCardProps) {
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={() => setShowSchedulePopup(false)}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
           <div
-            className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-surface border border-border"
+            className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-surface/90 backdrop-blur-xl border border-white/10 dark:border-white/5 shadow-2xl shadow-black/30"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="px-5 py-4 border-b border-border">
+            <div className="px-5 py-4 border-b border-white/10 dark:border-white/5">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Schedule {habit.name}</h2>
                 <button
                   onClick={() => setShowSchedulePopup(false)}
-                  className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-colors"
+                  className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-white/10 transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -213,22 +213,22 @@ export function HabitCard({ habit }: HabitCardProps) {
                   type="time"
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-border/30 border border-border focus:border-foreground focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 dark:border-white/5 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 border-t border-border flex gap-3">
+            <div className="px-5 py-4 border-t border-white/10 dark:border-white/5 flex gap-3">
               <button
                 onClick={() => setShowSchedulePopup(false)}
-                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-border/50 hover:bg-border transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-white/5 border border-white/10 dark:border-white/5 hover:bg-white/10 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSchedule}
-                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-foreground text-background hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <Calendar size={16} />
                 Schedule

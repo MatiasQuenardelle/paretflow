@@ -191,9 +191,9 @@ export default function TimerPage() {
 
       {/* Keyboard shortcuts hint */}
       <div className="mt-8 text-center text-xs text-muted space-x-3">
-        <span><kbd className="px-1.5 py-0.5 bg-border rounded">Space</kbd> play/pause</span>
-        <span><kbd className="px-1.5 py-0.5 bg-border rounded">R</kbd> reset</span>
-        <span><kbd className="px-1.5 py-0.5 bg-border rounded">S</kbd> skip</span>
+        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">Space</kbd> play/pause</span>
+        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">R</kbd> reset</span>
+        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">S</kbd> skip</span>
       </div>
     </div>
   )
