@@ -63,11 +63,6 @@ export default function CalendarPage() {
           <Button variant="ghost" size="sm" onClick={handleNext}>
             <ChevronRight size={18} />
           </Button>
-          <span className="text-lg font-medium ml-2">
-            {viewMode === 'day'
-              ? format(selectedDate, 'MMMM d, yyyy')
-              : format(selectedDate, 'MMMM yyyy')}
-          </span>
         </div>
 
         <div className="flex items-center gap-1 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-xl p-1">
@@ -80,7 +75,7 @@ export default function CalendarPage() {
             }`}
           >
             <CalendarDays size={16} />
-            Day
+            {format(selectedDate, 'MMMM d, yyyy')}
           </button>
           <button
             onClick={() => setViewMode('week')}
@@ -91,7 +86,7 @@ export default function CalendarPage() {
             }`}
           >
             <LayoutGrid size={16} />
-            Week
+            {format(selectedDate, 'MMMM yyyy')}
           </button>
         </div>
       </div>

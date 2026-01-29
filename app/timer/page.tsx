@@ -25,6 +25,7 @@ export default function TimerPage() {
     completeSession,
     switchToBreak,
     switchToWork,
+    syncTime,
   } = useTimerStore()
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -100,6 +101,34 @@ export default function TimerPage() {
       Notification.requestPermission()
     }
   }, [])
+
+  // Sync time on mount (handles case where user was away/closed browser)
+  useEffect(() => {
+    const remaining = syncTime()
+    // If timer was running and completed while away, handle completion
+    if (isRunning && remaining === 0) {
+      pause()
+      playSound()
+      if (!isBreak) {
+        completeSession()
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Focus session complete!', {
+            body: 'Time for a break.',
+            icon: '/favicon.ico',
+          })
+        }
+        switchToBreak()
+      } else {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Break is over!', {
+            body: 'Ready to focus again?',
+            icon: '/favicon.ico',
+          })
+        }
+        switchToWork()
+      }
+    }
+  }, []) // Only run on mount
 
   // Keyboard shortcuts
   useEffect(() => {

@@ -32,6 +32,9 @@ interface TimerState {
   pomodoroCount: number // count towards long break
   activeTaskId: string | null
   settings: TimerSettings
+  // Persistence: store when timer started and initial duration
+  startedAt: number | null // timestamp when timer was started
+  initialDuration: number // duration when timer was started (in seconds)
 
   // Actions
   setMode: (mode: TimerMode) => void
@@ -47,6 +50,8 @@ interface TimerState {
   switchToLongBreak: () => void
   switchToWork: () => void
   skipBreak: () => void
+  // Sync time based on elapsed time since start
+  syncTime: () => number
 }
 
 function getWorkDuration(mode: TimerMode, customWork: number): number {
@@ -89,6 +94,8 @@ export const useTimerStore = create<TimerState>()(
       pomodoroCount: 0,
       activeTaskId: null,
       settings: defaultSettings,
+      startedAt: null,
+      initialDuration: 25 * 60,
 
       setMode: (mode) => {
         const { customWork } = get()
@@ -120,9 +127,30 @@ export const useTimerStore = create<TimerState>()(
 
       setActiveTask: (taskId) => set({ activeTaskId: taskId }),
 
-      start: () => set({ isRunning: true }),
+      start: () => {
+        const { timeRemaining } = get()
+        set({
+          isRunning: true,
+          startedAt: Date.now(),
+          initialDuration: timeRemaining,
+        })
+      },
 
-      pause: () => set({ isRunning: false }),
+      pause: () => {
+        // Sync the time before pausing
+        const { startedAt, initialDuration } = get()
+        if (startedAt) {
+          const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+          const newTimeRemaining = Math.max(0, initialDuration - elapsed)
+          set({
+            isRunning: false,
+            timeRemaining: newTimeRemaining,
+            startedAt: null,
+          })
+        } else {
+          set({ isRunning: false })
+        }
+      },
 
       reset: () => {
         const { mode, customWork, isBreak, isLongBreak, customBreak, settings } = get()
@@ -138,10 +166,25 @@ export const useTimerStore = create<TimerState>()(
       },
 
       tick: () => {
-        const { timeRemaining } = get()
-        if (timeRemaining > 0) {
-          set({ timeRemaining: timeRemaining - 1 })
+        // Calculate time based on actual elapsed time, not intervals
+        const { startedAt, initialDuration } = get()
+        if (startedAt) {
+          const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+          const newTimeRemaining = Math.max(0, initialDuration - elapsed)
+          set({ timeRemaining: newTimeRemaining })
         }
+      },
+
+      syncTime: () => {
+        // Called on mount to sync time if timer was running
+        const { isRunning, startedAt, initialDuration } = get()
+        if (isRunning && startedAt) {
+          const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+          const newTimeRemaining = Math.max(0, initialDuration - elapsed)
+          set({ timeRemaining: newTimeRemaining })
+          return newTimeRemaining
+        }
+        return get().timeRemaining
       },
 
       completeSession: (taskId) => {
@@ -222,6 +265,13 @@ export const useTimerStore = create<TimerState>()(
         allSessions: state.allSessions,
         pomodoroCount: state.pomodoroCount,
         settings: state.settings,
+        // Persist timer state for background/close persistence
+        isRunning: state.isRunning,
+        isBreak: state.isBreak,
+        isLongBreak: state.isLongBreak,
+        startedAt: state.startedAt,
+        initialDuration: state.initialDuration,
+        timeRemaining: state.timeRemaining,
       }),
     }
   )
