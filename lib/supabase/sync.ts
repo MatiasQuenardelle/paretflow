@@ -1,15 +1,18 @@
 import { createClient } from './client'
 import { Task } from '@/stores/taskStore'
 
-const supabase = createClient()
+// Lazy initialization to avoid SSR issues
+function getSupabase() {
+  return createClient()
+}
 
 export async function fetchUserTasks(): Promise<Task[] | null> {
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await getSupabase().auth.getUser()
   console.log('[Sync] fetchUserTasks - getUser result:', { userId: user?.id, error: userError?.message })
 
   if (!user) return null
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('tasks')
     .select('data')
     .eq('user_id', user.id)
@@ -30,10 +33,10 @@ export async function fetchUserTasks(): Promise<Task[] | null> {
 }
 
 export async function saveUserTasks(tasks: Task[]): Promise<boolean> {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getSupabase().auth.getUser()
   if (!user) return false
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('tasks')
     .upsert({
       user_id: user.id,
@@ -51,12 +54,12 @@ export async function saveUserTasks(tasks: Task[]): Promise<boolean> {
 }
 
 export async function getCurrentUser() {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getSupabase().auth.getUser()
   return user
 }
 
 export function onAuthStateChange(callback: (user: any) => void) {
-  return supabase.auth.onAuthStateChange((event, session) => {
+  return getSupabase().auth.onAuthStateChange((event, session) => {
     console.log('[Sync] onAuthStateChange event:', event, 'user:', session?.user?.email)
     callback(session?.user ?? null)
   })
