@@ -279,30 +279,43 @@ export function useTaskSync() {
 
   // Sync tasks from cloud
   const syncFromCloud = useCallback(async (currentUser: any) => {
-    if (!currentUser || hasSyncedRef.current) return
+    console.log('[TaskSync] syncFromCloud called', { userId: currentUser?.id, hasSynced: hasSyncedRef.current })
+
+    if (!currentUser || hasSyncedRef.current) {
+      console.log('[TaskSync] Skipping sync - no user or already synced')
+      return
+    }
 
     hasSyncedRef.current = true
     setSyncing(true)
 
     try {
+      console.log('[TaskSync] Fetching tasks from cloud...')
       const cloudTasks = await fetchUserTasks()
       const localTasks = useTaskStore.getState().tasks
 
+      console.log('[TaskSync] Cloud tasks:', cloudTasks?.length ?? 'null', 'Local tasks:', localTasks.length)
+
       if (cloudTasks && cloudTasks.length > 0) {
         // Cloud has tasks - use them (cloud is source of truth)
+        console.log('[TaskSync] Using cloud tasks')
         setTasks(cloudTasks)
         setLastSyncedAt(new Date().toISOString())
       } else if (localTasks.length > 0) {
         // No cloud tasks but local tasks exist - push local to cloud
+        console.log('[TaskSync] Pushing local tasks to cloud')
         await saveUserTasks(localTasks)
         setLastSyncedAt(new Date().toISOString())
+      } else {
+        console.log('[TaskSync] No tasks to sync')
       }
     } catch (error) {
-      console.error('Error syncing tasks:', error)
+      console.error('[TaskSync] Error syncing tasks:', error)
       hasSyncedRef.current = false // Allow retry on error
     } finally {
       setSyncing(false)
       setInitialized(true)
+      console.log('[TaskSync] Sync complete')
     }
   }, [setTasks, setSyncing, setLastSyncedAt])
 
@@ -337,13 +350,17 @@ export function useTaskSync() {
   // Listen for auth state changes - this is the primary way to detect session restoration
   // onAuthStateChange fires with INITIAL_SESSION when session is restored from storage
   useEffect(() => {
+    console.log('[TaskSync] Setting up auth state listener')
+
     const { data: { subscription } } = onAuthStateChange(async (newUser) => {
+      console.log('[TaskSync] Auth state changed', { userId: newUser?.id, email: newUser?.email })
       setUser(newUser)
 
       if (newUser) {
         await syncFromCloud(newUser)
       } else {
         // User logged out - reset sync state
+        console.log('[TaskSync] No user - resetting sync state')
         hasSyncedRef.current = false
         setInitialized(true)
       }

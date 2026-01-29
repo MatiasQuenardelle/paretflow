@@ -4,7 +4,9 @@ import { Task } from '@/stores/taskStore'
 const supabase = createClient()
 
 export async function fetchUserTasks(): Promise<Task[] | null> {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  console.log('[Sync] fetchUserTasks - getUser result:', { userId: user?.id, error: userError?.message })
+
   if (!user) return null
 
   const { data, error } = await supabase
@@ -12,6 +14,8 @@ export async function fetchUserTasks(): Promise<Task[] | null> {
     .select('data')
     .eq('user_id', user.id)
     .single()
+
+  console.log('[Sync] fetchUserTasks - query result:', { hasData: !!data, error: error?.message, code: error?.code })
 
   if (error) {
     if (error.code === 'PGRST116') {
@@ -52,7 +56,8 @@ export async function getCurrentUser() {
 }
 
 export function onAuthStateChange(callback: (user: any) => void) {
-  return supabase.auth.onAuthStateChange((_event, session) => {
+  return supabase.auth.onAuthStateChange((event, session) => {
+    console.log('[Sync] onAuthStateChange event:', event, 'user:', session?.user?.email)
     callback(session?.user ?? null)
   })
 }
