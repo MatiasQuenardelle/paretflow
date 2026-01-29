@@ -51,11 +51,6 @@ export default function CalendarPage() {
 
   return (
     <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex flex-col">
-      <header className="mb-4">
-        <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
-        <p className="text-muted text-sm">View your scheduled steps</p>
-      </header>
-
       {/* Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2">
