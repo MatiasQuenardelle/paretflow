@@ -14,7 +14,16 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('day')
   const [selectedDate, setSelectedDate] = useState(new Date())
 
-  const { tasks, toggleStep, selectTask } = useTaskStore()
+  const { tasks, toggleStep, selectTask, mode, isLoading } = useTaskStore()
+
+  // Show loading state
+  if (mode === 'loading' || isLoading) {
+    return (
+      <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
+        <div className="text-muted">Loading...</div>
+      </div>
+    )
+  }
 
   const handlePrev = () => {
     if (viewMode === 'day') {

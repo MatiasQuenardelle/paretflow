@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import { useTaskStore, useTaskStoreHydrated } from '@/stores/taskStore'
+import { useTaskStore } from '@/stores/taskStore'
 import { TaskColumn } from '@/components/tasks/TaskColumn'
 import { StepsColumn } from '@/components/tasks/StepsColumn'
 import { CompactTimerBar } from '@/components/timer/CompactTimerBar'
@@ -14,7 +14,7 @@ function SyncDebug({ taskCount }: { taskCount: number }) {
   const [show, setShow] = useState(false)
   const [tapCount, setTapCount] = useState(0)
   const [debugInfo, setDebugInfo] = useState<any>({})
-  const { isSyncing, lastSyncedAt } = useTaskStore()
+  const { mode, isSaving, error } = useTaskStore()
 
   useEffect(() => {
     if (tapCount >= 5) {
@@ -24,24 +24,25 @@ function SyncDebug({ taskCount }: { taskCount: number }) {
       const fetchDebug = async () => {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        const { data, error } = user ? await supabase
+        const { data, error: fetchError } = user ? await supabase
           .from('tasks')
           .select('data')
           .eq('user_id', user.id)
           .single() : { data: null, error: null }
 
         setDebugInfo({
+          mode,
           userId: user?.id?.slice(0, 8) || 'none',
           email: user?.email || 'none',
-          cloudTasks: data?.data?.length ?? (error?.code === 'PGRST116' ? 0 : 'error: ' + error?.message),
+          cloudTasks: data?.data?.length ?? (fetchError?.code === 'PGRST116' ? 0 : 'error: ' + fetchError?.message),
           localTasks: taskCount,
-          lastSync: lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString() : 'never',
-          isSyncing,
+          isSaving,
+          error: error || 'none',
         })
       }
       fetchDebug()
     }
-  }, [tapCount, taskCount, lastSyncedAt, isSyncing])
+  }, [tapCount, taskCount, mode, isSaving, error])
 
   if (!show) {
     return (
@@ -68,11 +69,29 @@ function SyncDebug({ taskCount }: { taskCount: number }) {
   )
 }
 
+// Error banner component
+function ErrorBanner({ error, onDismiss }: { error: string; onDismiss: () => void }) {
+  return (
+    <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2 rounded-lg mb-4 flex items-center justify-between">
+      <span className="text-sm">{error}</span>
+      <button
+        onClick={onDismiss}
+        className="text-red-400 hover:text-red-300 ml-4"
+      >
+        Dismiss
+      </button>
+    </div>
+  )
+}
+
 export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showCalendar, setShowCalendar] = useState(false)
-  const hydrated = useTaskStoreHydrated()
+
   const {
+    mode,
+    isLoading,
+    error,
     tasks,
     selectedTaskId,
     showCompleted,
@@ -88,6 +107,7 @@ export default function HomePage() {
     setShowCompleted,
     updateTaskEstimate,
     clearCompletedTasks,
+    clearError,
   } = useTaskStore()
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId) || null
@@ -98,8 +118,8 @@ export default function HomePage() {
     !t.completed || t.scheduledDate === selectedDateStr
   )
 
-  // Don't render until Zustand has hydrated from localStorage
-  if (!hydrated) {
+  // Show loading state
+  if (mode === 'loading' || isLoading) {
     return (
       <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
         <div className="text-muted">Loading...</div>
@@ -111,6 +131,9 @@ export default function HomePage() {
     <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex flex-col relative">
       {/* Debug - tap 5 times in top-left corner to show */}
       <SyncDebug taskCount={tasks.length} />
+
+      {/* Error banner */}
+      {error && <ErrorBanner error={error} onDismiss={clearError} />}
 
       {/* Compact Timer Bar */}
       <CompactTimerBar />

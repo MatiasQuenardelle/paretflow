@@ -1,8 +1,7 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { generateId } from '@/lib/utils'
-import { fetchUserTasks, saveUserTasks, getCurrentUser, onAuthStateChange } from '@/lib/supabase/sync'
+import { taskService } from '@/lib/supabase/taskService'
 
 export interface Step {
   id: string
@@ -18,8 +17,8 @@ export interface Task {
   id: string
   title: string
   createdAt: string
-  scheduledDate?: string // The date this task is scheduled for (YYYY-MM-DD)
-  scheduledTime?: string // Optional time (HH:MM)
+  scheduledDate?: string
+  scheduledTime?: string
   steps: Step[]
   completed: boolean
   estimatedPomodoros: number
@@ -27,36 +26,67 @@ export interface Task {
   note?: string
 }
 
+type Mode = 'loading' | 'cloud' | 'guest'
+
 interface TaskState {
   tasks: Task[]
   selectedTaskId: string | null
   showCompleted: boolean
-  isSyncing: boolean
-  lastSyncedAt: string | null
 
-  // Actions
-  addTask: (title: string, scheduledDate?: string) => void
-  updateTaskSchedule: (id: string, scheduledDate?: string, scheduledTime?: string) => void
-  deleteTask: (id: string) => void
-  updateTaskTitle: (id: string, title: string) => void
+  // Cloud-first state
+  mode: Mode
+  isLoading: boolean
+  isSaving: boolean
+  error: string | null
+
+  // Initialization
+  initializeCloud: () => Promise<void>
+  initializeGuest: () => void
+
+  // Internal helper for saving to cloud
+  _saveToCloud: (tasks: Task[]) => Promise<void>
+
+  // Actions (async for cloud mode)
+  addTask: (title: string, scheduledDate?: string) => Promise<void>
+  updateTaskSchedule: (id: string, scheduledDate?: string, scheduledTime?: string) => Promise<void>
+  deleteTask: (id: string) => Promise<void>
+  updateTaskTitle: (id: string, title: string) => Promise<void>
   selectTask: (id: string | null) => void
-  toggleTaskCompleted: (id: string) => void
+  toggleTaskCompleted: (id: string) => Promise<void>
   setShowCompleted: (show: boolean) => void
-  updateTaskEstimate: (id: string, estimate: number) => void
-  incrementTaskPomodoro: (id: string) => void
-  updateTaskNote: (id: string, note: string) => void
-  clearCompletedTasks: () => void
+  updateTaskEstimate: (id: string, estimate: number) => Promise<void>
+  incrementTaskPomodoro: (id: string) => Promise<void>
+  updateTaskNote: (id: string, note: string) => Promise<void>
+  clearCompletedTasks: () => Promise<void>
 
-  addStep: (taskId: string, text: string, scheduledDate?: string) => void
-  updateStep: (taskId: string, stepId: string, updates: Partial<Step>) => void
-  deleteStep: (taskId: string, stepId: string) => void
-  toggleStep: (taskId: string, stepId: string) => void
-  reorderSteps: (taskId: string, stepIds: string[]) => void
+  addStep: (taskId: string, text: string, scheduledDate?: string) => Promise<void>
+  updateStep: (taskId: string, stepId: string, updates: Partial<Step>) => Promise<void>
+  deleteStep: (taskId: string, stepId: string) => Promise<void>
+  toggleStep: (taskId: string, stepId: string) => Promise<void>
+  reorderSteps: (taskId: string, stepIds: string[]) => Promise<void>
 
-  // Sync actions
-  setTasks: (tasks: Task[]) => void
-  setSyncing: (syncing: boolean) => void
-  setLastSyncedAt: (date: string | null) => void
+  // For clearing error
+  clearError: () => void
+}
+
+// Custom storage that only persists in guest mode
+const guestOnlyStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem(name)
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return
+    // Only persist if in guest mode
+    const state = JSON.parse(value)
+    if (state?.state?.mode === 'guest') {
+      localStorage.setItem(name, value)
+    }
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return
+    localStorage.removeItem(name)
+  },
 }
 
 export const useTaskStore = create<TaskState>()(
@@ -65,10 +95,75 @@ export const useTaskStore = create<TaskState>()(
       tasks: [],
       selectedTaskId: null,
       showCompleted: false,
-      isSyncing: false,
-      lastSyncedAt: null,
 
-      addTask: (title, scheduledDate) => {
+      // Cloud-first state
+      mode: 'loading' as Mode,
+      isLoading: false,
+      isSaving: false,
+      error: null,
+
+      // Initialize for logged-in user (cloud mode)
+      initializeCloud: async () => {
+        set({ mode: 'loading', isLoading: true, error: null })
+
+        try {
+          // Get current local tasks before switching to cloud
+          const localTasks = get().tasks
+
+          // Fetch cloud tasks
+          const cloudTasks = await taskService.fetchTasks()
+
+          if (cloudTasks.length > 0) {
+            // Cloud has tasks - use them
+            set({ tasks: cloudTasks, mode: 'cloud', isLoading: false })
+          } else if (localTasks.length > 0) {
+            // No cloud tasks but local tasks exist (guest-to-login transition)
+            // Upload local tasks to cloud
+            await taskService.saveTasks(localTasks)
+            set({ mode: 'cloud', isLoading: false })
+            // Clear localStorage for guest data since we're now in cloud mode
+            localStorage.removeItem('paretflow-tasks-guest')
+          } else {
+            // No tasks anywhere
+            set({ tasks: [], mode: 'cloud', isLoading: false })
+          }
+        } catch (error) {
+          console.error('[TaskStore] Cloud initialization failed:', error)
+          set({
+            mode: 'cloud',
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Failed to load tasks'
+          })
+        }
+      },
+
+      // Initialize for guest user (localStorage mode)
+      initializeGuest: () => {
+        set({ mode: 'guest', isLoading: false, error: null })
+        // Zustand persist will hydrate from localStorage automatically
+      },
+
+      // Internal helper to save to cloud with error handling
+      _saveToCloud: async (tasks: Task[]) => {
+        const { mode } = get()
+        if (mode !== 'cloud') return
+
+        set({ isSaving: true })
+        try {
+          await taskService.saveTasks(tasks)
+          set({ isSaving: false, error: null })
+        } catch (error) {
+          console.error('[TaskStore] Save failed:', error)
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save'
+          })
+          throw error // Re-throw for rollback handling
+        }
+      },
+
+      addTask: async (title, scheduledDate) => {
+        const { mode, tasks, _saveToCloud } = get()
         const dateToUse = scheduledDate || new Date().toISOString().split('T')[0]
         const newTask: Task = {
           id: generateId(),
@@ -84,324 +179,290 @@ export const useTaskStore = create<TaskState>()(
           estimatedPomodoros: 1,
           completedPomodoros: 0,
         }
-        set(state => ({
-          tasks: [newTask, ...state.tasks],
-          selectedTaskId: newTask.id,
-        }))
+
+        const newTasks = [newTask, ...tasks]
+
+        // Optimistic update
+        set({ tasks: newTasks, selectedTaskId: newTask.id })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            // Rollback on failure
+            set({ tasks, selectedTaskId: null })
+          }
+        }
       },
 
-      updateTaskSchedule: (id, scheduledDate, scheduledTime) => {
-        set(state => ({
-          tasks: state.tasks.map(t =>
-            t.id === id ? { ...t, scheduledDate, scheduledTime } : t
-          ),
-        }))
+      updateTaskSchedule: async (id, scheduledDate, scheduledTime) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t =>
+          t.id === id ? { ...t, scheduledDate, scheduledTime } : t
+        )
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      deleteTask: (id) => {
-        set(state => ({
-          tasks: state.tasks.filter(t => t.id !== id),
-          selectedTaskId: state.selectedTaskId === id ? null : state.selectedTaskId,
-        }))
+      deleteTask: async (id) => {
+        const { mode, tasks, selectedTaskId, _saveToCloud } = get()
+        const newTasks = tasks.filter(t => t.id !== id)
+        const newSelectedId = selectedTaskId === id ? null : selectedTaskId
+
+        set({ tasks: newTasks, selectedTaskId: newSelectedId })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks, selectedTaskId })
+          }
+        }
       },
 
-      updateTaskTitle: (id, title) => {
-        set(state => ({
-          tasks: state.tasks.map(t =>
-            t.id === id ? { ...t, title } : t
-          ),
-        }))
+      updateTaskTitle: async (id, title) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t =>
+          t.id === id ? { ...t, title } : t
+        )
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
       selectTask: (id) => set({ selectedTaskId: id }),
 
-      toggleTaskCompleted: (id) => {
-        set(state => ({
-          tasks: state.tasks.map(t =>
-            t.id === id ? { ...t, completed: !t.completed } : t
-          ),
-        }))
+      toggleTaskCompleted: async (id) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t =>
+          t.id === id ? { ...t, completed: !t.completed } : t
+        )
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
       setShowCompleted: (show) => set({ showCompleted: show }),
 
-      updateTaskEstimate: (id, estimate) => {
-        set(state => ({
-          tasks: state.tasks.map(t =>
-            t.id === id ? { ...t, estimatedPomodoros: Math.max(1, estimate) } : t
-          ),
-        }))
+      updateTaskEstimate: async (id, estimate) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t =>
+          t.id === id ? { ...t, estimatedPomodoros: Math.max(1, estimate) } : t
+        )
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      incrementTaskPomodoro: (id) => {
-        set(state => ({
-          tasks: state.tasks.map(t =>
-            t.id === id ? { ...t, completedPomodoros: t.completedPomodoros + 1 } : t
-          ),
-        }))
+      incrementTaskPomodoro: async (id) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t =>
+          t.id === id ? { ...t, completedPomodoros: t.completedPomodoros + 1 } : t
+        )
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      updateTaskNote: (id, note) => {
-        set(state => ({
-          tasks: state.tasks.map(t =>
-            t.id === id ? { ...t, note } : t
-          ),
-        }))
+      updateTaskNote: async (id, note) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t =>
+          t.id === id ? { ...t, note } : t
+        )
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      clearCompletedTasks: () => {
-        set(state => ({
-          tasks: state.tasks.filter(t => !t.completed),
-          selectedTaskId: state.tasks.find(t => t.id === state.selectedTaskId)?.completed
-            ? null
-            : state.selectedTaskId,
-        }))
+      clearCompletedTasks: async () => {
+        const { mode, tasks, selectedTaskId, _saveToCloud } = get()
+        const newTasks = tasks.filter(t => !t.completed)
+        const newSelectedId = tasks.find(t => t.id === selectedTaskId)?.completed
+          ? null
+          : selectedTaskId
+
+        set({ tasks: newTasks, selectedTaskId: newSelectedId })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks, selectedTaskId })
+          }
+        }
       },
 
-      addStep: (taskId, text, scheduledDate) => {
-        set(state => ({
-          tasks: state.tasks.map(t => {
-            if (t.id !== taskId) return t
-            const newStep: Step = {
-              id: generateId(),
-              text,
-              completed: false,
-              order: t.steps.length,
-              scheduledDate,
-            }
-            return { ...t, steps: [...t.steps, newStep] }
-          }),
-        }))
+      addStep: async (taskId, text, scheduledDate) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t => {
+          if (t.id !== taskId) return t
+          const newStep: Step = {
+            id: generateId(),
+            text,
+            completed: false,
+            order: t.steps.length,
+            scheduledDate,
+          }
+          return { ...t, steps: [...t.steps, newStep] }
+        })
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      updateStep: (taskId, stepId, updates) => {
-        set(state => ({
-          tasks: state.tasks.map(t => {
-            if (t.id !== taskId) return t
-            return {
-              ...t,
-              steps: t.steps.map(s =>
-                s.id === stepId ? { ...s, ...updates } : s
-              ),
-            }
-          }),
-        }))
+      updateStep: async (taskId, stepId, updates) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t => {
+          if (t.id !== taskId) return t
+          return {
+            ...t,
+            steps: t.steps.map(s =>
+              s.id === stepId ? { ...s, ...updates } : s
+            ),
+          }
+        })
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      deleteStep: (taskId, stepId) => {
-        set(state => ({
-          tasks: state.tasks.map(t => {
-            if (t.id !== taskId) return t
-            const steps = t.steps
-              .filter(s => s.id !== stepId)
-              .map((s, i) => ({ ...s, order: i }))
-            return { ...t, steps }
-          }),
-        }))
+      deleteStep: async (taskId, stepId) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t => {
+          if (t.id !== taskId) return t
+          const steps = t.steps
+            .filter(s => s.id !== stepId)
+            .map((s, i) => ({ ...s, order: i }))
+          return { ...t, steps }
+        })
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      toggleStep: (taskId, stepId) => {
-        set(state => ({
-          tasks: state.tasks.map(t => {
-            if (t.id !== taskId) return t
-            return {
-              ...t,
-              steps: t.steps.map(s =>
-                s.id === stepId ? { ...s, completed: !s.completed } : s
-              ),
-            }
-          }),
-        }))
+      toggleStep: async (taskId, stepId) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t => {
+          if (t.id !== taskId) return t
+          return {
+            ...t,
+            steps: t.steps.map(s =>
+              s.id === stepId ? { ...s, completed: !s.completed } : s
+            ),
+          }
+        })
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      reorderSteps: (taskId, stepIds) => {
-        set(state => ({
-          tasks: state.tasks.map(t => {
-            if (t.id !== taskId) return t
-            const stepsMap = new Map(t.steps.map(s => [s.id, s]))
-            const reorderedSteps = stepIds
-              .map((id, index) => {
-                const step = stepsMap.get(id)
-                return step ? { ...step, order: index } : null
-              })
-              .filter((s): s is Step => s !== null)
-            return { ...t, steps: reorderedSteps }
-          }),
-        }))
+      reorderSteps: async (taskId, stepIds) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t => {
+          if (t.id !== taskId) return t
+          const stepsMap = new Map(t.steps.map(s => [s.id, s]))
+          const reorderedSteps = stepIds
+            .map((id, index) => {
+              const step = stepsMap.get(id)
+              return step ? { ...step, order: index } : null
+            })
+            .filter((s): s is Step => s !== null)
+          return { ...t, steps: reorderedSteps }
+        })
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
       },
 
-      // Sync actions
-      setTasks: (tasks) => set({ tasks }),
-      setSyncing: (isSyncing) => set({ isSyncing }),
-      setLastSyncedAt: (lastSyncedAt) => set({ lastSyncedAt }),
+      clearError: () => set({ error: null }),
     }),
     {
-      name: 'paretflow-tasks',
+      name: 'paretflow-tasks-guest',
+      storage: createJSONStorage(() => guestOnlyStorage),
       partialize: (state) => ({
         tasks: state.tasks,
         selectedTaskId: state.selectedTaskId,
         showCompleted: state.showCompleted,
+        mode: state.mode,
       }),
     }
   )
 )
-
-// Hook to handle Zustand hydration with Next.js
-export function useTaskStoreHydrated() {
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    // Wait for Zustand to hydrate from localStorage
-    const unsubscribe = useTaskStore.persist.onFinishHydration(() => {
-      setHydrated(true)
-    })
-
-    // Check if already hydrated
-    if (useTaskStore.persist.hasHydrated()) {
-      setHydrated(true)
-    }
-
-    return () => {
-      unsubscribe()
-    }
-  }, [])
-
-  return hydrated
-}
-
-// Hook to sync tasks with Supabase when user is logged in
-export function useTaskSync() {
-  const { setTasks, setSyncing, setLastSyncedAt } = useTaskStore()
-  const [user, setUser] = useState<any>(null)
-  const [initialized, setInitialized] = useState(false)
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const hasSyncedRef = useRef(false)
-
-  // Sync tasks from cloud
-  const syncFromCloud = useCallback(async (currentUser: any) => {
-    console.log('[TaskSync] syncFromCloud called', { userId: currentUser?.id, hasSynced: hasSyncedRef.current })
-
-    if (!currentUser || hasSyncedRef.current) {
-      console.log('[TaskSync] Skipping sync - no user or already synced')
-      return
-    }
-
-    hasSyncedRef.current = true
-    setSyncing(true)
-
-    try {
-      console.log('[TaskSync] Fetching tasks from cloud...')
-      const cloudTasks = await fetchUserTasks()
-      const localTasks = useTaskStore.getState().tasks
-
-      console.log('[TaskSync] Cloud tasks:', cloudTasks?.length ?? 'null', 'Local tasks:', localTasks.length)
-
-      if (cloudTasks && cloudTasks.length > 0) {
-        // Cloud has tasks - use them (cloud is source of truth)
-        console.log('[TaskSync] Using cloud tasks')
-        setTasks(cloudTasks)
-        setLastSyncedAt(new Date().toISOString())
-      } else if (localTasks.length > 0) {
-        // No cloud tasks but local tasks exist - push local to cloud
-        console.log('[TaskSync] Pushing local tasks to cloud')
-        await saveUserTasks(localTasks)
-        setLastSyncedAt(new Date().toISOString())
-      } else {
-        console.log('[TaskSync] No tasks to sync')
-      }
-    } catch (error) {
-      console.error('[TaskSync] Error syncing tasks:', error)
-      hasSyncedRef.current = false // Allow retry on error
-    } finally {
-      setSyncing(false)
-      setInitialized(true)
-      console.log('[TaskSync] Sync complete')
-    }
-  }, [setTasks, setSyncing, setLastSyncedAt])
-
-  // Debounced save function using ref to avoid stale closure issues
-  const saveTasksDebounced = useCallback((tasksToSave: Task[]) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-    }
-    saveTimeoutRef.current = setTimeout(async () => {
-      // Get fresh user from Supabase instead of relying on closure
-      const currentUser = await getCurrentUser()
-      if (!currentUser) return
-
-      setSyncing(true)
-      const success = await saveUserTasks(tasksToSave)
-      if (success) {
-        setLastSyncedAt(new Date().toISOString())
-      }
-      setSyncing(false)
-    }, 1000)
-  }, [setSyncing, setLastSyncedAt])
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  // Listen for auth state changes - this is the primary way to detect session restoration
-  // onAuthStateChange fires with INITIAL_SESSION when session is restored from storage
-  useEffect(() => {
-    console.log('[TaskSync] Setting up auth state listener')
-
-    // Also check current session immediately in case onAuthStateChange already fired
-    const checkExistingSession = async () => {
-      console.log('[TaskSync] Checking for existing session...')
-      const currentUser = await getCurrentUser()
-      console.log('[TaskSync] Existing session check:', { userId: currentUser?.id, email: currentUser?.email })
-      if (currentUser && !hasSyncedRef.current) {
-        setUser(currentUser)
-        await syncFromCloud(currentUser)
-      } else if (!currentUser) {
-        setInitialized(true)
-      }
-    }
-
-    checkExistingSession()
-
-    const { data: { subscription } } = onAuthStateChange(async (newUser) => {
-      console.log('[TaskSync] Auth state changed', { userId: newUser?.id, email: newUser?.email })
-      setUser(newUser)
-
-      if (newUser) {
-        await syncFromCloud(newUser)
-      } else {
-        // User logged out - reset sync state
-        console.log('[TaskSync] No user - resetting sync state')
-        hasSyncedRef.current = false
-        setInitialized(true)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [syncFromCloud])
-
-  // Save to cloud when tasks change (debounced)
-  // Subscribe directly to store to get fresh tasks
-  useEffect(() => {
-    if (!initialized) return
-
-    const unsubscribe = useTaskStore.subscribe((state, prevState) => {
-      if (state.tasks !== prevState.tasks) {
-        // Only save if user is logged in (check fresh)
-        getCurrentUser().then(currentUser => {
-          if (currentUser) {
-            saveTasksDebounced(state.tasks)
-          }
-        })
-      }
-    })
-
-    return () => unsubscribe()
-  }, [initialized, saveTasksDebounced])
-
-  return { user, isSyncing: useTaskStore.getState().isSyncing }
-}

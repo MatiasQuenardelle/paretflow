@@ -8,8 +8,17 @@ import { useTimerStore } from '@/stores/timerStore'
 import { useTaskStore } from '@/stores/taskStore'
 
 export default function ProgressPage() {
-  const { sessionsToday, allSessions, mode, customWork } = useTimerStore()
-  const { tasks } = useTaskStore()
+  const { sessionsToday, allSessions, mode: timerMode, customWork } = useTimerStore()
+  const { tasks, mode, isLoading } = useTaskStore()
+
+  // Show loading state
+  if (mode === 'loading' || isLoading) {
+    return (
+      <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
+        <div className="text-muted">Loading...</div>
+      </div>
+    )
+  }
 
   // Today's stats
   const today = new Date().toDateString()
@@ -55,7 +64,7 @@ export default function ProgressPage() {
   const totalSteps = tasks.reduce((acc, t) => acc + t.steps.length, 0)
 
   // Pomodoro stats
-  const focusDuration = mode === '25/5' ? 25 : mode === '50/10' ? 50 : customWork
+  const focusDuration = timerMode === '25/5' ? 25 : timerMode === '50/10' ? 50 : customWork
   const dailyGoal = 8 // 8 pomodoros per day target
   const dailyProgress = Math.min((todaySessions.length / dailyGoal) * 100, 100)
 
