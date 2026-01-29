@@ -35,10 +35,8 @@ export function StepsColumn({
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
   const isTodaySelected = isToday(selectedDate)
 
-  // Filter steps for the selected date
-  const filteredSteps = task?.steps.filter(step =>
-    step.scheduledDate === selectedDateStr
-  ) || []
+  // Show all steps for the selected task
+  const filteredSteps = task?.steps || []
 
   const handleAddStep = () => {
     onAddStep('')
@@ -54,16 +52,12 @@ export function StepsColumn({
 
   const handleDragEnd = () => {
     if (draggedIndex !== null && dragOverIndex.current !== null && task) {
-      // Reorder within the filtered steps only
-      const sortedFiltered = [...filteredSteps].sort((a, b) => a.order - b.order)
-      const [draggedItem] = sortedFiltered.splice(draggedIndex, 1)
-      sortedFiltered.splice(dragOverIndex.current, 0, draggedItem)
+      // Reorder steps
+      const sortedSteps = [...filteredSteps].sort((a, b) => a.order - b.order)
+      const [draggedItem] = sortedSteps.splice(draggedIndex, 1)
+      sortedSteps.splice(dragOverIndex.current, 0, draggedItem)
 
-      // Get all other steps not in the filtered set
-      const otherSteps = task.steps.filter(s => s.scheduledDate !== selectedDateStr)
-
-      // Combine: other steps first (maintain their order), then reordered filtered steps
-      const allStepIds = [...otherSteps.sort((a, b) => a.order - b.order).map(s => s.id), ...sortedFiltered.map(s => s.id)]
+      const allStepIds = sortedSteps.map(s => s.id)
       onReorderSteps(allStepIds)
     }
     setDraggedIndex(null)
@@ -137,7 +131,7 @@ export function StepsColumn({
       <div className="flex-1 overflow-y-auto space-y-1.5 md:space-y-2 mb-2 md:mb-4">
         {filteredSteps.length === 0 ? (
           <div className="text-center py-6 md:py-8 text-muted">
-            <p className="text-sm">No steps scheduled for this day</p>
+            <p className="text-sm">No steps yet</p>
             <p className="text-xs mt-1">Click the + button to add a step</p>
           </div>
         ) : (
