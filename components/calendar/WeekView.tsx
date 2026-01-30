@@ -36,6 +36,9 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask,
   const currentHour = now.getHours()
   const currentMinute = now.getMinutes()
 
+  // Debug: log when isExpanded changes
+  console.log('WeekView isExpanded:', isExpanded)
+
   // Dynamic hour height based on expanded state
   const hourHeight = isExpanded ? HOUR_HEIGHT_EXPANDED : HOUR_HEIGHT_COLLAPSED
 

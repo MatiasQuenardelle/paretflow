@@ -58,9 +58,15 @@ export function TaskColumn({
   const [showLabelFilter, setShowLabelFilter] = useState(false)
   const [editingLabelsTaskId, setEditingLabelsTaskId] = useState<string | null>(null)
 
-  // Drag and drop state
+  // Drag and drop state (desktop)
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
+  const [dragOverTaskIdState, setDragOverTaskIdState] = useState<string | null>(null)
   const dragOverTaskId = useRef<string | null>(null)
+
+  // Touch drag state (mobile)
+  const [touchDragTaskId, setTouchDragTaskId] = useState<string | null>(null)
+  const touchStartY = useRef<number>(0)
+  const taskListRef = useRef<HTMLDivElement>(null)
 
   const { activeTaskId, setActiveTask } = useTimerStore()
 
@@ -81,6 +87,7 @@ export function TaskColumn({
   const handleDragEnter = (taskId: string) => {
     if (taskId !== draggedTaskId) {
       dragOverTaskId.current = taskId
+      setDragOverTaskIdState(taskId)
     }
   }
 
@@ -104,6 +111,64 @@ export function TaskColumn({
 
     setDraggedTaskId(null)
     dragOverTaskId.current = null
+    setDragOverTaskIdState(null)
+  }
+
+  // Touch handlers for mobile reordering
+  const handleTouchStart = (e: React.TouchEvent, taskId: string) => {
+    touchStartY.current = e.touches[0].clientY
+    // Use a timeout to distinguish between tap and drag
+    const timeout = setTimeout(() => {
+      setTouchDragTaskId(taskId)
+      // Vibrate on supported devices
+      if (navigator.vibrate) navigator.vibrate(50)
+    }, 200)
+
+    const handleTouchEnd = () => {
+      clearTimeout(timeout)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+    document.addEventListener('touchend', handleTouchEnd)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchDragTaskId || !taskListRef.current || !onReorderTasks) return
+
+    const touch = e.touches[0]
+    const elements = taskListRef.current.querySelectorAll('[data-task-id]')
+
+    Array.from(elements).forEach(el => {
+      const rect = el.getBoundingClientRect()
+      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        const taskId = el.getAttribute('data-task-id')
+        if (taskId && taskId !== touchDragTaskId) {
+          setDragOverTaskIdState(taskId)
+          dragOverTaskId.current = taskId
+        }
+      }
+    })
+  }
+
+  const handleTouchEnd = () => {
+    if (touchDragTaskId && dragOverTaskId.current && onReorderTasks) {
+      const incompleteTasks = tasks.filter(t => !t.completed)
+      const draggedIndex = incompleteTasks.findIndex(t => t.id === touchDragTaskId)
+      const dropIndex = incompleteTasks.findIndex(t => t.id === dragOverTaskId.current)
+
+      if (draggedIndex !== -1 && dropIndex !== -1 && draggedIndex !== dropIndex) {
+        const newOrder = [...incompleteTasks]
+        const [draggedTask] = newOrder.splice(draggedIndex, 1)
+        newOrder.splice(dropIndex, 0, draggedTask)
+
+        const completedTasks = tasks.filter(t => t.completed)
+        const allTaskIds = [...newOrder, ...completedTasks].map(t => t.id)
+        onReorderTasks(allTaskIds)
+      }
+    }
+
+    setTouchDragTaskId(null)
+    dragOverTaskId.current = null
+    setDragOverTaskIdState(null)
   }
 
   const toggleTaskLabel = (taskId: string, labelId: string) => {
@@ -330,7 +395,12 @@ export function TaskColumn({
         </form>
       )}
 
-      <div className="flex-1 overflow-y-auto space-y-1.5 md:space-y-2">
+      <div
+        ref={taskListRef}
+        className="flex-1 overflow-y-auto space-y-1.5 md:space-y-2"
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {visibleTasks.length === 0 && !isAdding && (
           <div className="text-center py-8 md:py-12">
             <div className="relative inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 mb-4">
@@ -357,25 +427,24 @@ export function TaskColumn({
           const stepsCount = task.steps?.length || 0
           const completedSteps = task.steps?.filter(s => s.completed).length || 0
           const taskLabels = task.labels || []
-          const isDragging = draggedTaskId === task.id
+          const isDragging = draggedTaskId === task.id || touchDragTaskId === task.id
 
           return (
             <div
               key={task.id}
+              data-task-id={task.id}
               draggable={!task.completed && !!onReorderTasks}
               onDragStart={(e) => handleDragStart(e, task.id)}
               onDragOver={handleDragOver}
               onDragEnter={() => handleDragEnter(task.id)}
               onDragEnd={handleDragEnd}
-              onClick={() => onSelectTask(task.id)}
-              onTouchEnd={(e) => {
-                // Ensure selection works on mobile touch
-                if (e.target === e.currentTarget || !(e.target as HTMLElement).closest('button')) {
-                  onSelectTask(task.id)
-                }
+              onClick={() => {
+                if (!touchDragTaskId) onSelectTask(task.id)
               }}
               className={`relative p-3 md:p-4 rounded-2xl cursor-pointer transition-all duration-300 group touch-manipulation overflow-hidden ${
-                isDragging ? 'opacity-50 scale-95' : ''
+                isDragging ? 'opacity-50 scale-95 ring-2 ring-blue-500/50' : ''
+              } ${
+                dragOverTaskIdState === task.id && draggedTaskId && draggedTaskId !== task.id ? 'ring-2 ring-blue-400/50 bg-blue-500/10' : ''
               } ${
                 isActive
                   ? 'bg-gradient-to-br from-blue-500/20 via-purple-500/15 to-indigo-500/20 shadow-glow-blue'
@@ -412,13 +481,22 @@ export function TaskColumn({
               )}
 
               <div className="relative flex items-start gap-2">
-                {/* Drag handle - only show for incomplete tasks */}
+                {/* Drag handle - always visible, touch-drag on mobile */}
                 {!task.completed && onReorderTasks && (
                   <div
-                    className="mt-1 cursor-grab active:cursor-grabbing text-muted/40 hover:text-muted/70 transition-colors flex-shrink-0"
+                    className={`mt-1 cursor-grab active:cursor-grabbing transition-all flex-shrink-0 p-1 -m-0.5 rounded ${
+                      touchDragTaskId === task.id
+                        ? 'text-blue-400 bg-blue-500/20 scale-110'
+                        : 'text-muted/60 md:text-muted/50 md:hover:text-foreground/70 md:hover:scale-110 md:hover:bg-white/10'
+                    }`}
                     onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => {
+                      e.stopPropagation()
+                      handleTouchStart(e, task.id)
+                    }}
+                    title="Hold to drag"
                   >
-                    <GripVertical size={14} className="md:w-4 md:h-4" />
+                    <GripVertical size={18} className="md:w-5 md:h-5" />
                   </div>
                 )}
 
@@ -577,8 +655,8 @@ export function TaskColumn({
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {/* Label button */}
+                <div className="flex items-center gap-1 transition-opacity duration-200">
+                  {/* Label button - always visible for incomplete tasks */}
                   {onUpdateLabels && !task.completed && (
                     <button
                       onClick={(e) => {
@@ -588,35 +666,40 @@ export function TaskColumn({
                       className={`p-1.5 rounded-lg transition-all duration-200 ${
                         editingLabelsTaskId === task.id
                           ? 'bg-purple-500/20 text-purple-400'
-                          : 'hover:bg-purple-500/10 text-muted hover:text-purple-400'
+                          : taskLabels.length > 0
+                          ? 'bg-purple-500/10 text-purple-400/70 hover:bg-purple-500/20 hover:text-purple-400'
+                          : 'text-muted/40 hover:bg-purple-500/10 hover:text-purple-400'
                       }`}
                       title="Add labels"
                     >
                       <Tag size={12} className="md:w-[14px] md:h-[14px]" />
                     </button>
                   )}
-                  {!task.completed && !isActive && (
+                  {/* Play/Delete - always visible on mobile, hover on desktop */}
+                  <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+                    {!task.completed && !isActive && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setActiveTask(task.id)
+                          onSelectTask(task.id)
+                        }}
+                        className="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-all duration-200"
+                        title="Start focusing on this task"
+                      >
+                        <Play size={12} className="md:w-[14px] md:h-[14px]" />
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        setActiveTask(task.id)
-                        onSelectTask(task.id)
+                        onDeleteTask(task.id)
                       }}
-                      className="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-all duration-200"
-                      title="Start focusing on this task"
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted hover:text-red-400 transition-all duration-200"
                     >
-                      <Play size={12} className="md:w-[14px] md:h-[14px]" />
+                      <Trash2 size={12} className="md:w-[14px] md:h-[14px]" />
                     </button>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDeleteTask(task.id)
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted hover:text-red-400 transition-all duration-200"
-                  >
-                    <Trash2 size={12} className="md:w-[14px] md:h-[14px]" />
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -474,7 +474,7 @@ export const useTaskStore = create<TaskState>()(
         const reorderedTasks = taskIds
           .map((id, index) => {
             const task = tasksMap.get(id)
-            return task ? { ...task, order: index } : null
+            return task ? { ...task, order: index } as Task : null
           })
           .filter((t): t is Task => t !== null)
 

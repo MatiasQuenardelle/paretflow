@@ -112,7 +112,10 @@ export default function CalendarPage() {
 
           {/* Compact/Expand toggle */}
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => {
+              console.log('Button clicked, current isExpanded:', isExpanded, '-> setting to:', !isExpanded)
+              setIsExpanded(!isExpanded)
+            }}
             className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-all duration-200 px-2 py-1.5 rounded-lg hover:bg-white/10 active:scale-95 border border-white/10 dark:border-white/5"
           >
             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
