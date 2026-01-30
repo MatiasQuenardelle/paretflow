@@ -6,8 +6,10 @@ import { TimerDisplay } from '@/components/timer/TimerDisplay'
 import { TimerControls } from '@/components/timer/TimerControls'
 import { SessionCounter } from '@/components/timer/SessionCounter'
 import { ModeSelector } from '@/components/timer/ModeSelector'
+import { useTranslations } from '@/lib/i18n'
 
 export default function TimerPage() {
+  const t = useTranslations()
   const {
     mode,
     customWork,
@@ -77,16 +79,16 @@ export default function TimerPage() {
         completeSession()
         // Show notification
         if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('Focus session complete!', {
-            body: 'Time for a break.',
+          new Notification(t.timer.focusComplete, {
+            body: t.timer.timeForBreak,
             icon: '/favicon.ico',
           })
         }
         switchToBreak()
       } else {
         if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('Break is over!', {
-            body: 'Ready to focus again?',
+          new Notification(t.timer.breakOver, {
+            body: t.timer.readyToFocus,
             icon: '/favicon.ico',
           })
         }
@@ -112,16 +114,16 @@ export default function TimerPage() {
       if (!isBreak) {
         completeSession()
         if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('Focus session complete!', {
-            body: 'Time for a break.',
+          new Notification(t.timer.focusComplete, {
+            body: t.timer.timeForBreak,
             icon: '/favicon.ico',
           })
         }
         switchToBreak()
       } else {
         if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('Break is over!', {
-            body: 'Ready to focus again?',
+          new Notification(t.timer.breakOver, {
+            body: t.timer.readyToFocus,
             icon: '/favicon.ico',
           })
         }
@@ -182,8 +184,8 @@ export default function TimerPage() {
   return (
     <div className="max-w-2xl mx-auto p-6 md:p-8">
       <header className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Paretto Timer</h1>
-        <p className="text-muted">Stay focused, take breaks</p>
+        <h1 className="text-2xl font-bold text-foreground">{t.timer.pageTitle}</h1>
+        <p className="text-muted">{t.timer.tagline}</p>
       </header>
 
       {/* Hidden audio element for notification sound */}
@@ -220,9 +222,9 @@ export default function TimerPage() {
 
       {/* Keyboard shortcuts hint */}
       <div className="mt-8 text-center text-xs text-muted space-x-3">
-        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">Space</kbd> play/pause</span>
-        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">R</kbd> reset</span>
-        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">S</kbd> skip</span>
+        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">Space</kbd> {t.timer.playPause}</span>
+        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">R</kbd> {t.timer.reset.toLowerCase()}</span>
+        <span><kbd className="px-1.5 py-0.5 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-md">S</kbd> {t.timer.skip.toLowerCase()}</span>
       </div>
     </div>
   )

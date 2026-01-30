@@ -5,10 +5,12 @@ import { format } from 'date-fns'
 import { ChevronUp, Flame, Target } from 'lucide-react'
 import { HabitCard } from '@/components/habits/HabitCard'
 import { POWER_HABITS, useHabitStore } from '@/stores/habitStore'
+import { useTranslations } from '@/lib/i18n'
 
 function StatsFooter() {
   const [isExpanded, setIsExpanded] = useState(false)
   const { getTodayScore, completions } = useHabitStore()
+  const t = useTranslations()
 
   const today = format(new Date(), 'yyyy-MM-dd')
   const todayScore = getTodayScore()
@@ -47,12 +49,12 @@ function StatsFooter() {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">
             <Target className="w-4 h-4 text-yellow-500" />
-            <span className="text-muted">Today:</span>
+            <span className="text-muted">{t.habits.todayLabel}</span>
             <span className="font-medium">{todayScore}/{maxPossibleScore} pts</span>
           </span>
           <span className="flex items-center gap-1.5">
             <Flame className="w-4 h-4 text-orange-500" />
-            <span className="font-medium">{streak} day streak</span>
+            <span className="font-medium">{streak} {t.habits.dayStreak}</span>
           </span>
         </div>
         <ChevronUp
@@ -73,7 +75,7 @@ function StatsFooter() {
             <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
               {todayScore}
             </p>
-            <p className="text-xs text-muted">Points Today</p>
+            <p className="text-xs text-muted">{t.habits.pointsToday}</p>
             <div className="mt-2 h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
@@ -85,9 +87,9 @@ function StatsFooter() {
             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {streak}
             </p>
-            <p className="text-xs text-muted">Day Streak</p>
+            <p className="text-xs text-muted">{t.habits.dayStreakLabel}</p>
             <p className="text-xs text-muted mt-2">
-              {completions.length} total completions
+              {completions.length} {t.habits.totalCompletions}
             </p>
           </div>
         </div>
@@ -97,14 +99,16 @@ function StatsFooter() {
 }
 
 export default function HabitsPage() {
+  const t = useTranslations()
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-auto">
         <div className="max-w-lg mx-auto p-4 space-y-2">
           {/* Header */}
           <div className="mb-4">
-            <h1 className="text-xl font-bold">Power Habits</h1>
-            <p className="text-sm text-muted">Tap to expand</p>
+            <h1 className="text-xl font-bold">{t.habits.title}</h1>
+            <p className="text-sm text-muted">{t.habits.tapToExpand}</p>
           </div>
 
           {/* Habit Cards */}
@@ -115,7 +119,7 @@ export default function HabitsPage() {
           {/* Coming Soon */}
           <div className="pt-4">
             <p className="text-xs text-center text-muted">
-              More habits coming soon...
+              {t.habits.moreComingSoon}
             </p>
           </div>
         </div>

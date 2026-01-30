@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { format } from 'date-fns'
 import { X, Clock, Calendar, FileText, CheckCircle, Circle, Edit3, Save } from 'lucide-react'
 import { Step, Task } from '@/stores/taskStore'
+import { useTranslations, useI18n } from '@/lib/i18n'
 
 interface StepDetailPopupProps {
   isOpen: boolean
@@ -26,6 +26,8 @@ export function StepDetailPopup({
 }: StepDetailPopupProps) {
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [description, setDescription] = useState(step.description || '')
+  const t = useTranslations()
+  const { locale } = useI18n()
 
   useEffect(() => {
     setDescription(step.description || '')
@@ -57,12 +59,12 @@ export function StepDetailPopup({
   const formatTime = (time: string | undefined) => {
     if (!time) return null
     const [h, m] = time.split(':').map(Number)
-    return format(new Date(0, 0, 0, h, m), 'h:mm a')
+    return new Date(0, 0, 0, h, m).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })
   }
 
   const formatDate = (date: string | undefined) => {
     if (!date) return null
-    return format(new Date(date), 'EEEE, MMMM d, yyyy')
+    return new Date(date).toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   }
 
   const handleSaveDescription = () => {
@@ -109,7 +111,7 @@ export function StepDetailPopup({
                 <h2 className={`text-xl font-semibold text-white ${
                   step.completed ? 'line-through opacity-60' : ''
                 }`}>
-                  {step.text || 'Untitled Step'}
+                  {step.text || t.tasks.untitledStep}
                 </h2>
               </div>
             </div>
@@ -137,10 +139,10 @@ export function StepDetailPopup({
               style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)' }}
             />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-white/40 uppercase tracking-wider">Task</p>
+              <p className="text-xs text-white/40 uppercase tracking-wider">{t.tasks.task}</p>
               <p className="text-sm text-white font-medium truncate">{task.title}</p>
             </div>
-            <span className="text-xs text-white/40">View task</span>
+            <span className="text-xs text-white/40">{t.tasks.viewTask}</span>
           </button>
 
           {/* Schedule info */}
@@ -149,7 +151,7 @@ export function StepDetailPopup({
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5">
                 <Calendar size={18} className="text-blue-400 flex-shrink-0" />
                 <div>
-                  <p className="text-xs text-white/40">Date</p>
+                  <p className="text-xs text-white/40">{t.tasks.date}</p>
                   <p className="text-sm text-white">{formatDate(step.scheduledDate)}</p>
                 </div>
               </div>
@@ -158,7 +160,7 @@ export function StepDetailPopup({
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5">
                 <Clock size={18} className="text-cyan-400 flex-shrink-0" />
                 <div>
-                  <p className="text-xs text-white/40">Time</p>
+                  <p className="text-xs text-white/40">{t.common.time}</p>
                   <p className="text-sm text-white">{formatTime(step.scheduledTime)}</p>
                 </div>
               </div>
@@ -170,7 +172,7 @@ export function StepDetailPopup({
             <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <FileText size={16} className="text-white/40" />
-                <span className="text-xs text-white/40 uppercase tracking-wider">Notes & Details</span>
+                <span className="text-xs text-white/40 uppercase tracking-wider">{t.tasks.notesAndDetails}</span>
               </div>
               {!isEditingDescription ? (
                 <button
@@ -185,7 +187,7 @@ export function StepDetailPopup({
                   className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-green-400 hover:bg-green-400/10 transition-colors text-xs"
                 >
                   <Save size={12} />
-                  Save
+                  {t.common.save}
                 </button>
               )}
             </div>
@@ -195,7 +197,7 @@ export function StepDetailPopup({
                   autoFocus
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add notes, instructions, or details about this step..."
+                  placeholder={t.tasks.addNotesPlaceholder}
                   className="w-full h-32 bg-transparent text-white text-sm placeholder:text-white/30 resize-none focus:outline-none"
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
@@ -212,7 +214,7 @@ export function StepDetailPopup({
                   {step.description ? (
                     <p className="text-sm text-white/80 whitespace-pre-wrap">{step.description}</p>
                   ) : (
-                    <p className="text-sm text-white/30 italic">No notes yet. Click edit to add details.</p>
+                    <p className="text-sm text-white/30 italic">{t.tasks.noNotesYet}</p>
                   )}
                 </div>
               )}
@@ -223,7 +225,7 @@ export function StepDetailPopup({
         {/* Footer */}
         <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
           <span className="text-[10px] text-white/30">
-            Press Esc to close
+            {t.tasks.pressEscToClose}
           </span>
           <button
             onClick={onToggleStep}
@@ -237,7 +239,7 @@ export function StepDetailPopup({
               boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
             } : {}}
           >
-            {step.completed ? 'Mark Incomplete' : 'Mark Complete'}
+            {step.completed ? t.tasks.markIncomplete : t.tasks.markComplete}
           </button>
         </div>
       </div>

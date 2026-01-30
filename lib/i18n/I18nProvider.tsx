@@ -1,12 +1,14 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { translations, Locale, TranslationStrings } from './translations'
+import { translations, Locale } from './translations'
+
+type TranslationType = typeof translations['en']
 
 interface I18nContextType {
   locale: Locale
   setLocale: (locale: Locale) => void
-  t: TranslationStrings
+  t: TranslationType
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
@@ -45,7 +47,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, [locale, mounted])
 
-  const t = translations[locale]
+  const t = translations[locale] as TranslationType
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>

@@ -24,6 +24,15 @@ export const translations = {
       signOut: 'Sign out',
       synced: 'Synced',
       syncing: 'Syncing...',
+      change: 'Change',
+      time: 'Time',
+      continueWith: 'Continue with',
+      item: 'item',
+      items: 'items',
+      of: 'of',
+      min: 'min',
+      minutes: 'minutes',
+      hours: 'hours',
     },
     // App branding
     app: {
@@ -38,7 +47,12 @@ export const translations = {
       addStep: 'Add a step...',
       noTasks: 'No tasks yet',
       noSteps: 'No steps yet',
+      noStepsYet: 'No steps yet',
+      clickToAddStep: 'Click the + button to add a step',
       selectTask: 'Select a task to see steps',
+      selectTaskToViewSteps: 'Select a task to view steps',
+      orCreateNewTask: 'or create a new task from the Tasks tab',
+      stepsFor: 'Steps for:',
       showCompleted: 'Show completed',
       hideCompleted: 'Hide completed',
       clearCompleted: 'Clear completed',
@@ -47,6 +61,17 @@ export const translations = {
       today: 'Today',
       tomorrow: 'Tomorrow',
       yesterday: 'Yesterday',
+      tasksDone: 'Tasks done',
+      untitledStep: 'Untitled Step',
+      task: 'Task',
+      viewTask: 'View task',
+      date: 'Date',
+      notesAndDetails: 'Notes & Details',
+      noNotesYet: 'No notes yet. Click edit to add details.',
+      addNotesPlaceholder: 'Add notes, instructions, or details about this step...',
+      pressEscToClose: 'Press Esc to close',
+      markComplete: 'Mark Complete',
+      markIncomplete: 'Mark Incomplete',
     },
     // Habits page
     habits: {
@@ -59,27 +84,80 @@ export const translations = {
       score: 'Score',
       currentStreak: 'Current streak',
       bestStreak: 'Best streak',
+      tapToExpand: 'Tap to expand',
+      moreComingSoon: 'More habits coming soon...',
+      todayLabel: 'Today:',
+      dayStreak: 'day streak',
+      pointsToday: 'Points Today',
+      dayStreakLabel: 'Day Streak',
+      totalCompletions: 'total completions',
+      whyThisMatters: 'Why This Matters',
+      scheduledForToday: 'Scheduled for today',
+      scheduleToConsistency: 'Schedule it to build consistency',
+      addToTodayCalendar: "Add to Today's Calendar",
+      addToCalendar: 'Add to your calendar',
+      recommendedTime: 'Recommended time',
+      optimalForHabit: 'is optimal for this habit',
+      scheduleFor: 'Schedule for',
+      todayOnly: 'Today only',
+      addToTodayCalendarShort: "Add to today's calendar",
+      selectDays: 'Select days',
+      chooseDaysOfWeek: 'Choose specific days of the week',
+      everyDay: 'Every day',
+      scheduleForNextWeeks: 'Schedule for the next 4 weeks',
+      selectDaysOfWeek: 'Select days of the week',
+      selectAtLeastOneDay: 'Select at least one day',
+      willBeScheduled: 'Will be scheduled for',
+      dayPerWeek: 'day per week',
+      daysPerWeek: 'days per week',
+      addToToday: 'Add to Today',
+      scheduleDays: 'Schedule Days',
+      scheduleDaily: 'Schedule Daily',
+      bestTime: 'Best time:',
     },
     // Calendar page
     calendar: {
       title: 'Calendar',
       noEvents: 'No events',
       scheduledSteps: 'Scheduled steps',
+      day: 'Day',
+      week: 'Week',
+      compact: 'Compact',
+      expand: 'Expand',
+      habits: 'Habits',
+      hideHabits: 'Hide power habits',
+      showHabits: 'Show power habits',
     },
     // Progress page
     progress: {
       title: 'Progress',
-      subtitle: 'Track your productivity journey',
+      subtitle: 'Track your productivity and achievements',
       tasksCompleted: 'Tasks completed',
       stepsCompleted: 'Steps completed',
       focusTime: 'Focus time',
       thisWeek: 'This week',
       thisMonth: 'This month',
       allTime: 'All time',
+      dailyGoal: 'Daily Goal',
+      focusedToday: 'min focused today',
+      pomodorosToday: 'Pomodoros today',
+      focusThisWeek: 'Focus this week',
+      lastSevenDays: 'Last 7 Days',
+      quickActions: 'Quick Actions',
+      startFocus: 'Start Focus',
+      beginSession: 'Begin a {duration} minute session',
+      manageTasks: 'Manage Tasks',
+      planSessions: 'Plan your work sessions',
+      viewSchedule: 'View Schedule',
+      seePlannedActivities: 'See your planned activities',
+      recentSessions: 'Recent Sessions',
+      focusSession: 'Focus session',
     },
     // Timer page
     timer: {
       title: 'Focus Timer',
+      pageTitle: 'Paretto Timer',
+      tagline: 'Stay focused, take breaks',
       focus: 'Focus',
       shortBreak: 'Short Break',
       longBreak: 'Long Break',
@@ -89,6 +167,21 @@ export const translations = {
       skip: 'Skip',
       sessions: 'sessions',
       pomodorosCompleted: 'Pomodoros completed',
+      focusTime: 'Focus Time',
+      breakTime: 'Break Time',
+      focusComplete: 'Focus session complete!',
+      timeForBreak: 'Time for a break.',
+      breakOver: 'Break is over!',
+      readyToFocus: 'Ready to focus again?',
+      playPause: 'play/pause',
+      sessionToday: 'session today',
+      sessionsToday: 'sessions today',
+      classicPomodoro: 'Classic Pomodoro',
+      deepWork: 'Deep Work',
+      custom: 'Custom',
+      setYourOwn: 'Set your own',
+      workMinutes: 'Work (minutes)',
+      breakMinutes: 'Break (minutes)',
     },
     // Settings page
     settings: {
@@ -109,6 +202,10 @@ export const translations = {
       importData: 'Import data',
       about: 'About',
       version: 'Version',
+    },
+    // Login page
+    login: {
+      continueWithGoogle: 'Continue with Google',
     },
   },
   es: {
@@ -134,6 +231,15 @@ export const translations = {
       signOut: 'Cerrar sesión',
       synced: 'Sincronizado',
       syncing: 'Sincronizando...',
+      change: 'Cambiar',
+      time: 'Hora',
+      continueWith: 'Continuar con',
+      item: 'elemento',
+      items: 'elementos',
+      of: 'de',
+      min: 'min',
+      minutes: 'minutos',
+      hours: 'horas',
     },
     // App branding
     app: {
@@ -148,7 +254,12 @@ export const translations = {
       addStep: 'Agregar un paso...',
       noTasks: 'No hay tareas',
       noSteps: 'No hay pasos',
+      noStepsYet: 'No hay pasos aún',
+      clickToAddStep: 'Haz clic en el botón + para agregar un paso',
       selectTask: 'Selecciona una tarea para ver los pasos',
+      selectTaskToViewSteps: 'Selecciona una tarea para ver los pasos',
+      orCreateNewTask: 'o crea una nueva tarea desde la pestaña Tareas',
+      stepsFor: 'Pasos para:',
       showCompleted: 'Mostrar completadas',
       hideCompleted: 'Ocultar completadas',
       clearCompleted: 'Limpiar completadas',
@@ -157,6 +268,17 @@ export const translations = {
       today: 'Hoy',
       tomorrow: 'Mañana',
       yesterday: 'Ayer',
+      tasksDone: 'Tareas hechas',
+      untitledStep: 'Paso sin título',
+      task: 'Tarea',
+      viewTask: 'Ver tarea',
+      date: 'Fecha',
+      notesAndDetails: 'Notas y Detalles',
+      noNotesYet: 'Sin notas aún. Haz clic en editar para agregar detalles.',
+      addNotesPlaceholder: 'Agrega notas, instrucciones o detalles sobre este paso...',
+      pressEscToClose: 'Presiona Esc para cerrar',
+      markComplete: 'Marcar Completo',
+      markIncomplete: 'Marcar Incompleto',
     },
     // Habits page
     habits: {
@@ -169,27 +291,80 @@ export const translations = {
       score: 'Puntuación',
       currentStreak: 'Racha actual',
       bestStreak: 'Mejor racha',
+      tapToExpand: 'Toca para expandir',
+      moreComingSoon: 'Más hábitos próximamente...',
+      todayLabel: 'Hoy:',
+      dayStreak: 'días de racha',
+      pointsToday: 'Puntos Hoy',
+      dayStreakLabel: 'Días de Racha',
+      totalCompletions: 'completados en total',
+      whyThisMatters: 'Por Qué Esto Importa',
+      scheduledForToday: 'Programado para hoy',
+      scheduleToConsistency: 'Prográmalo para crear constancia',
+      addToTodayCalendar: 'Agregar al Calendario de Hoy',
+      addToCalendar: 'Agregar a tu calendario',
+      recommendedTime: 'Hora recomendada',
+      optimalForHabit: 'es óptima para este hábito',
+      scheduleFor: 'Programar para',
+      todayOnly: 'Solo hoy',
+      addToTodayCalendarShort: 'Agregar al calendario de hoy',
+      selectDays: 'Seleccionar días',
+      chooseDaysOfWeek: 'Elige días específicos de la semana',
+      everyDay: 'Todos los días',
+      scheduleForNextWeeks: 'Programar para las próximas 4 semanas',
+      selectDaysOfWeek: 'Selecciona los días de la semana',
+      selectAtLeastOneDay: 'Selecciona al menos un día',
+      willBeScheduled: 'Se programará para',
+      dayPerWeek: 'día por semana',
+      daysPerWeek: 'días por semana',
+      addToToday: 'Agregar a Hoy',
+      scheduleDays: 'Programar Días',
+      scheduleDaily: 'Programar Diario',
+      bestTime: 'Mejor hora:',
     },
     // Calendar page
     calendar: {
       title: 'Calendario',
       noEvents: 'Sin eventos',
       scheduledSteps: 'Pasos programados',
+      day: 'Día',
+      week: 'Semana',
+      compact: 'Compacto',
+      expand: 'Expandir',
+      habits: 'Hábitos',
+      hideHabits: 'Ocultar hábitos',
+      showHabits: 'Mostrar hábitos',
     },
     // Progress page
     progress: {
       title: 'Progreso',
-      subtitle: 'Sigue tu productividad',
+      subtitle: 'Sigue tu productividad y logros',
       tasksCompleted: 'Tareas completadas',
       stepsCompleted: 'Pasos completados',
       focusTime: 'Tiempo de enfoque',
       thisWeek: 'Esta semana',
       thisMonth: 'Este mes',
       allTime: 'Todo el tiempo',
+      dailyGoal: 'Meta Diaria',
+      focusedToday: 'min enfocado hoy',
+      pomodorosToday: 'Pomodoros hoy',
+      focusThisWeek: 'Enfoque esta semana',
+      lastSevenDays: 'Últimos 7 Días',
+      quickActions: 'Acciones Rápidas',
+      startFocus: 'Iniciar Enfoque',
+      beginSession: 'Comenzar una sesión de {duration} minutos',
+      manageTasks: 'Gestionar Tareas',
+      planSessions: 'Planifica tus sesiones de trabajo',
+      viewSchedule: 'Ver Horario',
+      seePlannedActivities: 'Ver tus actividades planificadas',
+      recentSessions: 'Sesiones Recientes',
+      focusSession: 'Sesión de enfoque',
     },
     // Timer page
     timer: {
       title: 'Temporizador de Enfoque',
+      pageTitle: 'Temporizador Paretto',
+      tagline: 'Mantén el enfoque, toma descansos',
       focus: 'Enfoque',
       shortBreak: 'Descanso Corto',
       longBreak: 'Descanso Largo',
@@ -199,6 +374,21 @@ export const translations = {
       skip: 'Saltar',
       sessions: 'sesiones',
       pomodorosCompleted: 'Pomodoros completados',
+      focusTime: 'Tiempo de Enfoque',
+      breakTime: 'Tiempo de Descanso',
+      focusComplete: '¡Sesión de enfoque completada!',
+      timeForBreak: 'Hora de un descanso.',
+      breakOver: '¡El descanso terminó!',
+      readyToFocus: '¿Listo para enfocarte de nuevo?',
+      playPause: 'reproducir/pausar',
+      sessionToday: 'sesión hoy',
+      sessionsToday: 'sesiones hoy',
+      classicPomodoro: 'Pomodoro Clásico',
+      deepWork: 'Trabajo Profundo',
+      custom: 'Personalizado',
+      setYourOwn: 'Configura el tuyo',
+      workMinutes: 'Trabajo (minutos)',
+      breakMinutes: 'Descanso (minutos)',
     },
     // Settings page
     settings: {
@@ -220,6 +410,10 @@ export const translations = {
       about: 'Acerca de',
       version: 'Versión',
     },
+    // Login page
+    login: {
+      continueWithGoogle: 'Continuar con Google',
+    },
   },
 } as const
 
@@ -227,104 +421,4 @@ export type TranslationKey = keyof typeof translations.en
 export type Translations = typeof translations['en']
 
 // Helper type to make translations structurally typed
-export type TranslationStrings = {
-  nav: {
-    tasks: string
-    habits: string
-    calendar: string
-    progress: string
-    timer: string
-    settings: string
-  }
-  common: {
-    loading: string
-    save: string
-    cancel: string
-    delete: string
-    edit: string
-    add: string
-    dismiss: string
-    signIn: string
-    signOut: string
-    synced: string
-    syncing: string
-  }
-  app: {
-    name: string
-    tagline: string
-  }
-  tasks: {
-    title: string
-    steps: string
-    addTask: string
-    addStep: string
-    noTasks: string
-    noSteps: string
-    selectTask: string
-    showCompleted: string
-    hideCompleted: string
-    clearCompleted: string
-    estimatedPomodoros: string
-    completedToday: string
-    today: string
-    tomorrow: string
-    yesterday: string
-  }
-  habits: {
-    title: string
-    subtitle: string
-    addHabit: string
-    noHabits: string
-    streak: string
-    days: string
-    score: string
-    currentStreak: string
-    bestStreak: string
-  }
-  calendar: {
-    title: string
-    noEvents: string
-    scheduledSteps: string
-  }
-  progress: {
-    title: string
-    subtitle: string
-    tasksCompleted: string
-    stepsCompleted: string
-    focusTime: string
-    thisWeek: string
-    thisMonth: string
-    allTime: string
-  }
-  timer: {
-    title: string
-    focus: string
-    shortBreak: string
-    longBreak: string
-    start: string
-    pause: string
-    reset: string
-    skip: string
-    sessions: string
-    pomodorosCompleted: string
-  }
-  settings: {
-    title: string
-    subtitle: string
-    appearance: string
-    language: string
-    theme: string
-    lightTheme: string
-    darkTheme: string
-    systemTheme: string
-    account: string
-    signedInAs: string
-    guestMode: string
-    guestModeDescription: string
-    dataSync: string
-    exportData: string
-    importData: string
-    about: string
-    version: string
-  }
-}
+export type TranslationStrings = typeof translations['en']

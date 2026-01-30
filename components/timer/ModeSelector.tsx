@@ -4,6 +4,7 @@ import { TimerMode } from '@/stores/timerStore'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useState } from 'react'
+import { useTranslations } from '@/lib/i18n'
 
 interface ModeSelectorProps {
   mode: TimerMode
@@ -23,11 +24,12 @@ export function ModeSelector({
   const [showCustom, setShowCustom] = useState(false)
   const [workValue, setWorkValue] = useState(customWork.toString())
   const [breakValue, setBreakValue] = useState(customBreak.toString())
+  const t = useTranslations()
 
   const modes: { value: TimerMode; label: string; description: string }[] = [
-    { value: '25/5', label: '25/5', description: 'Classic Pomodoro' },
-    { value: '50/10', label: '50/10', description: 'Deep Work' },
-    { value: 'custom', label: 'Custom', description: 'Set your own' },
+    { value: '25/5', label: '25/5', description: t.timer.classicPomodoro },
+    { value: '50/10', label: '50/10', description: t.timer.deepWork },
+    { value: 'custom', label: t.timer.custom, description: t.timer.setYourOwn },
   ]
 
   const handleCustomSave = () => {
@@ -61,7 +63,7 @@ export function ModeSelector({
         <div className="mt-4 p-4 bg-surface border border-border rounded-lg max-w-xs mx-auto">
           <div className="space-y-3">
             <div>
-              <label className="text-sm text-muted block mb-1">Work (minutes)</label>
+              <label className="text-sm text-muted block mb-1">{t.timer.workMinutes}</label>
               <Input
                 type="number"
                 value={workValue}
@@ -71,7 +73,7 @@ export function ModeSelector({
               />
             </div>
             <div>
-              <label className="text-sm text-muted block mb-1">Break (minutes)</label>
+              <label className="text-sm text-muted block mb-1">{t.timer.breakMinutes}</label>
               <Input
                 type="number"
                 value={breakValue}
@@ -81,7 +83,7 @@ export function ModeSelector({
               />
             </div>
             <Button onClick={handleCustomSave} className="w-full">
-              Save
+              {t.common.save}
             </Button>
           </div>
         </div>

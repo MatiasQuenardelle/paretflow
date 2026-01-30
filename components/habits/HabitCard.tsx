@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { format, addDays, startOfWeek, getDay } from 'date-fns'
 import { ChevronDown, Clock, X, CalendarPlus, Check, CalendarDays, CalendarRange } from 'lucide-react'
 import { HabitDefinition, useHabitStore } from '@/stores/habitStore'
+import { useTranslations } from '@/lib/i18n'
 
 type ScheduleMode = 'today' | 'select-days' | 'every-day'
 
@@ -135,6 +136,7 @@ export function HabitCard({ habit }: HabitCardProps) {
   const [scheduleTime, setScheduleTime] = useState(habit.suggestedTime)
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('today')
   const [selectedDays, setSelectedDays] = useState<number[]>([]) // Days of week (0-6)
+  const t = useTranslations()
 
   const {
     completeHabit,
@@ -289,7 +291,7 @@ export function HabitCard({ habit }: HabitCardProps) {
             {/* Why This Matters */}
             <div className="rounded-lg bg-white/5 dark:bg-white/5 border border-white/10 dark:border-white/5 p-3">
               <p className="text-xs text-muted uppercase tracking-wider mb-1">
-                Why This Matters
+                {t.habits.whyThisMatters}
               </p>
               <p className="text-sm leading-relaxed">{habit.benefit}</p>
             </div>
@@ -304,7 +306,7 @@ export function HabitCard({ habit }: HabitCardProps) {
                       <Check className="w-5 h-5 text-green-500" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-green-400">Scheduled for today</p>
+                      <p className="text-sm font-medium text-green-400">{t.habits.scheduledForToday}</p>
                       <p className="text-xs text-muted">
                         {scheduledToday.map(s => formatTimeDisplay(s.time)).join(', ')}
                       </p>
@@ -316,7 +318,7 @@ export function HabitCard({ habit }: HabitCardProps) {
                       }}
                       className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                     >
-                      Change
+                      {t.common.change}
                     </button>
                   </div>
                 </div>
@@ -328,8 +330,8 @@ export function HabitCard({ habit }: HabitCardProps) {
                       <Clock className="w-5 h-5 text-amber-500" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">Best time: {formatTimeDisplay(habit.suggestedTime)}</p>
-                      <p className="text-xs text-muted">Schedule it to build consistency</p>
+                      <p className="text-sm font-medium">{t.habits.bestTime} {formatTimeDisplay(habit.suggestedTime)}</p>
+                      <p className="text-xs text-muted">{t.habits.scheduleToConsistency}</p>
                     </div>
                   </div>
                   <button
@@ -340,7 +342,7 @@ export function HabitCard({ habit }: HabitCardProps) {
                     className={`w-full py-3 px-4 rounded-xl bg-gradient-to-r ${colorGradients[habit.color] || colorGradients.purple} text-white font-medium text-sm shadow-lg ${colorShadows[habit.color] || colorShadows.purple} transition-all active:scale-[0.98] flex items-center justify-center gap-2`}
                   >
                     <CalendarPlus size={18} />
-                    Add to Today's Calendar
+                    {t.habits.addToTodayCalendar}
                   </button>
                 </div>
               )}
@@ -365,7 +367,7 @@ export function HabitCard({ habit }: HabitCardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold">{habit.name}</h2>
-                  <p className="text-xs text-muted">Add to your calendar</p>
+                  <p className="text-xs text-muted">{t.habits.addToCalendar}</p>
                 </div>
                 <button
                   onClick={() => setShowSchedulePopup(false)}
@@ -379,15 +381,15 @@ export function HabitCard({ habit }: HabitCardProps) {
             {/* Content */}
             <div className="p-5 space-y-4">
               <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
-                <p className="text-xs text-amber-400 font-medium mb-1">Recommended time</p>
+                <p className="text-xs text-amber-400 font-medium mb-1">{t.habits.recommendedTime}</p>
                 <p className="text-sm text-muted">
-                  {formatTimeDisplay(habit.suggestedTime)} is optimal for this habit
+                  {formatTimeDisplay(habit.suggestedTime)} {t.habits.optimalForHabit}
                 </p>
               </div>
 
               {/* Schedule Mode Selection */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Schedule for</label>
+                <label className="text-sm font-medium">{t.habits.scheduleFor}</label>
                 <div className="grid grid-cols-1 gap-2">
                   <button
                     onClick={() => setScheduleMode('today')}
@@ -399,8 +401,8 @@ export function HabitCard({ habit }: HabitCardProps) {
                   >
                     <CalendarPlus size={18} className={scheduleMode === 'today' ? colorText[habit.color] : 'text-muted'} />
                     <div className="text-left">
-                      <p className="text-sm font-medium">Today only</p>
-                      <p className="text-xs text-muted">Add to today's calendar</p>
+                      <p className="text-sm font-medium">{t.habits.todayOnly}</p>
+                      <p className="text-xs text-muted">{t.habits.addToTodayCalendarShort}</p>
                     </div>
                   </button>
 
@@ -414,8 +416,8 @@ export function HabitCard({ habit }: HabitCardProps) {
                   >
                     <CalendarDays size={18} className={scheduleMode === 'select-days' ? colorText[habit.color] : 'text-muted'} />
                     <div className="text-left">
-                      <p className="text-sm font-medium">Select days</p>
-                      <p className="text-xs text-muted">Choose specific days of the week</p>
+                      <p className="text-sm font-medium">{t.habits.selectDays}</p>
+                      <p className="text-xs text-muted">{t.habits.chooseDaysOfWeek}</p>
                     </div>
                   </button>
 
@@ -429,8 +431,8 @@ export function HabitCard({ habit }: HabitCardProps) {
                   >
                     <CalendarRange size={18} className={scheduleMode === 'every-day' ? colorText[habit.color] : 'text-muted'} />
                     <div className="text-left">
-                      <p className="text-sm font-medium">Every day</p>
-                      <p className="text-xs text-muted">Schedule for the next 4 weeks</p>
+                      <p className="text-sm font-medium">{t.habits.everyDay}</p>
+                      <p className="text-xs text-muted">{t.habits.scheduleForNextWeeks}</p>
                     </div>
                   </button>
                 </div>
@@ -439,7 +441,7 @@ export function HabitCard({ habit }: HabitCardProps) {
               {/* Day selection (only shown when select-days mode is active) */}
               {scheduleMode === 'select-days' && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Select days of the week</label>
+                  <label className="text-sm font-medium">{t.habits.selectDaysOfWeek}</label>
                   <div className="flex gap-1.5 justify-between">
                     {DAYS_OF_WEEK.map((day) => (
                       <button
@@ -458,14 +460,14 @@ export function HabitCard({ habit }: HabitCardProps) {
                   </div>
                   <p className="text-xs text-muted">
                     {selectedDays.length === 0
-                      ? 'Select at least one day'
-                      : `Will be scheduled for ${selectedDays.length} day${selectedDays.length > 1 ? 's' : ''} per week`}
+                      ? t.habits.selectAtLeastOneDay
+                      : `${t.habits.willBeScheduled} ${selectedDays.length} ${selectedDays.length > 1 ? t.habits.daysPerWeek : t.habits.dayPerWeek}`}
                   </p>
                 </div>
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Time</label>
+                <label className="text-sm font-medium">{t.common.time}</label>
                 <input
                   type="time"
                   value={scheduleTime}
@@ -485,7 +487,7 @@ export function HabitCard({ habit }: HabitCardProps) {
                 }}
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-white/5 border border-white/10 dark:border-white/5 hover:bg-white/10 transition-colors"
               >
-                Cancel
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleSchedule}
@@ -493,9 +495,9 @@ export function HabitCard({ habit }: HabitCardProps) {
                 className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-b ${colorGradients[habit.color] || colorGradients.purple} text-white shadow-lg ${colorShadows[habit.color] || colorShadows.purple} transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100`}
               >
                 <CalendarPlus size={18} />
-                {scheduleMode === 'today' && 'Add to Today'}
-                {scheduleMode === 'select-days' && 'Schedule Days'}
-                {scheduleMode === 'every-day' && 'Schedule Daily'}
+                {scheduleMode === 'today' && t.habits.addToToday}
+                {scheduleMode === 'select-days' && t.habits.scheduleDays}
+                {scheduleMode === 'every-day' && t.habits.scheduleDaily}
               </button>
             </div>
           </div>

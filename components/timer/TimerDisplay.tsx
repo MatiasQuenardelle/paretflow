@@ -1,6 +1,7 @@
 'use client'
 
 import { formatTime } from '@/lib/utils'
+import { useTranslations } from '@/lib/i18n'
 
 interface TimerDisplayProps {
   timeRemaining: number
@@ -10,6 +11,7 @@ interface TimerDisplayProps {
 }
 
 export function TimerDisplay({ timeRemaining, totalTime, isRunning, isBreak }: TimerDisplayProps) {
+  const t = useTranslations()
   const progress = ((totalTime - timeRemaining) / totalTime) * 100
   const circumference = 2 * Math.PI * 140 // radius = 140
   const strokeDashoffset = circumference - (progress / 100) * circumference
@@ -84,7 +86,7 @@ export function TimerDisplay({ timeRemaining, totalTime, isRunning, isBreak }: T
           {formatTime(timeRemaining)}
         </span>
         <span className={`text-sm font-medium mt-2 ${isBreak ? 'text-green-500' : 'text-muted'}`}>
-          {isBreak ? 'Break Time' : 'Focus Time'}
+          {isBreak ? t.timer.breakTime : t.timer.focusTime}
         </span>
       </div>
     </div>

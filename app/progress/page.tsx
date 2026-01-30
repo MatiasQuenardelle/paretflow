@@ -6,16 +6,19 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useTimerStore } from '@/stores/timerStore'
 import { useTaskStore } from '@/stores/taskStore'
+import { useTranslations, useI18n } from '@/lib/i18n'
 
 export default function ProgressPage() {
   const { sessionsToday, allSessions, mode: timerMode, customWork } = useTimerStore()
   const { tasks, mode, isLoading } = useTaskStore()
+  const t = useTranslations()
+  const { locale } = useI18n()
 
   // Show loading state
   if (mode === 'loading' || isLoading) {
     return (
       <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
-        <div className="text-muted">Loading...</div>
+        <div className="text-muted">{t.common.loading}</div>
       </div>
     )
   }
@@ -49,7 +52,7 @@ export default function ProgressPage() {
       .reduce((acc, s) => acc + s.duration, 0)
 
     return {
-      day: date.toLocaleDateString('en', { weekday: 'short' }),
+      day: date.toLocaleDateString(locale, { weekday: 'short' }),
       date: date.getDate(),
       minutes: dayMinutes,
     }
@@ -71,8 +74,8 @@ export default function ProgressPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 md:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Progress</h1>
-        <p className="text-muted">Track your productivity and achievements</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t.progress.title}</h1>
+        <p className="text-muted">{t.progress.subtitle}</p>
       </header>
 
       {/* Daily Progress Ring */}
@@ -113,11 +116,11 @@ export default function ProgressPage() {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-bold">{todaySessions.length}</span>
-              <span className="text-xs text-muted">of {dailyGoal}</span>
+              <span className="text-xs text-muted">{t.common.of} {dailyGoal}</span>
             </div>
           </div>
-          <p className="mt-4 font-medium">Daily Goal</p>
-          <p className="text-sm text-muted">{todayMinutes} min focused today</p>
+          <p className="mt-4 font-medium">{t.progress.dailyGoal}</p>
+          <p className="text-sm text-muted">{todayMinutes} {t.progress.focusedToday}</p>
         </Card>
 
         {/* Stats Cards */}
@@ -128,7 +131,7 @@ export default function ProgressPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{todaySessions.length}</p>
-              <p className="text-sm text-muted">Pomodoros today</p>
+              <p className="text-sm text-muted">{t.progress.pomodorosToday}</p>
             </div>
           </Card>
 
@@ -138,7 +141,7 @@ export default function ProgressPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{weekSessions.length}</p>
-              <p className="text-sm text-muted">This week</p>
+              <p className="text-sm text-muted">{t.progress.thisWeek}</p>
             </div>
           </Card>
 
@@ -148,7 +151,7 @@ export default function ProgressPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{completedTasks}/{totalTasks}</p>
-              <p className="text-sm text-muted">Tasks done</p>
+              <p className="text-sm text-muted">{t.tasks.tasksDone}</p>
             </div>
           </Card>
 
@@ -158,7 +161,7 @@ export default function ProgressPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{Math.round(weekMinutes / 60)}h</p>
-              <p className="text-sm text-muted">Focus this week</p>
+              <p className="text-sm text-muted">{t.progress.focusThisWeek}</p>
             </div>
           </Card>
         </div>
@@ -166,14 +169,14 @@ export default function ProgressPage() {
 
       {/* Weekly Chart */}
       <Card className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Last 7 Days</h2>
+        <h2 className="text-lg font-semibold mb-4">{t.progress.lastSevenDays}</h2>
         <div className="flex items-end gap-2 h-40">
           {last7Days.map((day, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-2">
               <div className="w-full flex-1 flex items-end">
                 <div
                   className={`w-full rounded-t-lg transition-all ${
-                    day.day === new Date().toLocaleDateString('en', { weekday: 'short' })
+                    day.day === new Date().toLocaleDateString(locale, { weekday: 'short' })
                       ? 'bg-blue-500'
                       : 'bg-blue-200 dark:bg-blue-900/50'
                   }`}
@@ -192,15 +195,15 @@ export default function ProgressPage() {
       </Card>
 
       {/* Quick Actions */}
-      <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+      <h2 className="text-lg font-semibold mb-4">{t.progress.quickActions}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Link href="/">
           <Card className="hover:border-blue-500 transition-colors cursor-pointer group">
             <div className="flex items-center gap-3 mb-3">
               <Play className="w-5 h-5 text-blue-600" />
-              <span className="font-medium">Start Focus</span>
+              <span className="font-medium">{t.progress.startFocus}</span>
             </div>
-            <p className="text-sm text-muted">Begin a {focusDuration} minute session</p>
+            <p className="text-sm text-muted">{t.progress.beginSession.replace('{duration}', String(focusDuration))}</p>
           </Card>
         </Link>
 
@@ -208,9 +211,9 @@ export default function ProgressPage() {
           <Card className="hover:border-blue-500 transition-colors cursor-pointer group">
             <div className="flex items-center gap-3 mb-3">
               <ListTodo className="w-5 h-5 text-blue-600" />
-              <span className="font-medium">Manage Tasks</span>
+              <span className="font-medium">{t.progress.manageTasks}</span>
             </div>
-            <p className="text-sm text-muted">Plan your work sessions</p>
+            <p className="text-sm text-muted">{t.progress.planSessions}</p>
           </Card>
         </Link>
 
@@ -218,9 +221,9 @@ export default function ProgressPage() {
           <Card className="hover:border-blue-500 transition-colors cursor-pointer group">
             <div className="flex items-center gap-3 mb-3">
               <Calendar className="w-5 h-5 text-blue-600" />
-              <span className="font-medium">View Schedule</span>
+              <span className="font-medium">{t.progress.viewSchedule}</span>
             </div>
-            <p className="text-sm text-muted">See your planned activities</p>
+            <p className="text-sm text-muted">{t.progress.seePlannedActivities}</p>
           </Card>
         </Link>
       </div>
@@ -228,7 +231,7 @@ export default function ProgressPage() {
       {/* Recent Activity */}
       {allSessions.length > 0 && (
         <>
-          <h2 className="text-lg font-semibold mb-4">Recent Sessions</h2>
+          <h2 className="text-lg font-semibold mb-4">{t.progress.recentSessions}</h2>
           <Card>
             <div className="divide-y divide-border">
               {allSessions.slice(-5).reverse().map((session) => {
@@ -241,13 +244,13 @@ export default function ProgressPage() {
                         <Timer className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-medium">{task?.title || 'Focus session'}</p>
+                        <p className="font-medium">{task?.title || t.progress.focusSession}</p>
                         <p className="text-xs text-muted">
-                          {date.toLocaleDateString()} at {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {date.toLocaleDateString(locale)} at {date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                     </div>
-                    <span className="text-sm text-muted">{session.duration} min</span>
+                    <span className="text-sm text-muted">{session.duration} {t.common.min}</span>
                   </div>
                 )
               })}

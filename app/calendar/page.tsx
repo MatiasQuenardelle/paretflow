@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { useTaskStore } from '@/stores/taskStore'
 import { DayView } from '@/components/calendar/DayView'
 import { WeekView } from '@/components/calendar/WeekView'
+import { useTranslations, useI18n } from '@/lib/i18n'
 
 type ViewMode = 'day' | 'week'
 
@@ -18,12 +19,14 @@ export default function CalendarPage() {
   const [scheduledItemsCount, setScheduledItemsCount] = useState(0)
 
   const { tasks, toggleStep, selectTask, mode, isLoading } = useTaskStore()
+  const t = useTranslations()
+  const { locale } = useI18n()
 
   // Show loading state
   if (mode === 'loading' || isLoading) {
     return (
       <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
-        <div className="text-muted">Loading...</div>
+        <div className="text-muted">{t.common.loading}</div>
       </div>
     )
   }
@@ -57,7 +60,7 @@ export default function CalendarPage() {
             <ChevronLeft size={18} />
           </Button>
           <span className="text-sm font-medium text-foreground min-w-[140px] text-center">
-            {format(selectedDate, 'MMMM d, yyyy')}
+            {selectedDate.toLocaleDateString(locale, { month: 'long', day: 'numeric', year: 'numeric' })}
           </span>
           <Button variant="ghost" size="sm" onClick={handleNext}>
             <ChevronRight size={18} />
@@ -76,7 +79,7 @@ export default function CalendarPage() {
               }`}
             >
               <CalendarDays size={16} />
-              Day
+              {t.calendar.day}
             </button>
             <button
               onClick={() => setViewMode('week')}
@@ -87,13 +90,13 @@ export default function CalendarPage() {
               }`}
             >
               <LayoutGrid size={16} />
-              Week
+              {t.calendar.week}
             </button>
           </div>
 
           {/* Scheduled items count */}
           <span className="text-xs text-muted hidden sm:block">
-            {scheduledItemsCount} {scheduledItemsCount === 1 ? 'item' : 'items'}
+            {scheduledItemsCount} {scheduledItemsCount === 1 ? t.common.item : t.common.items}
           </span>
 
           {/* Show/Hide Habits toggle */}
@@ -104,10 +107,10 @@ export default function CalendarPage() {
                 ? 'text-amber-400 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20'
                 : 'text-muted hover:text-foreground border-white/10 dark:border-white/5 hover:bg-white/10'
             }`}
-            title={showHabits ? 'Hide power habits' : 'Show power habits'}
+            title={showHabits ? t.calendar.hideHabits : t.calendar.showHabits}
           >
             {showHabits ? <Zap size={14} /> : <ZapOff size={14} />}
-            <span className="hidden sm:inline">{showHabits ? 'Habits' : 'Habits'}</span>
+            <span className="hidden sm:inline">{t.calendar.habits}</span>
           </button>
 
           {/* Compact/Expand toggle */}
@@ -119,7 +122,7 @@ export default function CalendarPage() {
             className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-all duration-200 px-2 py-1.5 rounded-lg hover:bg-white/10 active:scale-95 border border-white/10 dark:border-white/5"
           >
             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            <span className="hidden sm:inline">{isExpanded ? 'Compact' : 'Expand'}</span>
+            <span className="hidden sm:inline">{isExpanded ? t.calendar.compact : t.calendar.expand}</span>
           </button>
         </div>
       </div>

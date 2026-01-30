@@ -2,9 +2,10 @@
 
 import { useState, useRef } from 'react'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
-import { format, addDays, subDays, isToday } from 'date-fns'
+import { addDays, subDays, isToday } from 'date-fns'
 import { Task, Step } from '@/stores/taskStore'
 import { StepItem } from './StepItem'
+import { useTranslations, useI18n } from '@/lib/i18n'
 
 interface StepsColumnProps {
   task: Task | null
@@ -29,10 +30,11 @@ export function StepsColumn({
 }: StepsColumnProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const dragOverIndex = useRef<number | null>(null)
+  const t = useTranslations()
+  const { locale } = useI18n()
 
   // Date-related computed values
-  const dateFormatted = format(selectedDate, 'EEEE, MMMM d')
-  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
+  const dateFormatted = selectedDate.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })
   const isTodaySelected = isToday(selectedDate)
 
   // Show all steps for the selected task
@@ -72,8 +74,8 @@ export function StepsColumn({
     return (
       <div className="h-full flex items-center justify-center text-muted">
         <div className="text-center px-4">
-          <p className="mb-2 text-sm md:text-base">Select a task to view steps</p>
-          <p className="text-xs md:text-sm">or create a new task from the Tasks tab</p>
+          <p className="mb-2 text-sm md:text-base">{t.tasks.selectTaskToViewSteps}</p>
+          <p className="text-xs md:text-sm">{t.tasks.orCreateNewTask}</p>
         </div>
       </div>
     )
@@ -94,7 +96,7 @@ export function StepsColumn({
             {dateFormatted}
           </h2>
           {isTodaySelected && (
-            <span className="text-[10px] md:text-xs text-blue-600 font-medium">Today</span>
+            <span className="text-[10px] md:text-xs text-blue-600 font-medium">{t.tasks.today}</span>
           )}
         </div>
         <button
@@ -115,7 +117,7 @@ export function StepsColumn({
             onClick={handleToday}
             className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm rounded-lg border border-border hover:bg-border/50 text-muted hover:text-foreground transition-colors"
           >
-            Today
+            {t.tasks.today}
           </button>
         )}
       </div>
@@ -123,7 +125,7 @@ export function StepsColumn({
       {/* Task title indicator */}
       <div className="mb-2 px-1">
         <p className="text-xs text-muted truncate">
-          Steps for: <span className="text-foreground font-medium">{task.title}</span>
+          {t.tasks.stepsFor} <span className="text-foreground font-medium">{task.title}</span>
         </p>
       </div>
 
@@ -131,8 +133,8 @@ export function StepsColumn({
       <div className="flex-1 overflow-y-auto space-y-1.5 md:space-y-2 mb-2 md:mb-4">
         {filteredSteps.length === 0 ? (
           <div className="text-center py-6 md:py-8 text-muted">
-            <p className="text-sm">No steps yet</p>
-            <p className="text-xs mt-1">Click the + button to add a step</p>
+            <p className="text-sm">{t.tasks.noStepsYet}</p>
+            <p className="text-xs mt-1">{t.tasks.clickToAddStep}</p>
           </div>
         ) : (
           filteredSteps
