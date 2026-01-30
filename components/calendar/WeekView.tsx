@@ -22,9 +22,9 @@ interface ScheduledStep {
 }
 
 const START_HOUR = 6
-const END_HOUR = 23
+const END_HOUR = 22 // End at 10 PM instead of 11 PM
 const HOUR_HEIGHT_EXPANDED = 48
-const HOUR_HEIGHT_COLLAPSED = 24 // Compact height to fit all hours without scrolling
+const HOUR_HEIGHT_COLLAPSED = 16 // Compact height to fit all hours without scrolling
 
 export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask, isExpanded = true }: WeekViewProps) {
   const [selectedStep, setSelectedStep] = useState<{ step: Step; task: Task } | null>(null)
@@ -35,9 +35,6 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask,
   const now = new Date()
   const currentHour = now.getHours()
   const currentMinute = now.getMinutes()
-
-  // Debug: log when isExpanded changes
-  console.log('WeekView isExpanded:', isExpanded)
 
   // Dynamic hour height based on expanded state
   const hourHeight = isExpanded ? HOUR_HEIGHT_EXPANDED : HOUR_HEIGHT_COLLAPSED
