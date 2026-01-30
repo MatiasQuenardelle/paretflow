@@ -34,7 +34,7 @@ export function StepItem({
   const [isEditing, setIsEditing] = useState(!step.text)
   const [text, setText] = useState(step.text)
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     setText(step.text)
@@ -48,6 +48,14 @@ export function StepItem({
       }
     }
   }, [isEditing, step.text])
+
+  // Auto-resize textarea as content changes
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto'
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
+    }
+  }, [text, isEditing])
 
   const handleSave = (createNext = false) => {
     const trimmedText = text.trim()
@@ -82,26 +90,28 @@ export function StepItem({
       onDragEnter={onDragEnter}
       onDragEnd={onDragEnd}
       onDragOver={(e) => e.preventDefault()}
-      className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-xl group transition-all duration-200 hover:bg-white/5 ${
+      className={`flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-xl group transition-all duration-200 hover:bg-white/5 ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${step.completed ? 'opacity-60' : ''}`}
     >
-      <div className="cursor-grab active:cursor-grabbing text-muted hover:text-foreground">
+      <div className="cursor-grab active:cursor-grabbing text-muted hover:text-foreground mt-0.5">
         <GripVertical size={14} className="md:w-4 md:h-4" />
       </div>
 
-      <Checkbox checked={step.completed} onChange={onToggle} />
+      <div className="mt-0.5">
+        <Checkbox checked={step.completed} onChange={onToggle} />
+      </div>
 
       <div className="flex-1 min-w-0">
         {isEditing ? (
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
+            rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onBlur={() => handleSave(false)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
                 handleSave(true)
               }
@@ -111,19 +121,19 @@ export function StepItem({
               }
             }}
             placeholder="Enter step..."
-            className="w-full bg-transparent border-none outline-none text-sm md:text-base text-foreground placeholder:text-muted"
+            className="w-full bg-transparent border-none outline-none text-sm md:text-base text-foreground placeholder:text-muted resize-none overflow-hidden"
           />
         ) : (
           <span
             onClick={() => setIsEditing(true)}
-            className={`cursor-text text-sm md:text-base ${step.completed ? 'line-through text-muted' : ''} ${!step.text ? 'text-muted italic' : ''}`}
+            className={`cursor-text text-sm md:text-base whitespace-pre-wrap ${step.completed ? 'line-through text-muted' : ''} ${!step.text ? 'text-muted italic' : ''}`}
           >
             {step.text || 'Click to add step...'}
           </span>
         )}
       </div>
 
-      <div className="flex items-center gap-1 md:gap-2">
+      <div className="flex items-center gap-1 md:gap-2 mt-0.5">
         <TimeInput
           value={step.scheduledTime}
           onChange={(time) => onUpdate({ scheduledTime: time })}
