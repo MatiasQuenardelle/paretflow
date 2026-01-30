@@ -30,14 +30,24 @@ function SyncDebug({ taskCount, tasks }: { taskCount: number, tasks: any[] }) {
 
     const cloudTasksData = data?.data as any[] | undefined
 
+    // Count completed vs incomplete
+    const completedTasks = tasks.filter((t: any) => t.completed)
+    const incompleteTasks = tasks.filter((t: any) => !t.completed)
+    const cloudCompletedTasks = cloudTasksData?.filter((t: any) => t.completed) || []
+    const cloudIncompleteTasks = cloudTasksData?.filter((t: any) => !t.completed) || []
+
     setDebugInfo({
       mode,
       userId: user?.id?.slice(0, 8) || 'none',
       email: user?.email || 'none',
       cloudTasks: cloudTasksData?.length ?? (fetchError?.code === 'PGRST116' ? 0 : 'error: ' + fetchError?.message),
-      cloudTaskNames: cloudTasksData?.map((t: any) => `${t.title} (${t.steps?.length || 0} steps)`).slice(0, 5) || [],
+      cloudCompleted: cloudCompletedTasks.length,
+      cloudIncomplete: cloudIncompleteTasks.length,
+      cloudTaskNames: cloudTasksData?.map((t: any) => `${t.title} (${t.completed ? '✓' : '○'}) ${t.steps?.length || 0} steps`).slice(0, 8) || [],
       localTasks: taskCount,
-      localTaskNames: tasks.map(t => `${t.title} (${t.steps?.length || 0} steps)`).slice(0, 5),
+      localCompleted: completedTasks.length,
+      localIncomplete: incompleteTasks.length,
+      localTaskNames: tasks.map((t: any) => `${t.title} (${t.completed ? '✓' : '○'}) ${t.steps?.length || 0} steps`).slice(0, 8),
       cloudUpdatedAt: data?.updated_at ? new Date(data.updated_at).toLocaleString() : 'none',
       isSaving,
       error: error || 'none',
@@ -151,6 +161,12 @@ export default function HomePage() {
   const tasksForDate = tasks.filter(t =>
     !t.completed || t.scheduledDate === selectedDateStr
   )
+
+  // Debug: Log if there's a count mismatch
+  if (typeof window !== 'undefined' && tasks.length !== tasksForDate.length) {
+    console.log('[TaskFilter] Total tasks:', tasks.length, 'Visible tasks:', tasksForDate.length)
+    console.log('[TaskFilter] Hidden tasks:', tasks.filter(t => t.completed && t.scheduledDate !== selectedDateStr).map(t => ({ title: t.title, completed: t.completed, scheduledDate: t.scheduledDate })))
+  }
 
   // Show loading state
   if (mode === 'loading' || isLoading) {
