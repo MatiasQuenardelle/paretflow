@@ -21,6 +21,7 @@ function AnimatedCheckbox({
   const colorClasses: Record<string, string> = {
     purple: 'bg-purple-500',
     cyan: 'bg-cyan-500',
+    blue: 'bg-blue-500',
   }
 
   return (
@@ -31,7 +32,7 @@ function AnimatedCheckbox({
       }}
       className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 shrink-0 ${
         checked
-          ? `${colorClasses[color] || colorClasses.purple} animate-bounce-in shadow-lg ${color === 'purple' ? 'shadow-purple-500/40' : 'shadow-cyan-500/40'}`
+          ? `${colorClasses[color] || colorClasses.purple} animate-bounce-in shadow-lg ${color === 'purple' ? 'shadow-purple-500/40' : color === 'blue' ? 'shadow-blue-500/40' : 'shadow-cyan-500/40'}`
           : 'border-2 border-white/20 hover:border-white/40 dark:border-white/10 dark:hover:border-white/20'
       }`}
     >

@@ -51,6 +51,17 @@ export const POWER_HABITS: HabitDefinition[] = [
     points: 5,
     illustration: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&q=80',
   },
+  {
+    id: 'omega3',
+    name: 'Take Omega-3',
+    description: 'Take omega-3 fish oil supplement',
+    benefit: 'Omega-3 fatty acids (EPA and DHA) are essential for brain health, reducing inflammation, and supporting heart function. Studies show they improve cognitive performance, reduce symptoms of depression and anxiety, and protect against age-related mental decline. Taking omega-3 with a meal improves absorption significantly.',
+    suggestedTime: '08:00',
+    icon: 'Fish',
+    color: 'blue',
+    points: 5,
+    illustration: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
+  },
 ]
 
 interface HabitState {
