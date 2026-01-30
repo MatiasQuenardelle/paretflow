@@ -40,7 +40,19 @@ export function CompactTimerBar() {
 
   const [showMenu, setShowMenu] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [justStartedFocus, setJustStartedFocus] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const prevActiveStepIdRef = useRef<string | null>(null)
+
+  // Animate when a new step focus session starts
+  useEffect(() => {
+    if (activeStepId && activeStepId !== prevActiveStepIdRef.current && isRunning) {
+      setJustStartedFocus(true)
+      const timeout = setTimeout(() => setJustStartedFocus(false), 600)
+      return () => clearTimeout(timeout)
+    }
+    prevActiveStepIdRef.current = activeStepId
+  }, [activeStepId, isRunning])
 
   const activeTask = tasks.find(t => t.id === activeTaskId)
   const activeStep = activeStepId && activeTask
@@ -208,10 +220,13 @@ export function CompactTimerBar() {
 
   const c = colorClasses[color]
 
+  // Animation class for when focus session starts
+  const focusStartAnimation = justStartedFocus ? 'animate-focus-start' : ''
+
   // Mobile always shows compact bar (regardless of timerCollapsed state)
   // Desktop shows collapsed or expanded based on timerCollapsed
   const MobileCompactBar = () => (
-    <div className={`md:hidden rounded-xl px-2 py-1.5 mb-2 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+    <div className={`md:hidden rounded-xl px-2 py-1.5 mb-2 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border} ${focusStartAnimation}`}>
       <div className="flex items-center gap-2">
         {/* Small icon */}
         <div className="flex items-center justify-center">
@@ -252,7 +267,7 @@ export function CompactTimerBar() {
     return (
       <>
         <MobileCompactBar />
-        <div className={`hidden md:block rounded-xl px-3 py-1.5 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+        <div className={`hidden md:block rounded-xl px-3 py-1.5 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border} ${focusStartAnimation}`}>
           <div className="flex items-center gap-2">
             {/* Status icon */}
             {isLongBreak ? (
@@ -296,7 +311,7 @@ export function CompactTimerBar() {
   return (
     <>
       <MobileCompactBar />
-      <div className={`hidden md:block rounded-xl px-4 py-2.5 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+      <div className={`hidden md:block rounded-xl px-4 py-2.5 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border} ${focusStartAnimation}`}>
         <div className="flex items-center gap-4">
         {/* Compact Circular Progress with Time inside */}
         <div className="relative flex items-center justify-center">
