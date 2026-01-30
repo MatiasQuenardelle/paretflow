@@ -192,7 +192,6 @@ export default function HabitsPage() {
     enabledHabits,
     dailyHabitOverrides,
     recommendedBannerDismissed,
-    getEnabledForDate,
     setEnabledHabits,
     setDailyOverride,
     dismissRecommendedBanner,
@@ -215,8 +214,10 @@ export default function HabitsPage() {
   // Touch drag state
   const [touchDragId, setTouchDragId] = useState<string | null>(null)
 
-  // Get enabled habits for current date
-  const currentEnabledHabits = getEnabledForDate(today)
+  // Get enabled habits for current date (using direct state access for proper reactivity)
+  // Fallback to all habits if enabledHabits is empty (for backwards compatibility with existing users)
+  const effectiveEnabledHabits = enabledHabits?.length > 0 ? enabledHabits : POWER_HABITS.map(h => h.id)
+  const currentEnabledHabits = dailyHabitOverrides[today] || effectiveEnabledHabits
 
   // Show recommended banner when user has < 3 habits enabled and hasn't dismissed
   const showRecommendedBanner = currentEnabledHabits.length < 3 && !recommendedBannerDismissed
@@ -251,8 +252,8 @@ export default function HabitsPage() {
   // Toggle habit enabled status
   const toggleHabitEnabled = (habitId: string) => {
     const currentEnabled = editScope === 'today'
-      ? (dailyHabitOverrides[today] || enabledHabits)
-      : enabledHabits
+      ? (dailyHabitOverrides[today] || effectiveEnabledHabits)
+      : effectiveEnabledHabits
 
     const newEnabled = currentEnabled.includes(habitId)
       ? currentEnabled.filter(id => id !== habitId)
@@ -271,7 +272,7 @@ export default function HabitsPage() {
     const recommendedIds = recommendedHabits.map(h => h.id)
 
     // Add to global enabled if not already
-    const newEnabled = Array.from(new Set([...enabledHabits, ...recommendedIds]))
+    const newEnabled = Array.from(new Set([...effectiveEnabledHabits, ...recommendedIds]))
     setEnabledHabits(newEnabled)
 
     // Schedule each recommended habit for the next 4 weeks
@@ -290,8 +291,8 @@ export default function HabitsPage() {
   // Get the enabled habits for edit mode display
   const getEditModeEnabled = () => {
     return editScope === 'today'
-      ? (dailyHabitOverrides[today] || enabledHabits)
-      : enabledHabits
+      ? (dailyHabitOverrides[today] || effectiveEnabledHabits)
+      : effectiveEnabledHabits
   }
 
   const handleDragStart = (e: React.DragEvent, habitId: string) => {
