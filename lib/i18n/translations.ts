@@ -72,6 +72,8 @@ export const translations = {
       pressEscToClose: 'Press Esc to close',
       markComplete: 'Mark Complete',
       markIncomplete: 'Mark Incomplete',
+      enterStep: 'Enter step...',
+      clickToAddStepText: 'Click to add step...',
     },
     // Habits page
     habits: {
@@ -341,6 +343,8 @@ export const translations = {
       pressEscToClose: 'Presiona Esc para cerrar',
       markComplete: 'Marcar Completo',
       markIncomplete: 'Marcar Incompleto',
+      enterStep: 'Ingresa un paso...',
+      clickToAddStepText: 'Toca para agregar paso...',
     },
     // Habits page
     habits: {
