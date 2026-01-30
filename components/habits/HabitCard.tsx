@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { format, addDays, startOfWeek, getDay } from 'date-fns'
-import { ChevronDown, Clock, X, CalendarPlus, Check, CalendarDays, CalendarRange } from 'lucide-react'
+import { ChevronDown, Clock, X, CalendarPlus, Check, CalendarDays, CalendarRange, GripVertical } from 'lucide-react'
 import { HabitDefinition, useHabitStore } from '@/stores/habitStore'
 import { useTranslations } from '@/lib/i18n'
 
@@ -20,6 +20,14 @@ const DAYS_OF_WEEK = [
 
 interface HabitCardProps {
   habit: HabitDefinition
+  isDragging?: boolean
+  isDragOver?: boolean
+  onDragStart?: (e: React.DragEvent) => void
+  onDragOver?: (e: React.DragEvent) => void
+  onDragEnter?: () => void
+  onDragEnd?: () => void
+  onTouchDragStart?: (e: React.TouchEvent) => void
+  isTouchDragging?: boolean
 }
 
 const colorGradients: Record<string, string> = {
@@ -137,7 +145,17 @@ function AnimatedCheckbox({
   )
 }
 
-export function HabitCard({ habit }: HabitCardProps) {
+export function HabitCard({
+  habit,
+  isDragging,
+  isDragOver,
+  onDragStart,
+  onDragOver,
+  onDragEnter,
+  onDragEnd,
+  onTouchDragStart,
+  isTouchDragging,
+}: HabitCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [showSchedulePopup, setShowSchedulePopup] = useState(false)
   const [scheduleTime, setScheduleTime] = useState(habit.suggestedTime)
@@ -223,20 +241,49 @@ export function HabitCard({ habit }: HabitCardProps) {
     return format(new Date(0, 0, 0, h, m), 'h:mm a')
   }
 
+  const canDrag = !!onDragStart
+
   return (
     <>
       <div
+        data-habit-id={habit.id}
+        draggable={canDrag}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnter={onDragEnter}
+        onDragEnd={onDragEnd}
         className={`rounded-xl border ${colorBorders[habit.color] || 'border-white/10'} bg-surface/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ${
           isExpanded ? 'shadow-2xl shadow-black/10 dark:shadow-black/30' : 'shadow-lg shadow-black/5 dark:shadow-black/20'
+        } ${
+          isDragging ? 'opacity-50 scale-[0.98] ring-2 ring-purple-500/50' : ''
+        } ${
+          isDragOver ? 'ring-2 ring-purple-400/50 bg-purple-500/5' : ''
         }`}
       >
         {/* Always visible: collapsed card */}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center gap-3 p-3 text-left"
-        >
-          {/* Thumbnail image */}
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+        <div className="flex items-center gap-2 p-3">
+          {/* Drag handle */}
+          {canDrag && (
+            <div
+              className={`cursor-grab active:cursor-grabbing shrink-0 ${
+                isTouchDragging ? 'text-purple-400' : 'text-white/20 hover:text-white/40'
+              }`}
+              onTouchStart={(e) => {
+                e.stopPropagation()
+                onTouchDragStart?.(e)
+              }}
+            >
+              <GripVertical size={18} />
+            </div>
+          )}
+
+          {/* Clickable card content */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex-1 flex items-center gap-3 text-left min-w-0"
+          >
+            {/* Thumbnail image */}
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
             <img
               src={habit.illustration}
               alt={habitName}
@@ -245,36 +292,37 @@ export function HabitCard({ habit }: HabitCardProps) {
             <div className={`absolute inset-0 ${colorBg[habit.color] || 'bg-white/10'} mix-blend-overlay`} />
           </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span
-                className={`font-medium transition-all duration-200 truncate ${
-                  completed ? 'line-through text-muted' : ''
-                }`}
-              >
-                {habitName}
-              </span>
-              <span className={`text-xs px-1.5 py-0.5 rounded-md ${colorBg[habit.color]} ${colorText[habit.color]} font-medium shrink-0`}>
-                +{habit.points}
-              </span>
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`font-medium transition-all duration-200 truncate ${
+                    completed ? 'line-through text-muted' : ''
+                  }`}
+                >
+                  {habitName}
+                </span>
+                <span className={`text-xs px-1.5 py-0.5 rounded-md ${colorBg[habit.color]} ${colorText[habit.color]} font-medium shrink-0`}>
+                  +{habit.points}
+                </span>
+              </div>
+              <p className="text-xs text-muted truncate mt-0.5">{habitDescription}</p>
             </div>
-            <p className="text-xs text-muted truncate mt-0.5">{habitDescription}</p>
-          </div>
 
-          {/* Checkbox */}
+            <ChevronDown
+              className={`w-5 h-5 text-muted transition-transform duration-300 shrink-0 ${
+                isExpanded ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          {/* Checkbox - outside button so it doesn't trigger expand */}
           <AnimatedCheckbox
             checked={completed}
             onToggle={handleToggleComplete}
             color={habit.color}
           />
-
-          <ChevronDown
-            className={`w-5 h-5 text-muted transition-transform duration-300 shrink-0 ${
-              isExpanded ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
+        </div>
 
         {/* Expandable content */}
         <div

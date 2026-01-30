@@ -119,6 +119,12 @@ export const translations = {
       orSelectIndividually: 'Or select habits individually below',
       allScheduled: 'All habits scheduled!',
       habitsAddedToToday: 'habits added to today',
+      selectAll: 'Select all',
+      selectHabitsToAdd: 'Select habits to add',
+      checkOffYourHabits: 'Check off your habits as you complete them',
+      addHabitsToStart: 'Add habits to your day to get started',
+      dragToReorder: 'Drag to reorder',
+      viewHabitDetails: 'View habit details',
     },
     // Power Habits content
     powerHabits: {
@@ -374,6 +380,12 @@ export const translations = {
       orSelectIndividually: 'O selecciona hábitos individualmente abajo',
       allScheduled: '¡Todos los hábitos programados!',
       habitsAddedToToday: 'hábitos agregados a hoy',
+      selectAll: 'Seleccionar todos',
+      selectHabitsToAdd: 'Selecciona hábitos para agregar',
+      checkOffYourHabits: 'Marca tus hábitos a medida que los completas',
+      addHabitsToStart: 'Agrega hábitos a tu día para comenzar',
+      dragToReorder: 'Arrastra para reordenar',
+      viewHabitDetails: 'Ver detalles de hábitos',
     },
     // Power Habits content
     powerHabits: {

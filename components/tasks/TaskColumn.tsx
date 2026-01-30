@@ -441,267 +441,203 @@ export function TaskColumn({
               onClick={() => {
                 if (!touchDragTaskId) onSelectTask(task.id)
               }}
-              className={`relative p-3 md:p-4 rounded-2xl cursor-pointer transition-all duration-300 group touch-manipulation overflow-hidden ${
-                isDragging ? 'opacity-50 scale-95 ring-2 ring-blue-500/50' : ''
+              className={`relative px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group touch-manipulation border ${
+                isDragging ? 'opacity-50 scale-[0.98] ring-2 ring-blue-500/50' : ''
               } ${
-                dragOverTaskIdState === task.id && draggedTaskId && draggedTaskId !== task.id ? 'ring-2 ring-blue-400/50 bg-blue-500/10' : ''
+                dragOverTaskIdState === task.id && draggedTaskId && draggedTaskId !== task.id ? 'ring-1 ring-blue-400/50 bg-blue-500/10' : ''
               } ${
                 isActive
-                  ? 'bg-gradient-to-br from-blue-500/20 via-purple-500/15 to-indigo-500/20 shadow-glow-blue'
+                  ? 'bg-blue-500/15 border-blue-500/40 shadow-lg shadow-blue-500/10'
                   : isSelected
-                  ? 'bg-gradient-to-br from-white/10 to-white/5 dark:from-white/10 dark:to-white/5'
-                  : 'bg-white/5 dark:bg-white/[0.03] hover:bg-white/10 dark:hover:bg-white/[0.06]'
+                  ? 'bg-white/[0.08] border-white/15'
+                  : 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07] hover:border-white/15'
               } ${task.completed ? 'opacity-50' : ''}`}
-              style={{
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-              }}
             >
-              {/* Gradient border effect */}
-              <div className={`absolute inset-0 rounded-2xl transition-opacity duration-300 ${
-                isActive
-                  ? 'opacity-100'
-                  : isSelected
-                  ? 'opacity-70'
-                  : 'opacity-0 group-hover:opacity-50'
-              }`} style={{
-                padding: '1px',
-                background: isActive
-                  ? 'linear-gradient(135deg, rgba(59,130,246,0.6), rgba(147,51,234,0.4), rgba(59,130,246,0.6))'
-                  : 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))',
-                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                WebkitMaskComposite: 'xor',
-                maskComposite: 'exclude',
-                borderRadius: '1rem',
-              }} />
-
-              {/* Active glow effect */}
-              {isActive && (
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-2xl blur-xl animate-glow-pulse -z-10" />
-              )}
-
-              <div className="relative flex items-start gap-2">
-                {/* Drag handle - always visible, touch-drag on mobile */}
+              <div className="flex items-start gap-2.5">
+                {/* Drag handle */}
                 {!task.completed && onReorderTasks && (
                   <div
-                    className={`mt-1 cursor-grab active:cursor-grabbing transition-all flex-shrink-0 p-1 -m-0.5 rounded ${
-                      touchDragTaskId === task.id
-                        ? 'text-blue-400 bg-blue-500/20 scale-110'
-                        : 'text-muted/60 md:text-muted/50 md:hover:text-foreground/70 md:hover:scale-110 md:hover:bg-white/10'
+                    className={`mt-0.5 cursor-grab active:cursor-grabbing flex-shrink-0 ${
+                      touchDragTaskId === task.id ? 'text-blue-400' : 'text-white/20 hover:text-white/40'
                     }`}
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => {
                       e.stopPropagation()
                       handleTouchStart(e, task.id)
                     }}
-                    title="Hold to drag"
                   >
-                    <GripVertical size={18} className="md:w-5 md:h-5" />
+                    <GripVertical size={14} />
                   </div>
                 )}
 
-                {/* Premium checkbox */}
+                {/* Checkbox */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     onToggleCompleted(task.id)
                   }}
-                  className={`mt-0.5 flex-shrink-0 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                  className={`mt-0.5 flex-shrink-0 w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-all ${
                     task.completed
-                      ? 'bg-gradient-to-br from-emerald-400 to-green-500 border-transparent shadow-lg shadow-green-500/30'
-                      : 'border-white/30 dark:border-white/20 hover:border-blue-400 hover:bg-blue-500/10 group-hover:border-white/40'
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'border-white/25 hover:border-white/50'
                   }`}
                 >
                   {task.completed && (
-                    <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" className="animate-checkmark" />
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   )}
                 </button>
 
+                {/* Content area - grows with text */}
                 <div className="flex-1 min-w-0">
-                  {/* Title row */}
-                  <div className="flex items-center gap-2">
-                    <h3 className={`text-sm md:text-base font-semibold tracking-tight truncate ${
-                      task.completed ? 'line-through text-muted' : 'text-foreground'
-                    }`}>
-                      {task.title}
-                    </h3>
+                  {/* Title - wraps naturally */}
+                  <p className={`text-[14px] leading-snug ${
+                    task.completed ? 'line-through text-white/40' : 'text-white/90'
+                  }`}>
+                    {task.title}
+                  </p>
+
+                  {/* Meta row */}
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    {/* Labels */}
+                    {taskLabels.length > 0 && !editingLabelsTaskId && (
+                      <div className="flex items-center gap-1">
+                        {taskLabels.map(labelId => {
+                          const label = TASK_LABELS.find(l => l.id === labelId)
+                          if (!label) return null
+                          const colors = LABEL_COLORS[label.color]
+                          return (
+                            <span key={labelId} className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${colors.bg} ${colors.text}`}>
+                              {label.name}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* Steps */}
+                    {stepsCount > 0 && !task.completed && (
+                      <span className="text-[11px] text-white/35">{completedSteps}/{stepsCount} steps</span>
+                    )}
+
+                    {/* Pomodoro count */}
+                    {!task.completed && (
+                      <span className={`text-[11px] ${
+                        pomodorosDone > 0 ? 'text-rose-400/70' : 'text-white/35'
+                      }`}>
+                        {pomodorosDone}/{pomodorosTotal} pom
+                      </span>
+                    )}
+
+                    {/* Active indicator */}
                     {isActive && (
-                      <span className="flex-shrink-0 relative">
-                        <span className="absolute inset-0 w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-blue-400 animate-ping opacity-75" />
-                        <span className="relative w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 block" />
+                      <span className="flex items-center gap-1 text-[10px] text-blue-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                        Active
                       </span>
                     )}
                   </div>
-
-                  {/* Labels row */}
-                  {(taskLabels.length > 0 || editingLabelsTaskId === task.id) && (
-                    <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                      {taskLabels.map(labelId => {
-                        const label = TASK_LABELS.find(l => l.id === labelId)
-                        if (!label) return null
-                        const colors = LABEL_COLORS[label.color]
-                        return (
-                          <span
-                            key={labelId}
-                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium ${colors.bg} ${colors.text} ${colors.border} border`}
-                          >
-                            {label.name}
-                            {editingLabelsTaskId === task.id && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toggleTaskLabel(task.id, labelId)
-                                }}
-                                className="hover:text-white"
-                              >
-                                <X size={10} />
-                              </button>
-                            )}
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  {/* Label picker (when editing) */}
-                  {editingLabelsTaskId === task.id && (
-                    <div className="flex flex-wrap items-center gap-1 mt-1.5 p-2 rounded-lg bg-white/5 border border-white/10">
-                      {TASK_LABELS.filter(l => !taskLabels.includes(l.id)).map(label => {
-                        const colors = LABEL_COLORS[label.color]
-                        return (
-                          <button
-                            key={label.id}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              toggleTaskLabel(task.id, label.id)
-                            }}
-                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium ${colors.bg} ${colors.text} ${colors.border} border opacity-60 hover:opacity-100 transition-opacity`}
-                          >
-                            <Plus size={10} />
-                            {label.name}
-                          </button>
-                        )
-                      })}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingLabelsTaskId(null)
-                        }}
-                        className="ml-auto text-[9px] text-muted hover:text-foreground"
-                      >
-                        Done
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Stats row */}
-                  {!task.completed && (
-                    <div className="flex items-center gap-3 mt-2">
-                      {/* Pomodoro pills */}
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 dark:bg-white/[0.03] border border-white/10">
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: Math.min(pomodorosTotal, 5) }).map((_, i) => (
-                            <div
-                              key={i}
-                              className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all duration-300 ${
-                                i < pomodorosDone
-                                  ? 'bg-gradient-to-br from-red-400 to-rose-500 shadow-sm shadow-red-500/50'
-                                  : 'bg-white/20 dark:bg-white/10'
-                              }`}
-                            />
-                          ))}
-                          {pomodorosTotal > 5 && (
-                            <span className="text-[10px] text-muted ml-0.5">+{pomodorosTotal - 5}</span>
-                          )}
-                        </div>
-                        {/* Inline +/- */}
-                        <div className="flex items-center border-l border-white/10 pl-1.5 ml-0.5">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onUpdateEstimate(task.id, pomodorosTotal - 1)
-                            }}
-                            className="w-4 h-4 rounded flex items-center justify-center text-muted hover:text-foreground transition-colors"
-                            disabled={pomodorosTotal <= 1}
-                          >
-                            <Minus size={10} />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onUpdateEstimate(task.id, pomodorosTotal + 1)
-                            }}
-                            className="w-4 h-4 rounded flex items-center justify-center text-muted hover:text-foreground transition-colors"
-                          >
-                            <Plus size={10} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Steps indicator */}
-                      {stepsCount > 0 && (
-                        <div className="flex items-center gap-1 text-[10px] md:text-xs text-muted">
-                          <div className="w-3 h-3 rounded-full border border-white/20 flex items-center justify-center">
-                            <span className="text-[8px]">{completedSteps}</span>
-                          </div>
-                          <span>/</span>
-                          <span>{stepsCount}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-1 transition-opacity duration-200">
-                  {/* Label button - always visible for incomplete tasks */}
+                <div className="flex items-center gap-0.5 flex-shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                  {!task.completed && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUpdateEstimate(task.id, Math.max(1, pomodorosTotal - 1))
+                        }}
+                        className="p-1 rounded text-white/20 hover:text-white/60 hover:bg-white/10"
+                      >
+                        <Minus size={12} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUpdateEstimate(task.id, pomodorosTotal + 1)
+                        }}
+                        className="p-1 rounded text-white/20 hover:text-white/60 hover:bg-white/10"
+                      >
+                        <Plus size={12} />
+                      </button>
+                    </>
+                  )}
                   {onUpdateLabels && !task.completed && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         setEditingLabelsTaskId(editingLabelsTaskId === task.id ? null : task.id)
                       }}
-                      className={`p-1.5 rounded-lg transition-all duration-200 ${
-                        editingLabelsTaskId === task.id
-                          ? 'bg-purple-500/20 text-purple-400'
-                          : taskLabels.length > 0
-                          ? 'bg-purple-500/10 text-purple-400/70 hover:bg-purple-500/20 hover:text-purple-400'
-                          : 'text-muted/40 hover:bg-purple-500/10 hover:text-purple-400'
-                      }`}
-                      title="Add labels"
+                      className={`p-1 rounded hover:bg-white/10 ${taskLabels.length > 0 ? 'text-purple-400/60' : 'text-white/20'} hover:text-purple-400`}
                     >
-                      <Tag size={12} className="md:w-[14px] md:h-[14px]" />
+                      <Tag size={12} />
                     </button>
                   )}
-                  {/* Play/Delete - always visible on mobile, hover on desktop */}
-                  <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
-                    {!task.completed && !isActive && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setActiveTask(task.id)
-                          onSelectTask(task.id)
-                        }}
-                        className="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-all duration-200"
-                        title="Start focusing on this task"
-                      >
-                        <Play size={12} className="md:w-[14px] md:h-[14px]" />
-                      </button>
-                    )}
+                  {!task.completed && !isActive && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        onDeleteTask(task.id)
+                        setActiveTask(task.id)
+                        onSelectTask(task.id)
                       }}
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted hover:text-red-400 transition-all duration-200"
+                      className="p-1 rounded text-white/20 hover:text-blue-400 hover:bg-white/10"
                     >
-                      <Trash2 size={12} className="md:w-[14px] md:h-[14px]" />
+                      <Play size={12} />
                     </button>
-                  </div>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDeleteTask(task.id)
+                    }}
+                    className="p-1 rounded text-white/20 hover:text-red-400 hover:bg-white/10"
+                  >
+                    <Trash2 size={12} />
+                  </button>
                 </div>
               </div>
+
+              {/* Label picker - only when editing */}
+              {editingLabelsTaskId === task.id && (
+                <div className="mt-2 pt-2 border-t border-white/10 flex flex-wrap items-center gap-1">
+                  {taskLabels.map(labelId => {
+                    const label = TASK_LABELS.find(l => l.id === labelId)
+                    if (!label) return null
+                    const colors = LABEL_COLORS[label.color]
+                    return (
+                      <button
+                        key={labelId}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleTaskLabel(task.id, labelId)
+                        }}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium ${colors.bg} ${colors.text}`}
+                      >
+                        {label.name}
+                        <X size={10} />
+                      </button>
+                    )
+                  })}
+                  {TASK_LABELS.filter(l => !taskLabels.includes(l.id)).map(label => {
+                    const colors = LABEL_COLORS[label.color]
+                    return (
+                      <button
+                        key={label.id}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleTaskLabel(task.id, label.id)
+                        }}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium ${colors.bg} ${colors.text} opacity-40 hover:opacity-100`}
+                      >
+                        <Plus size={10} />
+                        {label.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )
         })}

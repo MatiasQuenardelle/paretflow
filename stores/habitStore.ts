@@ -129,6 +129,7 @@ export const POWER_HABITS: HabitDefinition[] = [
 interface HabitState {
   completions: HabitCompletion[]
   scheduledHabits: ScheduledHabit[]
+  habitOrder: Record<string, string[]> // date -> habitIds in order
 
   // Actions
   completeHabit: (habitId: string) => void
@@ -136,11 +137,13 @@ interface HabitState {
   scheduleHabit: (habitId: string, date: string, time: string) => void
   scheduleHabitForDays: (habitId: string, dates: string[], time: string) => void
   unscheduleHabit: (habitId: string, date: string) => void
+  reorderHabits: (date: string, habitIds: string[]) => void
 
   // Selectors
   isCompletedToday: (habitId: string) => boolean
   getCompletionsForDate: (date: string) => HabitCompletion[]
   getScheduledForDate: (date: string) => ScheduledHabit[]
+  getOrderedScheduledForDate: (date: string) => ScheduledHabit[]
   getTodayScore: () => number
   getTotalCompletions: (habitId: string) => number
 }
@@ -150,6 +153,7 @@ export const useHabitStore = create<HabitState>()(
     (set, get) => ({
       completions: [],
       scheduledHabits: [],
+      habitOrder: {},
 
       completeHabit: (habitId) => {
         const today = format(new Date(), 'yyyy-MM-dd')
@@ -213,6 +217,15 @@ export const useHabitStore = create<HabitState>()(
         }))
       },
 
+      reorderHabits: (date, habitIds) => {
+        set(state => ({
+          habitOrder: {
+            ...state.habitOrder,
+            [date]: habitIds,
+          },
+        }))
+      },
+
       isCompletedToday: (habitId) => {
         const today = format(new Date(), 'yyyy-MM-dd')
         return get().completions.some(
@@ -226,6 +239,28 @@ export const useHabitStore = create<HabitState>()(
 
       getScheduledForDate: (date) => {
         return get().scheduledHabits.filter(s => s.date === date)
+      },
+
+      getOrderedScheduledForDate: (date) => {
+        const scheduled = get().scheduledHabits.filter(s => s.date === date)
+        const customOrder = get().habitOrder[date]
+
+        // If user has set a custom order, use it
+        if (customOrder && customOrder.length > 0) {
+          return [...scheduled].sort((a, b) => {
+            const orderA = customOrder.indexOf(a.habitId)
+            const orderB = customOrder.indexOf(b.habitId)
+            // Items in custom order come first, sorted by their position
+            // Items not in custom order come after, sorted by time
+            if (orderA !== -1 && orderB !== -1) return orderA - orderB
+            if (orderA !== -1) return -1
+            if (orderB !== -1) return 1
+            return a.time.localeCompare(b.time)
+          })
+        }
+
+        // Default: sort by scheduled time (earliest first)
+        return [...scheduled].sort((a, b) => a.time.localeCompare(b.time))
       },
 
       getTodayScore: () => {
