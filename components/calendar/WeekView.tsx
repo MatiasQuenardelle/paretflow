@@ -97,7 +97,7 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask,
 
       {/* Week grid with time */}
       <div
-        className="flex-1 rounded-xl overflow-hidden"
+        className={`rounded-xl overflow-hidden ${isExpanded ? 'flex-1' : ''}`}
         style={{
           background: 'linear-gradient(180deg, rgba(26,26,46,0.95) 0%, rgba(22,22,42,0.98) 100%)',
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)'
@@ -149,13 +149,15 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask,
           className={isExpanded ? "overflow-y-auto" : "overflow-hidden"}
           style={isExpanded ? { maxHeight: 'calc(100vh - 320px)' } : undefined}
         >
-          <div className="flex" style={{ height: totalHeight }}>
+          <div className="flex transition-all duration-300" style={{ height: totalHeight }}>
             {/* Time Labels */}
             <div className="flex-shrink-0 w-14 border-r border-white/10 relative">
               {hourLabels.map((hour) => (
                 <div
                   key={hour}
-                  className="absolute right-3 text-[11px] text-white/40 font-medium"
+                  className={`absolute right-2 text-white/40 font-medium transition-all ${
+                    isExpanded ? 'text-[11px]' : 'text-[9px]'
+                  }`}
                   style={{
                     top: getTimePosition(hour),
                     transform: 'translateY(-50%)'
