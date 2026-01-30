@@ -115,6 +115,44 @@ export const translations = {
       scheduleDaily: 'Schedule Daily',
       bestTime: 'Best time:',
     },
+    // Power Habits content
+    powerHabits: {
+      meditation: {
+        name: 'Meditate',
+        description: '10 minutes of mindfulness meditation',
+        benefit: 'Meditation reduces stress, improves focus, and enhances emotional regulation. Just 10 minutes daily can lower cortisol levels, improve memory, and increase gray matter in brain regions associated with self-awareness and compassion. Studies show regular meditators have better attention spans and are more resilient to distractions.',
+      },
+      magnesium: {
+        name: 'Take Magnesium',
+        description: 'Take magnesium supplement',
+        benefit: 'Magnesium is essential for over 300 enzymatic reactions in your body. Taking it in the evening (around 7 PM) helps promote better sleep quality by regulating melatonin and GABA. It also supports muscle relaxation, reduces stress, and helps maintain healthy blood pressure. Most people are deficient in this crucial mineral.',
+      },
+      omega3: {
+        name: 'Take Omega-3',
+        description: 'Take omega-3 fish oil supplement',
+        benefit: 'Omega-3 fatty acids (EPA and DHA) are essential for brain health, reducing inflammation, and supporting heart function. Studies show they improve cognitive performance, reduce symptoms of depression and anxiety, and protect against age-related mental decline. Taking omega-3 with a meal improves absorption significantly.',
+      },
+      gym: {
+        name: 'Lift Weights',
+        description: 'Strength training session at the gym',
+        benefit: 'Resistance training builds muscle mass, increases bone density, and boosts metabolism. It improves insulin sensitivity, reduces risk of injury, and releases growth hormone and testosterone. Studies show strength training reduces symptoms of anxiety and depression while improving cognitive function and sleep quality.',
+      },
+      steps: {
+        name: '10,000 Steps',
+        description: 'Walk 10,000 steps throughout the day',
+        benefit: 'Walking 10,000 steps daily improves cardiovascular health, aids weight management, and reduces risk of chronic diseases. It boosts mood through endorphin release, improves creativity and problem-solving, and counteracts the negative effects of prolonged sitting. Low-impact and sustainable for long-term health.',
+      },
+      cardio: {
+        name: 'Cardio Session',
+        description: '20-25 minutes of cardiovascular exercise',
+        benefit: 'Cardiovascular exercise strengthens your heart, improves lung capacity, and increases endurance. It reduces blood pressure, improves cholesterol levels, and releases endorphins that boost mood. Regular cardio is linked to better brain health, reduced risk of dementia, and improved sleep quality.',
+      },
+      calories: {
+        name: 'Hit Calorie Goal',
+        description: 'Stay within your daily calorie target',
+        benefit: 'Calorie balance is the foundation of body composition. For fat loss, a moderate deficit of 300-500 calories preserves muscle while burning fat. For muscle gain, a slight surplus of 200-300 calories with adequate protein (1.6-2.2g/kg) maximizes growth. Combined with strength training, proper nutrition transforms your physique. Track consistently—what gets measured gets managed.',
+      },
+    },
     // Calendar page
     calendar: {
       title: 'Calendar',
@@ -321,6 +359,44 @@ export const translations = {
       scheduleDays: 'Programar Días',
       scheduleDaily: 'Programar Diario',
       bestTime: 'Mejor hora:',
+    },
+    // Power Habits content
+    powerHabits: {
+      meditation: {
+        name: 'Meditar',
+        description: '10 minutos de meditación de atención plena',
+        benefit: 'La meditación reduce el estrés, mejora el enfoque y mejora la regulación emocional. Solo 10 minutos diarios pueden reducir los niveles de cortisol, mejorar la memoria y aumentar la materia gris en las regiones del cerebro asociadas con la autoconciencia y la compasión. Los estudios muestran que los meditadores regulares tienen mejor capacidad de atención y son más resistentes a las distracciones.',
+      },
+      magnesium: {
+        name: 'Tomar Magnesio',
+        description: 'Tomar suplemento de magnesio',
+        benefit: 'El magnesio es esencial para más de 300 reacciones enzimáticas en tu cuerpo. Tomarlo por la noche (alrededor de las 7 PM) ayuda a promover una mejor calidad de sueño al regular la melatonina y el GABA. También apoya la relajación muscular, reduce el estrés y ayuda a mantener una presión arterial saludable. La mayoría de las personas tienen deficiencia de este mineral crucial.',
+      },
+      omega3: {
+        name: 'Tomar Omega-3',
+        description: 'Tomar suplemento de aceite de pescado omega-3',
+        benefit: 'Los ácidos grasos omega-3 (EPA y DHA) son esenciales para la salud cerebral, reducir la inflamación y apoyar la función cardíaca. Los estudios muestran que mejoran el rendimiento cognitivo, reducen los síntomas de depresión y ansiedad, y protegen contra el deterioro mental relacionado con la edad. Tomar omega-3 con una comida mejora significativamente la absorción.',
+      },
+      gym: {
+        name: 'Levantar Pesas',
+        description: 'Sesión de entrenamiento de fuerza en el gimnasio',
+        benefit: 'El entrenamiento de resistencia construye masa muscular, aumenta la densidad ósea y acelera el metabolismo. Mejora la sensibilidad a la insulina, reduce el riesgo de lesiones y libera hormona de crecimiento y testosterona. Los estudios muestran que el entrenamiento de fuerza reduce los síntomas de ansiedad y depresión mientras mejora la función cognitiva y la calidad del sueño.',
+      },
+      steps: {
+        name: '10,000 Pasos',
+        description: 'Caminar 10,000 pasos durante el día',
+        benefit: 'Caminar 10,000 pasos diarios mejora la salud cardiovascular, ayuda al control del peso y reduce el riesgo de enfermedades crónicas. Mejora el estado de ánimo a través de la liberación de endorfinas, mejora la creatividad y la resolución de problemas, y contrarresta los efectos negativos de estar sentado por mucho tiempo. Bajo impacto y sostenible para la salud a largo plazo.',
+      },
+      cardio: {
+        name: 'Sesión de Cardio',
+        description: '20-25 minutos de ejercicio cardiovascular',
+        benefit: 'El ejercicio cardiovascular fortalece tu corazón, mejora la capacidad pulmonar y aumenta la resistencia. Reduce la presión arterial, mejora los niveles de colesterol y libera endorfinas que mejoran el estado de ánimo. El cardio regular está vinculado a una mejor salud cerebral, menor riesgo de demencia y mejor calidad de sueño.',
+      },
+      calories: {
+        name: 'Cumplir Meta Calórica',
+        description: 'Mantenerse dentro de tu objetivo calórico diario',
+        benefit: 'El balance calórico es la base de la composición corporal. Para perder grasa, un déficit moderado de 300-500 calorías preserva el músculo mientras quemas grasa. Para ganar músculo, un ligero superávit de 200-300 calorías con proteína adecuada (1.6-2.2g/kg) maximiza el crecimiento. Combinado con entrenamiento de fuerza, la nutrición adecuada transforma tu físico. Registra consistentemente—lo que se mide se gestiona.',
+      },
     },
     // Calendar page
     calendar: {

@@ -138,6 +138,12 @@ export function HabitCard({ habit }: HabitCardProps) {
   const [selectedDays, setSelectedDays] = useState<number[]>([]) // Days of week (0-6)
   const t = useTranslations()
 
+  // Get translated habit content
+  const habitTranslation = t.powerHabits[habit.id as keyof typeof t.powerHabits]
+  const habitName = habitTranslation?.name || habit.name
+  const habitDescription = habitTranslation?.description || habit.description
+  const habitBenefit = habitTranslation?.benefit || habit.benefit
+
   const {
     completeHabit,
     uncompleteHabit,
@@ -226,7 +232,7 @@ export function HabitCard({ habit }: HabitCardProps) {
           <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
             <img
               src={habit.illustration}
-              alt={habit.name}
+              alt={habitName}
               className="w-full h-full object-cover"
             />
             <div className={`absolute inset-0 ${colorBg[habit.color] || 'bg-white/10'} mix-blend-overlay`} />
@@ -240,13 +246,13 @@ export function HabitCard({ habit }: HabitCardProps) {
                   completed ? 'line-through text-muted' : ''
                 }`}
               >
-                {habit.name}
+                {habitName}
               </span>
               <span className={`text-xs px-1.5 py-0.5 rounded-md ${colorBg[habit.color]} ${colorText[habit.color]} font-medium shrink-0`}>
                 +{habit.points}
               </span>
             </div>
-            <p className="text-xs text-muted truncate mt-0.5">{habit.description}</p>
+            <p className="text-xs text-muted truncate mt-0.5">{habitDescription}</p>
           </div>
 
           {/* Checkbox */}
@@ -273,7 +279,7 @@ export function HabitCard({ habit }: HabitCardProps) {
           <div className="relative h-40 overflow-hidden">
             <img
               src={habit.illustration}
-              alt={habit.name}
+              alt={habitName}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-surface/90 to-transparent" />
@@ -286,14 +292,14 @@ export function HabitCard({ habit }: HabitCardProps) {
 
           {/* Content */}
           <div className="p-4 space-y-4">
-            <p className="text-sm text-muted">{habit.description}</p>
+            <p className="text-sm text-muted">{habitDescription}</p>
 
             {/* Why This Matters */}
             <div className="rounded-lg bg-white/5 dark:bg-white/5 border border-white/10 dark:border-white/5 p-3">
               <p className="text-xs text-muted uppercase tracking-wider mb-1">
                 {t.habits.whyThisMatters}
               </p>
-              <p className="text-sm leading-relaxed">{habit.benefit}</p>
+              <p className="text-sm leading-relaxed">{habitBenefit}</p>
             </div>
 
             {/* Schedule CTA Section */}
@@ -366,7 +372,7 @@ export function HabitCard({ habit }: HabitCardProps) {
             <div className="px-5 py-4 border-b border-white/10 dark:border-white/5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">{habit.name}</h2>
+                  <h2 className="text-lg font-semibold">{habitName}</h2>
                   <p className="text-xs text-muted">{t.habits.addToCalendar}</p>
                 </div>
                 <button

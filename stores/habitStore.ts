@@ -14,6 +14,13 @@ export interface HabitDefinition {
   illustration: string // URL for illustration image
 }
 
+// Type for translated habit content
+export interface HabitTranslation {
+  name: string
+  description: string
+  benefit: string
+}
+
 export interface HabitCompletion {
   habitId: string
   date: string // YYYY-MM-DD
