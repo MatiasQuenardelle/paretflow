@@ -1,9 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { format } from 'date-fns'
-import { ChevronDown, Clock, Calendar, X, CalendarPlus, Check } from 'lucide-react'
+import { format, addDays, startOfWeek, getDay } from 'date-fns'
+import { ChevronDown, Clock, X, CalendarPlus, Check, CalendarDays, CalendarRange } from 'lucide-react'
 import { HabitDefinition, useHabitStore } from '@/stores/habitStore'
+
+type ScheduleMode = 'today' | 'select-days' | 'every-day'
+
+const DAYS_OF_WEEK = [
+  { id: 0, short: 'S', name: 'Sunday' },
+  { id: 1, short: 'M', name: 'Monday' },
+  { id: 2, short: 'T', name: 'Tuesday' },
+  { id: 3, short: 'W', name: 'Wednesday' },
+  { id: 4, short: 'T', name: 'Thursday' },
+  { id: 5, short: 'F', name: 'Friday' },
+  { id: 6, short: 'S', name: 'Saturday' },
+]
 
 interface HabitCardProps {
   habit: HabitDefinition
@@ -121,12 +133,15 @@ export function HabitCard({ habit }: HabitCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [showSchedulePopup, setShowSchedulePopup] = useState(false)
   const [scheduleTime, setScheduleTime] = useState(habit.suggestedTime)
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('today')
+  const [selectedDays, setSelectedDays] = useState<number[]>([]) // Days of week (0-6)
 
   const {
     completeHabit,
     uncompleteHabit,
     isCompletedToday,
     scheduleHabit,
+    scheduleHabitForDays,
     getScheduledForDate,
   } = useHabitStore()
 
@@ -142,11 +157,50 @@ export function HabitCard({ habit }: HabitCardProps) {
     }
   }
 
-  const handleSchedule = () => {
-    if (scheduleTime) {
-      scheduleHabit(habit.id, today, scheduleTime)
+  const getDatesForNextWeeks = (daysOfWeek: number[], weeks: number = 4): string[] => {
+    const dates: string[] = []
+    const startDate = new Date()
+
+    for (let i = 0; i < weeks * 7; i++) {
+      const date = addDays(startDate, i)
+      const dayOfWeek = getDay(date)
+      if (daysOfWeek.includes(dayOfWeek)) {
+        dates.push(format(date, 'yyyy-MM-dd'))
+      }
     }
+    return dates
+  }
+
+  const handleSchedule = () => {
+    if (!scheduleTime) {
+      setShowSchedulePopup(false)
+      return
+    }
+
+    if (scheduleMode === 'today') {
+      scheduleHabit(habit.id, today, scheduleTime)
+    } else if (scheduleMode === 'every-day') {
+      // Schedule for every day for the next 4 weeks
+      const allDays = [0, 1, 2, 3, 4, 5, 6]
+      const dates = getDatesForNextWeeks(allDays, 4)
+      scheduleHabitForDays(habit.id, dates, scheduleTime)
+    } else if (scheduleMode === 'select-days' && selectedDays.length > 0) {
+      // Schedule for selected days of the week for the next 4 weeks
+      const dates = getDatesForNextWeeks(selectedDays, 4)
+      scheduleHabitForDays(habit.id, dates, scheduleTime)
+    }
+
     setShowSchedulePopup(false)
+    setScheduleMode('today')
+    setSelectedDays([])
+  }
+
+  const toggleDaySelection = (dayId: number) => {
+    setSelectedDays(prev =>
+      prev.includes(dayId)
+        ? prev.filter(d => d !== dayId)
+        : [...prev, dayId]
+    )
   }
 
   const formatTimeDisplay = (time: string) => {
@@ -331,8 +385,87 @@ export function HabitCard({ habit }: HabitCardProps) {
                 </p>
               </div>
 
+              {/* Schedule Mode Selection */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Select time</label>
+                <label className="text-sm font-medium">Schedule for</label>
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    onClick={() => setScheduleMode('today')}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      scheduleMode === 'today'
+                        ? `${colorBg[habit.color]} border-${habit.color}-500/50`
+                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    <CalendarPlus size={18} className={scheduleMode === 'today' ? colorText[habit.color] : 'text-muted'} />
+                    <div className="text-left">
+                      <p className="text-sm font-medium">Today only</p>
+                      <p className="text-xs text-muted">Add to today's calendar</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setScheduleMode('select-days')}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      scheduleMode === 'select-days'
+                        ? `${colorBg[habit.color]} border-${habit.color}-500/50`
+                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    <CalendarDays size={18} className={scheduleMode === 'select-days' ? colorText[habit.color] : 'text-muted'} />
+                    <div className="text-left">
+                      <p className="text-sm font-medium">Select days</p>
+                      <p className="text-xs text-muted">Choose specific days of the week</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setScheduleMode('every-day')}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      scheduleMode === 'every-day'
+                        ? `${colorBg[habit.color]} border-${habit.color}-500/50`
+                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    <CalendarRange size={18} className={scheduleMode === 'every-day' ? colorText[habit.color] : 'text-muted'} />
+                    <div className="text-left">
+                      <p className="text-sm font-medium">Every day</p>
+                      <p className="text-xs text-muted">Schedule for the next 4 weeks</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Day selection (only shown when select-days mode is active) */}
+              {scheduleMode === 'select-days' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select days of the week</label>
+                  <div className="flex gap-1.5 justify-between">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <button
+                        key={day.id}
+                        onClick={() => toggleDaySelection(day.id)}
+                        className={`w-9 h-9 rounded-full text-sm font-medium transition-all ${
+                          selectedDays.includes(day.id)
+                            ? `bg-gradient-to-r ${colorGradients[habit.color]} text-white shadow-lg`
+                            : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                        }`}
+                        title={day.name}
+                      >
+                        {day.short}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted">
+                    {selectedDays.length === 0
+                      ? 'Select at least one day'
+                      : `Will be scheduled for ${selectedDays.length} day${selectedDays.length > 1 ? 's' : ''} per week`}
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Time</label>
                 <input
                   type="time"
                   value={scheduleTime}
@@ -345,17 +478,24 @@ export function HabitCard({ habit }: HabitCardProps) {
             {/* Footer */}
             <div className="px-5 py-4 border-t border-white/10 dark:border-white/5 flex gap-3">
               <button
-                onClick={() => setShowSchedulePopup(false)}
+                onClick={() => {
+                  setShowSchedulePopup(false)
+                  setScheduleMode('today')
+                  setSelectedDays([])
+                }}
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-white/5 border border-white/10 dark:border-white/5 hover:bg-white/10 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSchedule}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-b ${colorGradients[habit.color] || colorGradients.purple} text-white shadow-lg ${colorShadows[habit.color] || colorShadows.purple} transition-all flex items-center justify-center gap-2 active:scale-[0.98]`}
+                disabled={scheduleMode === 'select-days' && selectedDays.length === 0}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-b ${colorGradients[habit.color] || colorGradients.purple} text-white shadow-lg ${colorShadows[habit.color] || colorShadows.purple} transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100`}
               >
                 <CalendarPlus size={18} />
-                Add to Calendar
+                {scheduleMode === 'today' && 'Add to Today'}
+                {scheduleMode === 'select-days' && 'Schedule Days'}
+                {scheduleMode === 'every-day' && 'Schedule Daily'}
               </button>
             </div>
           </div>

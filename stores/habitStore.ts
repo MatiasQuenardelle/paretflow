@@ -116,6 +116,7 @@ interface HabitState {
   completeHabit: (habitId: string) => void
   uncompleteHabit: (habitId: string, date: string) => void
   scheduleHabit: (habitId: string, date: string, time: string) => void
+  scheduleHabitForDays: (habitId: string, dates: string[], time: string) => void
   unscheduleHabit: (habitId: string, date: string) => void
 
   // Selectors
@@ -168,6 +169,20 @@ export const useHabitStore = create<HabitState>()(
           )
           return {
             scheduledHabits: [...filtered, { habitId, date, time }],
+          }
+        })
+      },
+
+      scheduleHabitForDays: (habitId, dates, time) => {
+        set(state => {
+          // Remove any existing schedules for this habit on these dates
+          const filtered = state.scheduledHabits.filter(
+            s => !(s.habitId === habitId && dates.includes(s.date))
+          )
+          // Add new schedules for all dates
+          const newSchedules = dates.map(date => ({ habitId, date, time }))
+          return {
+            scheduledHabits: [...filtered, ...newSchedules],
           }
         })
       },
