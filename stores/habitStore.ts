@@ -37,6 +37,17 @@ export interface ScheduledHabit {
 // Predefined Pareto Power Habits
 export const POWER_HABITS: HabitDefinition[] = [
   {
+    id: 'wake-early',
+    name: 'Wake Up Early',
+    description: 'Wake up at 6 AM or earlier',
+    benefit: 'Waking up early gives you quiet, uninterrupted time before the world demands your attention. Early risers report higher productivity, better mental health, and more time for self-improvement activities. Studies show morning people tend to be more proactive, optimistic, and better at anticipating problems. The discipline of an early wake-up also improves sleep quality by regulating your circadian rhythm.',
+    suggestedTime: '06:00',
+    icon: 'Sunrise',
+    color: 'amber',
+    points: 10,
+    illustration: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=800&q=80',
+  },
+  {
     id: 'meditation',
     name: 'Meditate',
     description: '10 minutes of mindfulness meditation',

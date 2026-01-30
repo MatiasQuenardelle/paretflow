@@ -30,6 +30,7 @@ const colorGradients: Record<string, string> = {
   green: 'from-green-500 to-green-600',
   rose: 'from-rose-500 to-rose-600',
   orange: 'from-orange-500 to-orange-600',
+  amber: 'from-amber-500 to-amber-600',
 }
 
 const colorShadows: Record<string, string> = {
@@ -40,6 +41,7 @@ const colorShadows: Record<string, string> = {
   green: 'shadow-green-500/30 hover:shadow-green-500/50',
   rose: 'shadow-rose-500/30 hover:shadow-rose-500/50',
   orange: 'shadow-orange-500/30 hover:shadow-orange-500/50',
+  amber: 'shadow-amber-500/30 hover:shadow-amber-500/50',
 }
 
 const colorBorders: Record<string, string> = {
@@ -50,6 +52,7 @@ const colorBorders: Record<string, string> = {
   green: 'border-green-500/30',
   rose: 'border-rose-500/30',
   orange: 'border-orange-500/30',
+  amber: 'border-amber-500/30',
 }
 
 const colorBg: Record<string, string> = {
@@ -60,6 +63,7 @@ const colorBg: Record<string, string> = {
   green: 'bg-green-500/10',
   rose: 'bg-rose-500/10',
   orange: 'bg-orange-500/10',
+  amber: 'bg-amber-500/10',
 }
 
 const colorText: Record<string, string> = {
@@ -70,6 +74,7 @@ const colorText: Record<string, string> = {
   green: 'text-green-400',
   rose: 'text-rose-400',
   orange: 'text-orange-400',
+  amber: 'text-amber-400',
 }
 
 function AnimatedCheckbox({
@@ -89,6 +94,7 @@ function AnimatedCheckbox({
     green: 'bg-green-500',
     rose: 'bg-rose-500',
     orange: 'bg-orange-500',
+    amber: 'bg-amber-500',
   }
 
   const shadowClasses: Record<string, string> = {
@@ -99,6 +105,7 @@ function AnimatedCheckbox({
     green: 'shadow-green-500/40',
     rose: 'shadow-rose-500/40',
     orange: 'shadow-orange-500/40',
+    amber: 'shadow-amber-500/40',
   }
 
   return (

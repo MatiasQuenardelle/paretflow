@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { ChevronUp, Flame, Target } from 'lucide-react'
+import { ChevronDown, Flame, Target, CalendarPlus, Check, Sparkles } from 'lucide-react'
 import { HabitCard } from '@/components/habits/HabitCard'
 import { POWER_HABITS, useHabitStore } from '@/stores/habitStore'
 import { useTranslations } from '@/lib/i18n'
 
-function StatsFooter() {
+function StatsHeader() {
   const [isExpanded, setIsExpanded] = useState(false)
   const { getTodayScore, completions } = useHabitStore()
   const t = useTranslations()
@@ -40,7 +40,7 @@ function StatsFooter() {
   const streak = calculateStreak()
 
   return (
-    <div className="border-t border-white/10 dark:border-white/5 bg-surface/80 backdrop-blur-xl">
+    <div className="border-b border-white/10 dark:border-white/5 bg-surface/80 backdrop-blur-xl">
       {/* Collapsed preview */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -57,7 +57,7 @@ function StatsFooter() {
             <span className="font-medium">{streak} {t.habits.dayStreak}</span>
           </span>
         </div>
-        <ChevronUp
+        <ChevronDown
           className={`w-5 h-5 text-muted transition-transform duration-300 ${
             isExpanded ? 'rotate-180' : ''
           }`}
@@ -98,18 +98,90 @@ function StatsFooter() {
   )
 }
 
+function ScheduleActions() {
+  const { scheduleHabit, getScheduledForDate } = useHabitStore()
+  const [justScheduledAll, setJustScheduledAll] = useState(false)
+  const t = useTranslations()
+
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const scheduledToday = getScheduledForDate(today)
+
+  // Check if all habits are already scheduled
+  const allScheduled = POWER_HABITS.every(habit =>
+    scheduledToday.some(s => s.habitId === habit.id)
+  )
+
+  const handleAddAllToToday = () => {
+    POWER_HABITS.forEach(habit => {
+      // Only schedule if not already scheduled
+      if (!scheduledToday.some(s => s.habitId === habit.id)) {
+        scheduleHabit(habit.id, today, habit.suggestedTime)
+      }
+    })
+    setJustScheduledAll(true)
+    setTimeout(() => setJustScheduledAll(false), 3000)
+  }
+
+  return (
+    <div className="rounded-xl border border-white/10 dark:border-white/5 bg-surface/60 backdrop-blur-xl overflow-hidden">
+      {allScheduled || justScheduledAll ? (
+        // All scheduled state
+        <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+              <Check className="w-5 h-5 text-green-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-green-400">{t.habits.allScheduled}</p>
+              <p className="text-xs text-muted">
+                {POWER_HABITS.length} {t.habits.habitsAddedToToday}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Not all scheduled - show CTA
+        <div className="p-4">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{t.habits.addAllHabitsToSchedule}</p>
+              <p className="text-xs text-muted mt-0.5">{t.habits.orSelectIndividually}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleAddAllToToday}
+            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium text-sm shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            <CalendarPlus size={18} />
+            {t.habits.addAllToToday}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function HabitsPage() {
   const t = useTranslations()
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Stats Header at Top */}
+      <StatsHeader />
+
       <div className="flex-1 overflow-auto">
-        <div className="max-w-lg mx-auto p-4 space-y-2">
+        <div className="max-w-lg mx-auto p-4 space-y-3">
           {/* Header */}
-          <div className="mb-4">
+          <div className="mb-2">
             <h1 className="text-xl font-bold">{t.habits.title}</h1>
             <p className="text-sm text-muted">{t.habits.tapToExpand}</p>
           </div>
+
+          {/* Schedule All Action */}
+          <ScheduleActions />
 
           {/* Habit Cards */}
           {POWER_HABITS.map(habit => (
@@ -124,9 +196,6 @@ export default function HabitsPage() {
           </div>
         </div>
       </div>
-
-      {/* Stats Footer */}
-      <StatsFooter />
     </div>
   )
 }

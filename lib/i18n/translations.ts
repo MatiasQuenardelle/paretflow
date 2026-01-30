@@ -114,9 +114,19 @@ export const translations = {
       scheduleDays: 'Schedule Days',
       scheduleDaily: 'Schedule Daily',
       bestTime: 'Best time:',
+      addAllToToday: 'Add All to Today',
+      addAllHabitsToSchedule: 'Schedule all habits at their recommended times',
+      orSelectIndividually: 'Or select habits individually below',
+      allScheduled: 'All habits scheduled!',
+      habitsAddedToToday: 'habits added to today',
     },
     // Power Habits content
     powerHabits: {
+      'wake-early': {
+        name: 'Wake Up Early',
+        description: 'Wake up at 6 AM or earlier',
+        benefit: 'Waking up early gives you quiet, uninterrupted time before the world demands your attention. Early risers report higher productivity, better mental health, and more time for self-improvement activities. Studies show morning people tend to be more proactive, optimistic, and better at anticipating problems. The discipline of an early wake-up also improves sleep quality by regulating your circadian rhythm.',
+      },
       meditation: {
         name: 'Meditate',
         description: '10 minutes of mindfulness meditation',
@@ -359,9 +369,19 @@ export const translations = {
       scheduleDays: 'Programar Días',
       scheduleDaily: 'Programar Diario',
       bestTime: 'Mejor hora:',
+      addAllToToday: 'Agregar Todos a Hoy',
+      addAllHabitsToSchedule: 'Programar todos los hábitos en sus horarios recomendados',
+      orSelectIndividually: 'O selecciona hábitos individualmente abajo',
+      allScheduled: '¡Todos los hábitos programados!',
+      habitsAddedToToday: 'hábitos agregados a hoy',
     },
     // Power Habits content
     powerHabits: {
+      'wake-early': {
+        name: 'Despertar Temprano',
+        description: 'Despertar a las 6 AM o antes',
+        benefit: 'Despertar temprano te da tiempo tranquilo e ininterrumpido antes de que el mundo demande tu atención. Los madrugadores reportan mayor productividad, mejor salud mental y más tiempo para actividades de automejora. Los estudios muestran que las personas matutinas tienden a ser más proactivas, optimistas y mejores anticipando problemas. La disciplina de despertar temprano también mejora la calidad del sueño al regular tu ritmo circadiano.',
+      },
       meditation: {
         name: 'Meditar',
         description: '10 minutos de meditación de atención plena',

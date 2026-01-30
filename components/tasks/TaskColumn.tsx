@@ -295,7 +295,7 @@ export function TaskColumn({
               <Filter size={16} className="md:w-[18px] md:h-[18px]" />
             </button>
             {showLabelFilter && (
-              <div className="absolute right-0 top-full mt-2 z-50 w-48 p-2 rounded-xl bg-surface/95 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/30">
+              <div className="absolute right-0 top-full mt-2 z-50 w-48 p-2 rounded-xl bg-surface/95 backdrop-blur-xl md:bg-surface md:backdrop-blur-sm border border-white/15 shadow-2xl shadow-black/50 ring-1 ring-white/5">
                 <div className="text-xs text-muted font-medium mb-2 px-2">Filter by label</div>
                 <button
                   onClick={() => {
@@ -303,10 +303,10 @@ export function TaskColumn({
                     setShowLabelFilter(false)
                   }}
                   className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
-                    !labelFilterId ? 'bg-white/10 text-foreground' : 'text-muted hover:bg-white/5'
+                    !labelFilterId ? 'bg-white/15 text-foreground' : 'text-foreground/90 hover:bg-white/10'
                   }`}
                 >
-                  <span className="w-3 h-3 rounded-full border border-white/20" />
+                  <span className="w-3 h-3 rounded-full border border-white/30" />
                   All tasks
                 </button>
                 {TASK_LABELS.map(label => {
@@ -319,7 +319,7 @@ export function TaskColumn({
                         setShowLabelFilter(false)
                       }}
                       className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
-                        labelFilterId === label.id ? 'bg-white/10 text-foreground' : 'text-muted hover:bg-white/5'
+                        labelFilterId === label.id ? 'bg-white/15 text-foreground' : 'text-foreground/90 hover:bg-white/10'
                       }`}
                     >
                       <span className={`w-3 h-3 rounded-full ${colors.bg} ${colors.border} border`} />

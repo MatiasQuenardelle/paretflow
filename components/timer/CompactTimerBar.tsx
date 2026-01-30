@@ -242,58 +242,44 @@ export function CompactTimerBar() {
     </div>
   )
 
-  // Desktop collapsed view
+  // Desktop collapsed view - ultra minimal
   if (timerCollapsed) {
     return (
       <>
         <MobileCompactBar />
-        <div className={`hidden md:block rounded-2xl px-4 py-2 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
-          <div className="flex items-center gap-3">
-            {/* Small icon */}
-            <div className="flex items-center justify-center">
-              {isLongBreak ? (
-                <Sun className="w-4 h-4 text-amber-500" />
-              ) : isBreak ? (
-                <Coffee className="w-4 h-4 text-emerald-500" />
-              ) : (
-                <Brain className="w-4 h-4 text-blue-500" />
-              )}
-            </div>
+        <div className={`hidden md:block rounded-xl px-3 py-1.5 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+          <div className="flex items-center gap-2">
+            {/* Status icon */}
+            {isLongBreak ? (
+              <Sun className="w-3.5 h-3.5 text-amber-500" />
+            ) : isBreak ? (
+              <Coffee className="w-3.5 h-3.5 text-emerald-500" />
+            ) : (
+              <Brain className="w-3.5 h-3.5 text-blue-500" />
+            )}
 
             {/* Time */}
-            <span className={`font-mono text-lg font-bold ${c.text}`}>
+            <span className={`font-mono text-base font-bold ${c.text}`}>
               {formatTime(timeRemaining)}
             </span>
-
-            {/* Status badge */}
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.badge}`}>
-              {isLongBreak ? 'Long Break' : isBreak ? 'Break' : 'Focus'}
-            </span>
-
-            {/* Active task name */}
-            {activeTask && (
-              <span className="text-sm text-muted truncate max-w-[150px]">
-                {activeTask.title}
-              </span>
-            )}
 
             <div className="flex-1" />
 
             {/* Play/Pause */}
             <button
               onClick={isRunning ? pause : start}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-gradient-to-br ${c.button} text-white`}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 bg-gradient-to-br ${c.button} text-white`}
             >
-              {isRunning ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+              {isRunning ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
             </button>
 
             {/* Expand button */}
             <button
               onClick={toggleTimer}
-              className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface border border-border text-muted hover:text-foreground hover:bg-border/50 transition-all duration-200"
+              className="w-7 h-7 rounded-lg flex items-center justify-center bg-surface/50 text-muted hover:text-foreground transition-all duration-200"
               title="Expand timer"
             >
-              <ChevronDown size={16} />
+              <ChevronDown size={14} />
             </button>
           </div>
         </div>
@@ -301,22 +287,22 @@ export function CompactTimerBar() {
     )
   }
 
-  // Expanded view - hidden on mobile, only shows on desktop
+  // Expanded view - hidden on mobile, only shows on desktop (minimalistic)
   return (
     <>
       <MobileCompactBar />
-      <div className={`hidden md:block rounded-2xl p-4 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
-        <div className="flex items-center gap-5">
-        {/* Circular Progress with Time */}
+      <div className={`hidden md:block rounded-xl px-4 py-2.5 mb-4 transition-all duration-300 bg-gradient-to-r ${c.bg} border ${c.border}`}>
+        <div className="flex items-center gap-4">
+        {/* Compact Circular Progress with Time inside */}
         <div className="relative flex items-center justify-center">
-          <svg className="w-16 h-16 -rotate-90" viewBox="0 0 48 48">
+          <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
             <circle
               cx="24"
               cy="24"
               r="20"
               fill="none"
               className={c.strokeBg}
-              strokeWidth="4"
+              strokeWidth="3"
             />
             <circle
               cx="24"
@@ -324,7 +310,7 @@ export function CompactTimerBar() {
               r="20"
               fill="none"
               className={`transition-all duration-1000 ${c.stroke}`}
-              strokeWidth="4"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
@@ -332,37 +318,37 @@ export function CompactTimerBar() {
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             {isLongBreak ? (
-              <Sun className={`w-5 h-5 text-amber-500`} />
+              <Sun className="w-4 h-4 text-amber-500" />
             ) : isBreak ? (
-              <Coffee className={`w-5 h-5 text-emerald-500`} />
+              <Coffee className="w-4 h-4 text-emerald-500" />
             ) : (
-              <Brain className={`w-5 h-5 text-blue-500`} />
+              <Brain className="w-4 h-4 text-blue-500" />
             )}
           </div>
         </div>
 
-        {/* Time and Status */}
+        {/* Time and minimal info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <span className={`font-mono text-3xl font-bold tracking-tight ${c.text}`}>
+          <div className="flex items-center gap-2">
+            <span className={`font-mono text-xl font-bold tracking-tight ${c.text}`}>
               {formatTime(timeRemaining)}
             </span>
-            <span className={`text-sm font-medium px-2 py-0.5 rounded-full ${c.badge}`}>
-              {isLongBreak ? 'Long Break' : isBreak ? 'Short Break' : 'Focus'}
+            <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${c.badge}`}>
+              {isLongBreak ? 'Long' : isBreak ? 'Break' : 'Focus'}
             </span>
             {!isBreak && (
               <span className="text-xs text-muted">
-                #{pomodoroCount + 1} of {settings.pomodorosUntilLongBreak}
+                {pomodoroCount + 1}/{settings.pomodorosUntilLongBreak}
               </span>
             )}
           </div>
 
-          {/* Active task or task selector */}
-          <div className="mt-1 flex items-center gap-2">
+          {/* Compact task display or selector */}
+          <div className="flex items-center gap-2 mt-0.5">
             {activeTask ? (
-              <p className="text-sm text-foreground truncate">
-                <span className="text-muted">Working on:</span> {activeTask.title}
-                <span className="text-muted ml-2">
+              <p className="text-xs text-muted truncate max-w-[200px]" title={activeTask.title}>
+                {activeTask.title}
+                <span className="ml-1 opacity-60">
                   ({activeTask.completedPomodoros || 0}/{activeTask.estimatedPomodoros || 1})
                 </span>
               </p>
@@ -372,7 +358,6 @@ export function CompactTimerBar() {
                 onChange={(e) => {
                   const value = e.target.value
                   if (value.startsWith('step:')) {
-                    // It's a step - find its parent task
                     const stepId = value.replace('step:', '')
                     const found = scheduledStepsForToday.find(s => s.step.id === stepId)
                     if (found) {
@@ -384,14 +369,14 @@ export function CompactTimerBar() {
                     selectTask(value)
                   }
                 }}
-                className="text-sm bg-transparent border-none text-muted hover:text-foreground cursor-pointer focus:outline-none"
+                className="text-xs bg-transparent border-none text-muted hover:text-foreground cursor-pointer focus:outline-none"
               >
-                <option value="">Select a task to focus on...</option>
+                <option value="">Select task...</option>
                 {scheduledStepsForToday.length > 0 && (
-                  <optgroup label="Scheduled for today">
+                  <optgroup label="Scheduled">
                     {scheduledStepsForToday.map(({ step, task, displayTime }) => (
                       <option key={step.id} value={`step:${step.id}`}>
-                        {displayTime} - {step.text} ({task.title})
+                        {displayTime} - {step.text}
                       </option>
                     ))}
                   </optgroup>
@@ -400,62 +385,51 @@ export function CompactTimerBar() {
                   <optgroup label="Tasks">
                     {incompleteTasks.map(task => (
                       <option key={task.id} value={task.id}>
-                        {task.title} ({task.completedPomodoros || 0}/{task.estimatedPomodoros || 1})
+                        {task.title}
                       </option>
                     ))}
                   </optgroup>
                 )}
               </select>
-            ) : (
-              <p className="text-sm text-muted">Add tasks to get started</p>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {/* Estimated finish time */}
+        {/* Estimated finish - compact inline */}
         {estimate.remainingPomodoros > 0 && !isBreak && (
-          <div className="hidden md:block text-right">
-            <p className="text-xs text-muted">Est. finish</p>
-            <p className="text-lg font-semibold">{estimate.finishTime}</p>
-            <p className="text-xs text-muted">{estimate.remainingPomodoros} pomodoros left</p>
+          <div className="hidden lg:flex items-center gap-1.5 text-muted">
+            <Clock className="w-3.5 h-3.5" />
+            <span className="text-sm font-medium text-foreground">{estimate.finishTime}</span>
+            <span className="text-xs">({estimate.remainingPomodoros})</span>
           </div>
         )}
 
-        {/* Controls */}
-        <div className="flex items-center gap-2">
-          {/* Collapse Button */}
-          <button
-            onClick={toggleTimer}
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-surface border border-border text-muted hover:text-foreground hover:bg-border/50 transition-all duration-200 active:scale-95"
-            title="Minimize timer"
-          >
-            <ChevronUp size={18} />
-          </button>
-
+        {/* Compact Controls */}
+        <div className="flex items-center gap-1.5">
           {/* Play/Pause Button */}
           <button
             onClick={isRunning ? pause : start}
-            className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 bg-gradient-to-br ${c.button} text-white`}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 bg-gradient-to-br ${c.button} text-white`}
           >
-            {isRunning ? <Pause size={22} /> : <Play size={22} className="ml-0.5" />}
+            {isRunning ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
           </button>
 
           {/* Skip/Reset Button */}
           {isBreak ? (
             <button
               onClick={skipBreak}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-surface border border-border text-muted hover:text-foreground hover:bg-border/50 transition-all duration-200 active:scale-95"
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface/50 text-muted hover:text-foreground transition-all duration-200"
               title="Skip break"
             >
-              <SkipForward size={18} />
+              <SkipForward size={15} />
             </button>
           ) : (
             <button
               onClick={reset}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-surface border border-border text-muted hover:text-foreground hover:bg-border/50 transition-all duration-200 active:scale-95"
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface/50 text-muted hover:text-foreground transition-all duration-200"
               title="Reset timer"
             >
-              <RotateCcw size={18} />
+              <RotateCcw size={15} />
             </button>
           )}
 
@@ -463,26 +437,23 @@ export function CompactTimerBar() {
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => { setShowMenu(!showMenu); setShowSettings(false) }}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-95 ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
                 showMenu
-                  ? 'bg-border/50 border-border text-foreground'
-                  : 'bg-surface border-border text-muted hover:text-foreground hover:bg-border/50'
+                  ? 'bg-border/50 text-foreground'
+                  : 'bg-surface/50 text-muted hover:text-foreground'
               }`}
               title="Timer settings"
             >
-              <Settings size={18} />
+              <Settings size={15} />
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu - Compact */}
             {showMenu && !showSettings && (
-              <div className="absolute right-0 top-full mt-2 w-72 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="absolute right-0 top-full mt-2 w-56 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden">
                 {/* Mode Selection */}
-                <div className="p-3 border-b border-border">
-                  <p className="text-xs font-medium text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Clock size={12} />
-                    Timer Mode
-                  </p>
-                  <div className="space-y-1">
+                <div className="p-2 border-b border-border">
+                  <p className="text-[10px] font-medium text-muted uppercase tracking-wider mb-1.5 px-2">Mode</p>
+                  <div className="space-y-0.5">
                     {modeOptions.map((opt) => (
                       <button
                         key={opt.value}
@@ -490,39 +461,32 @@ export function CompactTimerBar() {
                           setMode(opt.value)
                           setShowMenu(false)
                         }}
-                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                        className={`w-full text-left px-2 py-1.5 rounded-lg transition-colors text-sm ${
                           mode === opt.value
                             ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
                             : 'hover:bg-border/50 text-foreground'
                         }`}
                       >
-                        <span className="font-medium">{opt.label}</span>
-                        <span className="text-xs text-muted ml-2">{opt.desc}</span>
+                        {opt.label}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Quick Actions */}
-                <div className="p-3 border-b border-border">
-                  <p className="text-xs font-medium text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Zap size={12} />
-                    Quick Actions
-                  </p>
-                  <div className="space-y-1">
+                <div className="p-2 border-b border-border">
+                  <p className="text-[10px] font-medium text-muted uppercase tracking-wider mb-1.5 px-2">Actions</p>
+                  <div className="space-y-0.5">
                     {isBreak ? (
                       <button
                         onClick={() => {
                           switchToWork()
                           setShowMenu(false)
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-border/50 transition-colors text-left"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-border/50 transition-colors text-left text-sm"
                       >
-                        <Brain size={16} className="text-blue-500" />
-                        <div>
-                          <span className="font-medium">Start Focus</span>
-                          <p className="text-xs text-muted">Switch to work session</p>
-                        </div>
+                        <Brain size={14} className="text-blue-500" />
+                        <span>Start Focus</span>
                       </button>
                     ) : (
                       <>
@@ -531,26 +495,20 @@ export function CompactTimerBar() {
                             switchToBreak()
                             setShowMenu(false)
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-border/50 transition-colors text-left"
+                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-border/50 transition-colors text-left text-sm"
                         >
-                          <Coffee size={16} className="text-emerald-500" />
-                          <div>
-                            <span className="font-medium">Short Break</span>
-                            <p className="text-xs text-muted">{mode === '25/5' ? '5' : mode === '50/10' ? '10' : customBreak} minutes</p>
-                          </div>
+                          <Coffee size={14} className="text-emerald-500" />
+                          <span>Short Break</span>
                         </button>
                         <button
                           onClick={() => {
                             switchToLongBreak()
                             setShowMenu(false)
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-border/50 transition-colors text-left"
+                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-border/50 transition-colors text-left text-sm"
                         >
-                          <Sun size={16} className="text-amber-500" />
-                          <div>
-                            <span className="font-medium">Long Break</span>
-                            <p className="text-xs text-muted">{settings.longBreakDuration} minutes</p>
-                          </div>
+                          <Sun size={14} className="text-amber-500" />
+                          <span>Long Break</span>
                         </button>
                       </>
                     )}
@@ -560,29 +518,23 @@ export function CompactTimerBar() {
                           setActiveTask(null)
                           setShowMenu(false)
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-border/50 transition-colors text-left"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-border/50 transition-colors text-left text-sm"
                       >
-                        <RotateCcw size={16} className="text-muted" />
-                        <div>
-                          <span className="font-medium">Clear Active Task</span>
-                          <p className="text-xs text-muted">Unlink current task</p>
-                        </div>
+                        <RotateCcw size={14} className="text-muted" />
+                        <span>Clear Task</span>
                       </button>
                     )}
                   </div>
                 </div>
 
                 {/* Settings Link */}
-                <div className="p-3">
+                <div className="p-2">
                   <button
                     onClick={() => setShowSettings(true)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-border/50 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-border/50 transition-colors text-left text-sm"
                   >
-                    <Settings size={16} className="text-muted" />
-                    <div>
-                      <span className="font-medium">Timer Settings</span>
-                      <p className="text-xs text-muted">Customize durations & behavior</p>
-                    </div>
+                    <Settings size={14} className="text-muted" />
+                    <span>Settings</span>
                   </button>
                 </div>
               </div>
@@ -590,22 +542,22 @@ export function CompactTimerBar() {
 
             {/* Settings Panel */}
             {showMenu && showSettings && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden">
-                <div className="p-4 border-b border-border flex items-center justify-between">
+              <div className="absolute right-0 top-full mt-2 w-72 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="p-3 border-b border-border flex items-center justify-between">
                   <button
                     onClick={() => setShowSettings(false)}
-                    className="text-sm text-muted hover:text-foreground"
+                    className="text-xs text-muted hover:text-foreground"
                   >
-                    &larr; Back
+                    ← Back
                   </button>
-                  <h3 className="font-medium">Timer Settings</h3>
-                  <div className="w-12" />
+                  <h3 className="text-sm font-medium">Settings</h3>
+                  <div className="w-10" />
                 </div>
 
-                <div className="p-4 space-y-4">
+                <div className="p-3 space-y-3">
                   {/* Long Break Duration */}
                   <div>
-                    <label className="text-sm font-medium">Long Break Duration</label>
+                    <label className="text-xs font-medium">Long Break</label>
                     <div className="flex items-center gap-2 mt-1">
                       <input
                         type="range"
@@ -615,13 +567,13 @@ export function CompactTimerBar() {
                         onChange={(e) => setSettings({ longBreakDuration: Number(e.target.value) })}
                         className="flex-1"
                       />
-                      <span className="text-sm w-12 text-right">{settings.longBreakDuration}m</span>
+                      <span className="text-xs w-10 text-right">{settings.longBreakDuration}m</span>
                     </div>
                   </div>
 
                   {/* Pomodoros Until Long Break */}
                   <div>
-                    <label className="text-sm font-medium">Pomodoros Until Long Break</label>
+                    <label className="text-xs font-medium">Pomodoros til Long Break</label>
                     <div className="flex items-center gap-2 mt-1">
                       <input
                         type="range"
@@ -631,35 +583,44 @@ export function CompactTimerBar() {
                         onChange={(e) => setSettings({ pomodorosUntilLongBreak: Number(e.target.value) })}
                         className="flex-1"
                       />
-                      <span className="text-sm w-12 text-right">{settings.pomodorosUntilLongBreak}</span>
+                      <span className="text-xs w-10 text-right">{settings.pomodorosUntilLongBreak}</span>
                     </div>
                   </div>
 
                   {/* Auto-start options */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.autoStartBreaks}
                         onChange={(e) => setSettings({ autoStartBreaks: e.target.checked })}
-                        className="rounded"
+                        className="rounded w-3.5 h-3.5"
                       />
-                      <span className="text-sm">Auto-start breaks</span>
+                      <span className="text-xs">Auto-start breaks</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.autoStartPomodoros}
                         onChange={(e) => setSettings({ autoStartPomodoros: e.target.checked })}
-                        className="rounded"
+                        className="rounded w-3.5 h-3.5"
                       />
-                      <span className="text-sm">Auto-start pomodoros</span>
+                      <span className="text-xs">Auto-start pomodoros</span>
                     </label>
                   </div>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Collapse Button */}
+          <button
+            onClick={toggleTimer}
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-surface/50 text-muted hover:text-foreground transition-all duration-200"
+            title="Minimize timer"
+          >
+            <ChevronUp size={15} />
+          </button>
         </div>
       </div>
       </div>
