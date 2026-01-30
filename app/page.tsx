@@ -9,6 +9,7 @@ import { CompactTimerBar } from '@/components/timer/CompactTimerBar'
 import { CalendarPopup } from '@/components/calendar/CalendarPopup'
 import { createClient } from '@/lib/supabase/client'
 import { ListTodo, CheckSquare } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n'
 
 // Debug component to show sync status - tap 5 times on "Tasks" header to show
 function SyncDebug({ taskCount }: { taskCount: number }) {
@@ -89,6 +90,7 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showCalendar, setShowCalendar] = useState(false)
   const [mobileTab, setMobileTab] = useState<'tasks' | 'steps'>('tasks')
+  const t = useTranslations()
 
   const {
     mode,
@@ -126,7 +128,7 @@ export default function HomePage() {
   if (mode === 'loading' || isLoading) {
     return (
       <div className="h-[calc(100dvh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
-        <div className="text-muted">Loading...</div>
+        <div className="text-muted">{t.common.loading}</div>
       </div>
     )
   }
@@ -159,7 +161,7 @@ export default function HomePage() {
           }`}
         >
           <ListTodo size={16} />
-          Tasks
+          {t.tasks.title}
         </button>
         <button
           onClick={() => setMobileTab('steps')}
@@ -170,7 +172,7 @@ export default function HomePage() {
           }`}
         >
           <CheckSquare size={16} />
-          Steps
+          {t.tasks.steps}
           {selectedTask && (
             <span className="text-xs bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded-full">
               {selectedTask.steps.filter(s => s.scheduledDate === format(selectedDate, 'yyyy-MM-dd')).length}

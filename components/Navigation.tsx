@@ -2,15 +2,18 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { PanelLeftClose, PanelLeft } from 'lucide-react'
+import { PanelLeftClose, PanelLeft, Settings } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
 import { AuthButton } from './AuthButton'
 import { useUIStore } from '@/stores/uiStore'
+import { useTranslations } from '@/lib/i18n'
 
-const navItems = [
+type NavKey = 'tasks' | 'habits' | 'calendar' | 'progress' | 'timer'
+
+const navItemsConfig: { href: string; key: NavKey; icon: (active: boolean) => React.ReactNode }[] = [
   {
     href: '/',
-    label: 'Tasks',
+    key: 'tasks',
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" strokeWidth={active ? 2 : 1.5}>
         <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.2 : 0} />
@@ -21,7 +24,7 @@ const navItems = [
   },
   {
     href: '/habits',
-    label: 'Habits',
+    key: 'habits',
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" strokeWidth={active ? 2 : 1.5}>
         <path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5L12 2Z" stroke="currentColor" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.2 : 0} strokeLinejoin="round" />
@@ -30,7 +33,7 @@ const navItems = [
   },
   {
     href: '/calendar',
-    label: 'Calendar',
+    key: 'calendar',
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" strokeWidth={active ? 2 : 1.5}>
         <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.15 : 0} />
@@ -42,7 +45,7 @@ const navItems = [
   },
   {
     href: '/progress',
-    label: 'Progress',
+    key: 'progress',
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" strokeWidth={active ? 2 : 1.5}>
         <path d="M3 20V12" stroke="currentColor" strokeLinecap="round" />
@@ -57,7 +60,7 @@ const navItems = [
   },
   {
     href: '/timer',
-    label: 'Timer',
+    key: 'timer',
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" strokeWidth={active ? 2 : 1.5}>
         <circle cx="12" cy="13" r="8" stroke="currentColor" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.15 : 0} />
@@ -77,6 +80,7 @@ const navItems = [
 export function Navigation() {
   const pathname = usePathname()
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
+  const t = useTranslations()
 
   return (
     <>
@@ -89,8 +93,9 @@ export function Navigation() {
           {/* Main container */}
           <div className="relative bg-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-2xl shadow-2xl shadow-black/20 dark:shadow-black/50">
             <div className="flex items-center justify-around px-2 py-2">
-              {navItems.map(({ href, label, icon }) => {
+              {navItemsConfig.map(({ href, key, icon }) => {
                 const isActive = pathname === href
+                const label = t.nav[key]
                 return (
                   <Link
                     key={href}
@@ -135,9 +140,9 @@ export function Navigation() {
             {!sidebarCollapsed && (
               <div className="px-2">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                  Paretflow
+                  {t.app.name}
                 </h1>
-                <p className="text-xs text-muted mt-0.5 tracking-wide">Focus. Simplify. Achieve.</p>
+                <p className="text-xs text-muted mt-0.5 tracking-wide">{t.app.tagline}</p>
               </div>
             )}
             <button
@@ -151,8 +156,9 @@ export function Navigation() {
 
           {/* Nav Items */}
           <div className="flex flex-col gap-1">
-            {navItems.map(({ href, label, icon }) => {
+            {navItemsConfig.map(({ href, key, icon }) => {
               const isActive = pathname === href
+              const label = t.nav[key]
               return (
                 <Link
                   key={href}
@@ -191,6 +197,34 @@ export function Navigation() {
           {/* Footer */}
           <div className={`mt-auto pt-4 border-t border-white/5 flex flex-col gap-2 ${sidebarCollapsed ? 'items-center' : ''}`}>
             <AuthButton />
+            {/* Settings Button */}
+            <Link
+              href="/settings"
+              title={sidebarCollapsed ? t.nav.settings : undefined}
+              className="relative group"
+            >
+              {pathname === '/settings' && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-400 to-blue-600 rounded-r-full" />
+              )}
+              <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                sidebarCollapsed ? 'justify-center' : ''
+              } ${
+                pathname === '/settings'
+                  ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-foreground'
+                  : 'text-muted hover:text-foreground hover:bg-white/5 active:scale-[0.98]'
+              }`}>
+                <div className={`transition-all duration-200 ${pathname === '/settings' ? 'text-blue-500' : 'group-hover:text-blue-400'}`}>
+                  <Settings size={20} />
+                </div>
+                {!sidebarCollapsed && (
+                  <span className={`text-sm font-medium transition-all duration-200 ${
+                    pathname === '/settings' ? 'text-foreground' : ''
+                  }`}>
+                    {t.nav.settings}
+                  </span>
+                )}
+              </div>
+            </Link>
             <ThemeToggle collapsed={sidebarCollapsed} />
           </div>
         </div>

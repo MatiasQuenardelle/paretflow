@@ -6,6 +6,7 @@ import { TopHeader } from './TopHeader'
 import { useTaskStore } from '@/stores/taskStore'
 import { useUIStore } from '@/stores/uiStore'
 import { getCurrentUser, onAuthStateChange } from '@/lib/supabase/sync'
+import { I18nProvider } from '@/lib/i18n'
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -40,16 +41,18 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [initializeCloud, initializeGuest])
 
   return (
-    <div className="min-h-screen">
-      <Navigation />
-      <div className={`flex flex-col min-h-screen transition-all duration-300 ${
-        sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'
-      }`}>
-        <TopHeader isSyncing={isSaving} />
-        <main className="flex-1 pb-24 md:pb-0 overflow-auto">
-          {children}
-        </main>
+    <I18nProvider>
+      <div className="min-h-screen">
+        <Navigation />
+        <div className={`flex flex-col min-h-screen transition-all duration-300 ${
+          sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'
+        }`}>
+          <TopHeader isSyncing={isSaving} />
+          <main className="flex-1 pb-24 md:pb-0 overflow-auto">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </I18nProvider>
   )
 }
