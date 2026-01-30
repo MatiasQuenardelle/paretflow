@@ -57,6 +57,9 @@ interface TaskState {
   initializeCloud: () => Promise<void>
   initializeGuest: () => void
 
+  // Refresh from cloud (for sync on visibility/focus)
+  refreshFromCloud: () => Promise<void>
+
   // Internal helper for saving to cloud
   _saveToCloud: (tasks: Task[]) => Promise<void>
 
@@ -159,6 +162,22 @@ export const useTaskStore = create<TaskState>()(
       initializeGuest: () => {
         set({ mode: 'guest', isLoading: false, error: null })
         // Zustand persist will hydrate from localStorage automatically
+      },
+
+      // Refresh tasks from cloud (called on visibility/focus events)
+      refreshFromCloud: async () => {
+        const { mode, isSaving } = get()
+
+        // Only refresh if in cloud mode and not currently saving
+        if (mode !== 'cloud' || isSaving) return
+
+        try {
+          const cloudTasks = await taskService.fetchTasks()
+          set({ tasks: cloudTasks, error: null })
+        } catch (error) {
+          console.error('[TaskStore] Refresh failed:', error)
+          // Don't set error for background refresh failures
+        }
       },
 
       // Internal helper to save to cloud with error handling

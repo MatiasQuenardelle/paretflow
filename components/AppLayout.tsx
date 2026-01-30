@@ -13,7 +13,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { isSaving, initializeCloud, initializeGuest } = useTaskStore()
+  const { isSaving, initializeCloud, initializeGuest, refreshFromCloud, mode } = useTaskStore()
   const { sidebarCollapsed } = useUIStore()
 
   // Initialize task store based on auth state
@@ -39,6 +39,29 @@ export function AppLayout({ children }: AppLayoutProps) {
 
     return () => subscription.unsubscribe()
   }, [initializeCloud, initializeGuest])
+
+  // Sync tasks when returning to the app (visibility change or focus)
+  useEffect(() => {
+    if (mode !== 'cloud') return
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshFromCloud()
+      }
+    }
+
+    const handleFocus = () => {
+      refreshFromCloud()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [mode, refreshFromCloud])
 
   return (
     <I18nProvider>
