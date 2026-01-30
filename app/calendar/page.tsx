@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { format, addDays, addWeeks, subDays, subWeeks } from 'date-fns'
-import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, ChevronUp, ChevronDown } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, ChevronUp, ChevronDown, Zap, ZapOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useTaskStore } from '@/stores/taskStore'
 import { DayView } from '@/components/calendar/DayView'
@@ -14,6 +14,7 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('day')
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [isExpanded, setIsExpanded] = useState(true)
+  const [showHabits, setShowHabits] = useState(true)
   const [scheduledItemsCount, setScheduledItemsCount] = useState(0)
 
   const { tasks, toggleStep, selectTask, mode, isLoading } = useTaskStore()
@@ -95,6 +96,20 @@ export default function CalendarPage() {
             {scheduledItemsCount} {scheduledItemsCount === 1 ? 'item' : 'items'}
           </span>
 
+          {/* Show/Hide Habits toggle */}
+          <button
+            onClick={() => setShowHabits(!showHabits)}
+            className={`flex items-center gap-1.5 text-xs transition-all duration-200 px-2 py-1.5 rounded-lg active:scale-95 border ${
+              showHabits
+                ? 'text-amber-400 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20'
+                : 'text-muted hover:text-foreground border-white/10 dark:border-white/5 hover:bg-white/10'
+            }`}
+            title={showHabits ? 'Hide power habits' : 'Show power habits'}
+          >
+            {showHabits ? <Zap size={14} /> : <ZapOff size={14} />}
+            <span className="hidden sm:inline">{showHabits ? 'Habits' : 'Habits'}</span>
+          </button>
+
           {/* Compact/Expand toggle */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -117,6 +132,7 @@ export default function CalendarPage() {
             isExpanded={isExpanded}
             onToggleExpanded={() => setIsExpanded(!isExpanded)}
             onScheduledItemsChange={setScheduledItemsCount}
+            showHabits={showHabits}
           />
         ) : (
           <WeekView

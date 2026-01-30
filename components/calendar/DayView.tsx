@@ -14,12 +14,13 @@ interface DayViewProps {
   isExpanded?: boolean
   onToggleExpanded?: () => void
   onScheduledItemsChange?: (count: number) => void
+  showHabits?: boolean
 }
 
 const START_HOUR = 6
 const END_HOUR = 23
-const HOUR_HEIGHT_COLLAPSED = 24
-const HOUR_HEIGHT_EXPANDED = 48
+const HOUR_HEIGHT_COLLAPSED = 20
+const HOUR_HEIGHT_EXPANDED = 36
 
 interface ScheduledStep {
   step: Step
@@ -35,7 +36,7 @@ interface ScheduledHabitItem {
   completed: boolean
 }
 
-export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: isExpandedProp, onToggleExpanded, onScheduledItemsChange }: DayViewProps) {
+export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: isExpandedProp, onToggleExpanded, onScheduledItemsChange, showHabits = true }: DayViewProps) {
   const [isExpandedInternal, setIsExpandedInternal] = useState(true)
   const isExpanded = isExpandedProp !== undefined ? isExpandedProp : isExpandedInternal
   const [selectedStep, setSelectedStep] = useState<{ step: Step; task: Task } | null>(null)
@@ -69,9 +70,9 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: i
   // Sort by time
   scheduledSteps.sort((a, b) => (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute))
 
-  // Collect all scheduled habits for the selected date
-  const scheduledHabitsForDate = getScheduledForDate(dateStr)
-  const completionsForDate = getCompletionsForDate(dateStr)
+  // Collect all scheduled habits for the selected date (only if showHabits is true)
+  const scheduledHabitsForDate = showHabits ? getScheduledForDate(dateStr) : []
+  const completionsForDate = showHabits ? getCompletionsForDate(dateStr) : []
   const scheduledHabits: ScheduledHabitItem[] = scheduledHabitsForDate
     .map(scheduled => {
       const habit = POWER_HABITS.find(h => h.id === scheduled.habitId)
@@ -141,12 +142,13 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: i
       const top = getTimePosition(hour, minute)
       const height = (duration / 60) * hourHeight
 
+      const minHeight = isExpanded ? 40 : 24
       if (type === 'step') {
         blocks.push({
           type: 'step',
           item: data as ScheduledStep,
           top,
-          height: Math.max(height, isExpanded ? 36 : 18),
+          height: Math.max(height, minHeight),
           left: 0,
           width: 100
         })
@@ -155,7 +157,7 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: i
           type: 'habit',
           item: data as ScheduledHabitItem,
           top,
-          height: Math.max(height, isExpanded ? 36 : 18),
+          height: Math.max(height, minHeight),
           left: 0,
           width: 100
         })
@@ -164,15 +166,16 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: i
 
     // Recalculate widths for overlapping blocks
     const totalColumns = Math.max(columns.length, 1)
+    const overlapThreshold = isExpanded ? 40 : 24
     if (totalColumns > 1) {
       blocks.forEach((block, index) => {
         const overlapping = blocks.filter((b, i) =>
-          i !== index && Math.abs(b.top - block.top) < (isExpanded ? 36 : 18)
+          i !== index && Math.abs(b.top - block.top) < overlapThreshold
         )
         if (overlapping.length > 0) {
           block.width = 100 / (overlapping.length + 1)
           const colIndex = blocks.slice(0, index + 1).filter(b =>
-            Math.abs(b.top - block.top) < (isExpanded ? 36 : 18)
+            Math.abs(b.top - block.top) < overlapThreshold
           ).length - 1
           block.left = colIndex * block.width
         }
@@ -275,14 +278,14 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: i
                           : '0 4px 12px rgba(59, 130, 246, 0.3)'
                       }}
                     >
-                      <div className="h-full w-full px-3 py-2 flex flex-col justify-center">
-                        <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'} ${
+                      <div className="h-full w-full px-2 py-1 flex flex-col justify-center overflow-hidden">
+                        <span className={`font-medium text-white text-left leading-tight ${isExpanded ? 'text-xs' : 'text-[10px]'} ${
                           item.step.completed ? 'line-through' : ''
-                        }`}>
+                        }`} style={{ wordBreak: 'break-word' }}>
                           {item.step.text}
                         </span>
                         {isExpanded && (
-                          <span className="text-[10px] text-white/70 mt-0.5 truncate">
+                          <span className="text-[9px] text-white/80 mt-0.5 leading-tight truncate">
                             {item.task.title} - {format(new Date().setHours(item.hour, item.minute), 'h:mm a')}
                           </span>
                         )}
@@ -310,15 +313,15 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: i
                           : '0 4px 12px rgba(245, 158, 11, 0.3)'
                       }}
                     >
-                      <div className="h-full w-full px-3 py-2 flex flex-col justify-center">
-                        <span className={`font-medium text-white truncate text-left ${isExpanded ? 'text-sm' : 'text-xs'} ${
+                      <div className="h-full w-full px-2 py-1 flex flex-col justify-center overflow-hidden">
+                        <span className={`font-medium text-white text-left leading-tight ${isExpanded ? 'text-xs' : 'text-[10px]'} ${
                           item.completed ? 'line-through' : ''
-                        }`}>
+                        }`} style={{ wordBreak: 'break-word' }}>
                           {item.habit.name}
                         </span>
                         {isExpanded && (
-                          <span className="text-[10px] text-white/70 mt-0.5 truncate">
-                            Power Habit - {format(new Date().setHours(item.hour, item.minute), 'h:mm a')}
+                          <span className="text-[9px] text-white/80 mt-0.5 leading-tight">
+                            {format(new Date().setHours(item.hour, item.minute), 'h:mm a')}
                           </span>
                         )}
                       </div>
