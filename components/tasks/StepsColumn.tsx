@@ -150,6 +150,7 @@ export function StepsColumn({
                 onDragEnter={() => handleDragEnter(index)}
                 onDragEnd={handleDragEnd}
                 isDragging={draggedIndex === index}
+                onCreateNext={handleAddStep}
               />
             ))
         )}

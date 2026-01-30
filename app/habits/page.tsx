@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { format } from 'date-fns'
 import { ChevronDown, Flame, Target } from 'lucide-react'
 import { HabitCard } from '@/components/habits/HabitCard'
+import { PowerScorePanel } from '@/components/habits/PowerScorePanel'
 import { POWER_HABITS, useHabitStore, HabitDefinition } from '@/stores/habitStore'
 import { useTranslations } from '@/lib/i18n'
 
@@ -237,9 +238,60 @@ export default function HabitsPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <StatsHeader />
+      {/* Mobile: StatsHeader */}
+      <div className="md:hidden">
+        <StatsHeader />
+      </div>
 
-      <div className="flex-1 overflow-auto">
+      {/* Desktop: two-panel layout */}
+      <div className="hidden md:flex md:flex-1 md:p-6 md:gap-6 overflow-hidden">
+        {/* Left: Score Panel (340px fixed) */}
+        <div className="w-[340px] shrink-0">
+          <PowerScorePanel />
+        </div>
+
+        {/* Right: Habit Cards (flex-1, scrollable) */}
+        <div className="flex-1 overflow-auto rounded-2xl bg-surface/80 backdrop-blur-xl border border-white/10 p-6">
+          {/* Header */}
+          <div className="mb-4">
+            <h1 className="text-xl font-bold">{t.habits.title}</h1>
+            <p className="text-sm text-muted">{t.habits.tapToExpand}</p>
+          </div>
+
+          {/* Habit Cards */}
+          <div
+            ref={listRef}
+            className="space-y-2"
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {orderedHabits.map(habit => (
+              <HabitCard
+                key={habit.id}
+                habit={habit}
+                isDragging={draggedId === habit.id || touchDragId === habit.id}
+                isDragOver={dragOverId === habit.id && (draggedId !== habit.id && touchDragId !== habit.id)}
+                onDragStart={(e) => handleDragStart(e, habit.id)}
+                onDragOver={handleDragOver}
+                onDragEnter={() => handleDragEnter(habit.id)}
+                onDragEnd={handleDragEnd}
+                onTouchDragStart={(e) => handleTouchStart(e, habit.id)}
+                isTouchDragging={touchDragId === habit.id}
+              />
+            ))}
+          </div>
+
+          {/* Coming Soon */}
+          <div className="pt-4">
+            <p className="text-xs text-center text-muted">
+              {t.habits.moreComingSoon}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile: existing vertical stack */}
+      <div className="md:hidden flex-1 overflow-auto">
         <div className="max-w-lg mx-auto p-4 space-y-4">
           {/* Header */}
           <div>
@@ -249,7 +301,6 @@ export default function HabitsPage() {
 
           {/* Habit Cards - draggable and with checkboxes */}
           <div
-            ref={listRef}
             className="space-y-2"
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}

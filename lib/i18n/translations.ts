@@ -125,6 +125,14 @@ export const translations = {
       addHabitsToStart: 'Add habits to your day to get started',
       dragToReorder: 'Drag to reorder',
       viewHabitDetails: 'View habit details',
+      powerScore: 'Power Score',
+      todaysProgress: "Today's Progress",
+      completed: 'Completed',
+      pointsEarned: 'Points Earned',
+      motivationStart: 'Start your day strong!',
+      motivationHalf: 'Keep going! Building momentum.',
+      motivationAlmost: 'So close to a perfect day!',
+      motivationPerfect: 'Perfect day! You crushed it!',
     },
     // Power Habits content
     powerHabits: {
@@ -386,6 +394,14 @@ export const translations = {
       addHabitsToStart: 'Agrega hábitos a tu día para comenzar',
       dragToReorder: 'Arrastra para reordenar',
       viewHabitDetails: 'Ver detalles de hábitos',
+      powerScore: 'Puntuación de Poder',
+      todaysProgress: 'Progreso de Hoy',
+      completed: 'Completados',
+      pointsEarned: 'Puntos Ganados',
+      motivationStart: '¡Comienza tu día con fuerza!',
+      motivationHalf: '¡Sigue así! Construyendo impulso.',
+      motivationAlmost: '¡Casi logras un día perfecto!',
+      motivationPerfect: '¡Día perfecto! ¡Lo lograste!',
     },
     // Power Habits content
     powerHabits: {

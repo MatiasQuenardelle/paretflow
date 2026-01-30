@@ -17,6 +17,7 @@ interface StepItemProps {
   onDragEnter: () => void
   onDragEnd: () => void
   isDragging: boolean
+  onCreateNext?: () => void
 }
 
 export function StepItem({
@@ -28,6 +29,7 @@ export function StepItem({
   onDragEnter,
   onDragEnd,
   isDragging,
+  onCreateNext,
 }: StepItemProps) {
   const [isEditing, setIsEditing] = useState(!step.text)
   const [text, setText] = useState(step.text)
@@ -47,13 +49,23 @@ export function StepItem({
     }
   }, [isEditing, step.text])
 
-  const handleSave = () => {
-    if (text.trim() && text !== step.text) {
-      onUpdate({ text: text.trim() })
+  const handleSave = (createNext = false) => {
+    const trimmedText = text.trim()
+    if (trimmedText && trimmedText !== step.text) {
+      onUpdate({ text: trimmedText })
+    } else if (!trimmedText && !step.text) {
+      // Empty new step, delete it
+      onDelete()
+      return
     } else {
       setText(step.text)
     }
     setIsEditing(false)
+
+    // Create next step if requested and current step has content
+    if (createNext && trimmedText && onCreateNext) {
+      onCreateNext()
+    }
   }
 
   const formatDateDisplay = (dateStr: string) => {
@@ -87,9 +99,12 @@ export function StepItem({
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onBlur={handleSave}
+            onBlur={() => handleSave(false)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSave()
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleSave(true)
+              }
               if (e.key === 'Escape') {
                 setText(step.text)
                 setIsEditing(false)
