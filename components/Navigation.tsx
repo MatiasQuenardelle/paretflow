@@ -1,12 +1,15 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { PanelLeftClose, PanelLeft, Settings } from 'lucide-react'
+import { PanelLeftClose, PanelLeft, Settings, Cloud, CloudOff, Loader2 } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
 import { AuthButton } from './AuthButton'
 import { useUIStore } from '@/stores/uiStore'
+import { useTaskStore } from '@/stores/taskStore'
 import { useTranslations } from '@/lib/i18n'
+import { createClient } from '@/lib/supabase/client'
 
 type NavKey = 'tasks' | 'habits' | 'calendar' | 'progress' | 'timer'
 
@@ -76,6 +79,125 @@ const navItemsConfig: { href: string; key: NavKey; icon: (active: boolean) => Re
     )
   },
 ]
+
+function SyncStatusButton({ collapsed }: { collapsed: boolean }) {
+  const [showDebug, setShowDebug] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [isForceSyncing, setIsForceSyncing] = useState(false)
+  const { mode, tasks, error, isSaving, refreshFromCloud } = useTaskStore()
+  const t = useTranslations()
+
+  const handleShowDebug = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data, error: fetchError } = user ? await supabase
+      .from('tasks')
+      .select('data, updated_at')
+      .eq('user_id', user.id)
+      .single() : { data: null, error: null }
+
+    const cloudTasksData = data?.data as any[] | undefined
+
+    setDebugInfo({
+      mode,
+      userId: user?.id?.slice(0, 8) || 'none',
+      email: user?.email || 'none',
+      cloudTasks: cloudTasksData?.length ?? (fetchError?.code === 'PGRST116' ? 0 : 'error: ' + fetchError?.message),
+      cloudTaskNames: cloudTasksData?.map((t: any) => `${t.title} (${t.steps?.length || 0} steps)`).slice(0, 5) || [],
+      localTasks: tasks.length,
+      localTaskNames: tasks.map(t => `${t.title} (${t.steps?.length || 0} steps)`).slice(0, 5),
+      cloudUpdatedAt: data?.updated_at ? new Date(data.updated_at).toLocaleString() : 'none',
+      isSaving,
+      error: error || 'none',
+    })
+    setShowDebug(true)
+  }
+
+  const handleForceSync = async () => {
+    if (mode !== 'cloud' || isForceSyncing) return
+    setIsForceSyncing(true)
+    try {
+      await refreshFromCloud()
+      await handleShowDebug()
+    } catch (e) {
+      console.error('Force sync failed:', e)
+    } finally {
+      setIsForceSyncing(false)
+    }
+  }
+
+  return (
+    <>
+      <button
+        onClick={handleShowDebug}
+        title={collapsed ? 'Sync Status' : undefined}
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-muted hover:text-foreground hover:bg-white/5 active:scale-[0.98] ${
+          collapsed ? 'justify-center' : ''
+        }`}
+      >
+        <div className="transition-all duration-200 group-hover:text-blue-400">
+          {isSaving ? (
+            <Loader2 size={20} className="animate-spin text-blue-500" />
+          ) : mode === 'cloud' ? (
+            <Cloud size={20} className="text-green-500" />
+          ) : mode === 'guest' ? (
+            <CloudOff size={20} className="text-orange-500" />
+          ) : (
+            <Loader2 size={20} className="animate-spin" />
+          )}
+        </div>
+        {!collapsed && (
+          <span className="text-sm font-medium">
+            {isSaving ? 'Syncing...' : mode === 'cloud' ? 'Synced' : mode === 'guest' ? 'Guest' : 'Loading...'}
+          </span>
+        )}
+      </button>
+
+      {/* Debug Modal */}
+      {showDebug && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 p-4 flex items-center justify-center"
+          onClick={() => setShowDebug(false)}
+        >
+          <div
+            className="bg-gray-900 p-4 rounded-lg max-w-md w-full text-white text-sm font-mono max-h-[80vh] overflow-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="font-bold mb-3">Sync Debug</h3>
+            {debugInfo ? (
+              <pre className="text-xs overflow-auto whitespace-pre-wrap">{JSON.stringify(debugInfo, null, 2)}</pre>
+            ) : (
+              <p>Loading...</p>
+            )}
+            <div className="flex flex-col gap-2 mt-4">
+              <button
+                className="w-full px-3 py-2 bg-green-600 rounded text-sm disabled:opacity-50"
+                onClick={handleForceSync}
+                disabled={isForceSyncing || mode !== 'cloud'}
+              >
+                {isForceSyncing ? 'Syncing...' : 'Force Sync from Cloud'}
+              </button>
+              <div className="flex gap-2">
+                <button
+                  className="flex-1 px-3 py-2 bg-blue-600 rounded text-sm"
+                  onClick={() => window.location.reload()}
+                >
+                  Hard Refresh
+                </button>
+                <button
+                  className="flex-1 px-3 py-2 bg-gray-700 rounded text-sm"
+                  onClick={() => setShowDebug(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
 
 export function Navigation() {
   const pathname = usePathname()
@@ -196,6 +318,7 @@ export function Navigation() {
 
           {/* Footer */}
           <div className={`mt-auto pt-4 border-t border-white/5 flex flex-col gap-2 ${sidebarCollapsed ? 'items-center' : ''}`}>
+            <SyncStatusButton collapsed={sidebarCollapsed} />
             <AuthButton />
             {/* Settings Button */}
             <Link
