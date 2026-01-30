@@ -91,10 +91,26 @@ interface TaskState {
 }
 
 // Custom storage that only persists in guest mode
+// IMPORTANT: For cloud users, we never restore from localStorage to avoid showing stale data
 const guestOnlyStorage = {
   getItem: (name: string): string | null => {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem(name)
+    const stored = localStorage.getItem(name)
+    if (!stored) return null
+
+    // Check if the stored state was from guest mode
+    // If not guest mode, don't restore to prevent showing stale cloud data
+    try {
+      const parsed = JSON.parse(stored)
+      if (parsed?.state?.mode !== 'guest') {
+        // Clear non-guest localStorage data to prevent future hydration issues
+        localStorage.removeItem(name)
+        return null
+      }
+      return stored
+    } catch {
+      return null
+    }
   },
   setItem: (name: string, value: string): void => {
     if (typeof window === 'undefined') return
@@ -102,6 +118,9 @@ const guestOnlyStorage = {
     const state = JSON.parse(value)
     if (state?.state?.mode === 'guest') {
       localStorage.setItem(name, value)
+    } else {
+      // If switching away from guest mode, clear localStorage
+      localStorage.removeItem(name)
     }
   },
   removeItem: (name: string): void => {
@@ -125,25 +144,38 @@ export const useTaskStore = create<TaskState>()(
 
       // Initialize for logged-in user (cloud mode)
       initializeCloud: async () => {
-        set({ mode: 'loading', isLoading: true, error: null })
+        // Clear tasks immediately to prevent showing stale data during loading
+        set({ tasks: [], mode: 'loading', isLoading: true, error: null })
 
         try {
-          // Get current local tasks before switching to cloud
-          const localTasks = get().tasks
+          // Check localStorage for potential guest-to-cloud migration
+          let localGuestTasks: Task[] = []
+          try {
+            const storedData = localStorage.getItem('paretflow-tasks-guest')
+            if (storedData) {
+              const parsed = JSON.parse(storedData)
+              if (parsed?.state?.mode === 'guest' && Array.isArray(parsed?.state?.tasks)) {
+                localGuestTasks = parsed.state.tasks
+              }
+            }
+          } catch {
+            // Ignore localStorage parse errors
+          }
+
+          // Always clear localStorage for cloud users to prevent hydration issues
+          localStorage.removeItem('paretflow-tasks-guest')
 
           // Fetch cloud tasks
           const cloudTasks = await taskService.fetchTasks()
 
           if (cloudTasks.length > 0) {
-            // Cloud has tasks - use them
+            // Cloud has tasks - use them (cloud is source of truth)
             set({ tasks: cloudTasks, mode: 'cloud', isLoading: false })
-          } else if (localTasks.length > 0) {
-            // No cloud tasks but local tasks exist (guest-to-login transition)
-            // Upload local tasks to cloud
-            await taskService.saveTasks(localTasks)
-            set({ mode: 'cloud', isLoading: false })
-            // Clear localStorage for guest data since we're now in cloud mode
-            localStorage.removeItem('paretflow-tasks-guest')
+          } else if (localGuestTasks.length > 0) {
+            // No cloud tasks but guest tasks exist (guest-to-login transition)
+            // Upload guest tasks to cloud
+            await taskService.saveTasks(localGuestTasks)
+            set({ tasks: localGuestTasks, mode: 'cloud', isLoading: false })
           } else {
             // No tasks anywhere
             set({ tasks: [], mode: 'cloud', isLoading: false })
@@ -151,6 +183,7 @@ export const useTaskStore = create<TaskState>()(
         } catch (error) {
           console.error('[TaskStore] Cloud initialization failed:', error)
           set({
+            tasks: [],
             mode: 'cloud',
             isLoading: false,
             error: error instanceof Error ? error.message : 'Failed to load tasks'
