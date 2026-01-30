@@ -1,114 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { format } from 'date-fns'
 import { useTaskStore } from '@/stores/taskStore'
 import { TaskColumn } from '@/components/tasks/TaskColumn'
 import { StepsColumn } from '@/components/tasks/StepsColumn'
 import { CompactTimerBar } from '@/components/timer/CompactTimerBar'
 import { CalendarPopup } from '@/components/calendar/CalendarPopup'
-import { createClient } from '@/lib/supabase/client'
 import { ListTodo, CheckSquare } from 'lucide-react'
 import { useTranslations } from '@/lib/i18n'
-
-// Debug component to show sync status - tap 5 times on "Tasks" header to show
-function SyncDebug({ taskCount, tasks }: { taskCount: number, tasks: any[] }) {
-  const [show, setShow] = useState(false)
-  const [tapCount, setTapCount] = useState(0)
-  const [debugInfo, setDebugInfo] = useState<any>({})
-  const [isForceSyncing, setIsForceSyncing] = useState(false)
-  const { mode, isSaving, error, refreshFromCloud } = useTaskStore()
-
-  const fetchDebug = async () => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    const { data, error: fetchError } = user ? await supabase
-      .from('tasks')
-      .select('data, updated_at')
-      .eq('user_id', user.id)
-      .single() : { data: null, error: null }
-
-    const cloudTasksData = data?.data as any[] | undefined
-
-    // Count completed vs incomplete
-    const completedTasks = tasks.filter((t: any) => t.completed)
-    const incompleteTasks = tasks.filter((t: any) => !t.completed)
-    const cloudCompletedTasks = cloudTasksData?.filter((t: any) => t.completed) || []
-    const cloudIncompleteTasks = cloudTasksData?.filter((t: any) => !t.completed) || []
-
-    setDebugInfo({
-      mode,
-      userId: user?.id?.slice(0, 8) || 'none',
-      email: user?.email || 'none',
-      cloudTasks: cloudTasksData?.length ?? (fetchError?.code === 'PGRST116' ? 0 : 'error: ' + fetchError?.message),
-      cloudCompleted: cloudCompletedTasks.length,
-      cloudIncomplete: cloudIncompleteTasks.length,
-      cloudTaskNames: cloudTasksData?.map((t: any) => `${t.title} (${t.completed ? '✓' : '○'}) ${t.steps?.length || 0} steps`).slice(0, 8) || [],
-      localTasks: taskCount,
-      localCompleted: completedTasks.length,
-      localIncomplete: incompleteTasks.length,
-      localTaskNames: tasks.map((t: any) => `${t.title} (${t.completed ? '✓' : '○'}) ${t.steps?.length || 0} steps`).slice(0, 8),
-      cloudUpdatedAt: data?.updated_at ? new Date(data.updated_at).toLocaleString() : 'none',
-      isSaving,
-      error: error || 'none',
-    })
-  }
-
-  const handleForceSync = async () => {
-    if (mode !== 'cloud' || isForceSyncing) return
-    setIsForceSyncing(true)
-    try {
-      await refreshFromCloud()
-      await fetchDebug() // Refresh debug info
-    } catch (e) {
-      console.error('Force sync failed:', e)
-    } finally {
-      setIsForceSyncing(false)
-    }
-  }
-
-  useEffect(() => {
-    if (tapCount >= 5) {
-      setShow(true)
-      setTapCount(0)
-      fetchDebug()
-    }
-  }, [tapCount, taskCount, mode, isSaving, error])
-
-  if (!show) {
-    return (
-      <div
-        data-debug-trigger
-        className="absolute top-0 left-0 w-20 h-10 z-50"
-        onClick={() => setTapCount(c => c + 1)}
-      />
-    )
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/90 p-2 text-white text-xs font-mono flex items-start justify-center pt-12" onClick={() => setShow(false)}>
-      <div className="bg-gray-900 p-3 rounded-lg w-full max-w-sm max-h-[70vh] overflow-auto" onClick={e => e.stopPropagation()}>
-        <h3 className="font-bold mb-2">Sync Debug (tap outside to close)</h3>
-        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(debugInfo, null, 2)}</pre>
-        <div className="flex flex-col gap-2 mt-4">
-          <button
-            className="w-full px-4 py-2 bg-green-600 rounded disabled:opacity-50"
-            onClick={handleForceSync}
-            disabled={isForceSyncing || mode !== 'cloud'}
-          >
-            {isForceSyncing ? 'Syncing...' : 'Force Sync from Cloud'}
-          </button>
-          <button
-            className="w-full px-4 py-2 bg-blue-600 rounded"
-            onClick={() => window.location.reload()}
-          >
-            Hard Refresh
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // Error banner component
 function ErrorBanner({ error, onDismiss }: { error: string; onDismiss: () => void }) {
@@ -163,13 +63,6 @@ export default function HomePage() {
     !t.completed || t.scheduledDate === selectedDateStr
   )
 
-  // Debug info for mobile (visible on screen)
-  const debugMismatch = tasks.length !== tasksForDate.length ? {
-    total: tasks.length,
-    visible: tasksForDate.length,
-    hidden: tasks.filter(t => t.completed && t.scheduledDate !== selectedDateStr).map(t => t.title)
-  } : null
-
   // Show loading state
   if (mode === 'loading' || isLoading) {
     return (
@@ -181,32 +74,6 @@ export default function HomePage() {
 
   return (
     <div className="h-[calc(100dvh-5rem)] md:h-screen md:p-6 flex flex-col relative">
-      {/* Debug - tap the bug icon to show sync debug */}
-      <SyncDebug taskCount={tasks.length} tasks={tasks} />
-
-      {/* Temporary visible debug button - both mobile and desktop */}
-      <button
-        onClick={() => {
-          // Trigger the debug panel by simulating 5 taps
-          const debugArea = document.querySelector('[data-debug-trigger]') as HTMLElement
-          if (debugArea) {
-            for (let i = 0; i < 5; i++) debugArea.click()
-          }
-        }}
-        className="fixed bottom-28 md:bottom-4 right-4 z-40 p-2 bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-400 text-xs"
-      >
-        🐛
-      </button>
-
-      {/* On-screen debug for mobile - shows if there's a task count mismatch */}
-      {debugMismatch && (
-        <div className="mx-2 mb-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-xs text-yellow-300">
-          <div className="font-bold">Task Mismatch Debug:</div>
-          <div>Total in store: {debugMismatch.total}</div>
-          <div>Visible after filter: {debugMismatch.visible}</div>
-          <div>Hidden (completed, other days): {debugMismatch.hidden.join(', ') || 'none'}</div>
-        </div>
-      )}
 
       {/* Error banner */}
       {error && (

@@ -4,10 +4,13 @@ import { persist } from 'zustand/middleware'
 interface UIState {
   sidebarCollapsed: boolean
   timerCollapsed: boolean
+  tasksCompact: boolean
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
   toggleTimer: () => void
   setTimerCollapsed: (collapsed: boolean) => void
+  toggleTasksCompact: () => void
+  setTasksCompact: (compact: boolean) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -15,6 +18,7 @@ export const useUIStore = create<UIState>()(
     (set) => ({
       sidebarCollapsed: false,
       timerCollapsed: false,
+      tasksCompact: false,
 
       toggleSidebar: () => {
         set(state => ({ sidebarCollapsed: !state.sidebarCollapsed }))
@@ -30,6 +34,14 @@ export const useUIStore = create<UIState>()(
 
       setTimerCollapsed: (collapsed) => {
         set({ timerCollapsed: collapsed })
+      },
+
+      toggleTasksCompact: () => {
+        set(state => ({ tasksCompact: !state.tasksCompact }))
+      },
+
+      setTasksCompact: (compact) => {
+        set({ tasksCompact: compact })
       },
     }),
     {

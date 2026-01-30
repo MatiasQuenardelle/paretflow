@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Plus, Trash2, Eye, EyeOff, Timer, Minus, Play, Calendar, ChevronLeft, ChevronRight, Clock, GripVertical, Tag, X, Filter } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, Timer, Minus, Play, Calendar, ChevronLeft, ChevronRight, Clock, GripVertical, Tag, X, Filter, List, LayoutGrid } from 'lucide-react'
 import { format, addDays, subDays, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Task, TASK_LABELS } from '@/stores/taskStore'
 import { useTimerStore } from '@/stores/timerStore'
+import { useUIStore } from '@/stores/uiStore'
 import { DatePicker } from './DatePicker'
 
 const LABEL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -69,6 +70,7 @@ export function TaskColumn({
   const taskListRef = useRef<HTMLDivElement>(null)
 
   const { activeTaskId, setActiveTask } = useTimerStore()
+  const { tasksCompact, toggleTasksCompact } = useUIStore()
 
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
 
@@ -287,6 +289,23 @@ export function TaskColumn({
           )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Compact/Expanded toggle */}
+          <button
+            onClick={toggleTasksCompact}
+            className={`p-2 rounded-xl border transition-all duration-300 ${
+              tasksCompact
+                ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
+                : 'bg-white/5 border-white/[0.06] text-muted hover:text-foreground hover:bg-white/10'
+            }`}
+            title={tasksCompact ? 'Expand cards' : 'Compact cards'}
+          >
+            {tasksCompact ? (
+              <LayoutGrid size={16} className="md:w-[18px] md:h-[18px]" />
+            ) : (
+              <List size={16} className="md:w-[18px] md:h-[18px]" />
+            )}
+          </button>
+
           {/* Label filter */}
           <div className="relative">
             <button
@@ -460,8 +479,8 @@ export function TaskColumn({
               } ${task.completed ? 'opacity-50' : ''}`}
             >
               <div className="flex items-start gap-2.5">
-                {/* Drag handle */}
-                {!task.completed && onReorderTasks && (
+                {/* Drag handle - hidden in compact mode */}
+                {!tasksCompact && !task.completed && onReorderTasks && (
                   <div
                     className={`mt-0.5 cursor-grab active:cursor-grabbing flex-shrink-0 ${
                       touchDragTaskId === task.id ? 'text-blue-400' : 'text-white/20 hover:text-white/40'
@@ -504,109 +523,113 @@ export function TaskColumn({
                     {task.title}
                   </p>
 
-                  {/* Meta row */}
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    {/* Labels */}
-                    {taskLabels.length > 0 && !editingLabelsTaskId && (
-                      <div className="flex items-center gap-1">
-                        {taskLabels.map(labelId => {
-                          const label = TASK_LABELS.find(l => l.id === labelId)
-                          if (!label) return null
-                          const colors = LABEL_COLORS[label.color]
-                          return (
-                            <span key={labelId} className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${colors.bg} ${colors.text}`}>
-                              {label.name}
-                            </span>
-                          )
-                        })}
-                      </div>
-                    )}
+                  {/* Meta row - hidden in compact mode */}
+                  {!tasksCompact && (
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {/* Labels */}
+                      {taskLabels.length > 0 && !editingLabelsTaskId && (
+                        <div className="flex items-center gap-1">
+                          {taskLabels.map(labelId => {
+                            const label = TASK_LABELS.find(l => l.id === labelId)
+                            if (!label) return null
+                            const colors = LABEL_COLORS[label.color]
+                            return (
+                              <span key={labelId} className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${colors.bg} ${colors.text}`}>
+                                {label.name}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      )}
 
-                    {/* Steps */}
-                    {stepsCount > 0 && !task.completed && (
-                      <span className="text-[11px] text-white/35">{completedSteps}/{stepsCount} steps</span>
-                    )}
+                      {/* Steps */}
+                      {stepsCount > 0 && !task.completed && (
+                        <span className="text-[11px] text-white/35">{completedSteps}/{stepsCount} steps</span>
+                      )}
 
-                    {/* Pomodoro count */}
+                      {/* Pomodoro count */}
+                      {!task.completed && (
+                        <span className={`text-[11px] ${
+                          pomodorosDone > 0 ? 'text-rose-400/70' : 'text-white/35'
+                        }`}>
+                          {pomodorosDone}/{pomodorosTotal} pom
+                        </span>
+                      )}
+
+                      {/* Active indicator */}
+                      {isActive && (
+                        <span className="flex items-center gap-1 text-[10px] text-blue-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                          Active
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action buttons - hidden in compact mode */}
+                {!tasksCompact && (
+                  <div className="flex items-center gap-0.5 flex-shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     {!task.completed && (
-                      <span className={`text-[11px] ${
-                        pomodorosDone > 0 ? 'text-rose-400/70' : 'text-white/35'
-                      }`}>
-                        {pomodorosDone}/{pomodorosTotal} pom
-                      </span>
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onUpdateEstimate(task.id, Math.max(1, pomodorosTotal - 1))
+                          }}
+                          className="p-1 rounded text-white/20 hover:text-white/60 hover:bg-white/10"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onUpdateEstimate(task.id, pomodorosTotal + 1)
+                          }}
+                          className="p-1 rounded text-white/20 hover:text-white/60 hover:bg-white/10"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </>
                     )}
-
-                    {/* Active indicator */}
-                    {isActive && (
-                      <span className="flex items-center gap-1 text-[10px] text-blue-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                        Active
-                      </span>
+                    {onUpdateLabels && !task.completed && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingLabelsTaskId(editingLabelsTaskId === task.id ? null : task.id)
+                        }}
+                        className={`p-1 rounded hover:bg-white/10 ${taskLabels.length > 0 ? 'text-purple-400/60' : 'text-white/20'} hover:text-purple-400`}
+                      >
+                        <Tag size={12} />
+                      </button>
                     )}
+                    {!task.completed && !isActive && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setActiveTask(task.id)
+                          onSelectTask(task.id)
+                        }}
+                        className="p-1 rounded text-white/20 hover:text-blue-400 hover:bg-white/10"
+                      >
+                        <Play size={12} />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteTask(task.id)
+                      }}
+                      className="p-1 rounded text-white/20 hover:text-red-400 hover:bg-white/10"
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-0.5 flex-shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                  {!task.completed && (
-                    <>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onUpdateEstimate(task.id, Math.max(1, pomodorosTotal - 1))
-                        }}
-                        className="p-1 rounded text-white/20 hover:text-white/60 hover:bg-white/10"
-                      >
-                        <Minus size={12} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onUpdateEstimate(task.id, pomodorosTotal + 1)
-                        }}
-                        className="p-1 rounded text-white/20 hover:text-white/60 hover:bg-white/10"
-                      >
-                        <Plus size={12} />
-                      </button>
-                    </>
-                  )}
-                  {onUpdateLabels && !task.completed && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setEditingLabelsTaskId(editingLabelsTaskId === task.id ? null : task.id)
-                      }}
-                      className={`p-1 rounded hover:bg-white/10 ${taskLabels.length > 0 ? 'text-purple-400/60' : 'text-white/20'} hover:text-purple-400`}
-                    >
-                      <Tag size={12} />
-                    </button>
-                  )}
-                  {!task.completed && !isActive && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setActiveTask(task.id)
-                        onSelectTask(task.id)
-                      }}
-                      className="p-1 rounded text-white/20 hover:text-blue-400 hover:bg-white/10"
-                    >
-                      <Play size={12} />
-                    </button>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDeleteTask(task.id)
-                    }}
-                    className="p-1 rounded text-white/20 hover:text-red-400 hover:bg-white/10"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
+                )}
               </div>
 
-              {/* Label picker - only when editing */}
-              {editingLabelsTaskId === task.id && (
+              {/* Label picker - only when editing and not in compact mode */}
+              {!tasksCompact && editingLabelsTaskId === task.id && (
                 <div className="mt-2 pt-2 border-t border-white/10 flex flex-wrap items-center gap-1">
                   {taskLabels.map(labelId => {
                     const label = TASK_LABELS.find(l => l.id === labelId)
