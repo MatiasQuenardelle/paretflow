@@ -18,6 +18,7 @@ export function CompactTimerBar() {
     customBreak,
     pomodoroCount,
     activeTaskId,
+    activeStepId,
     settings,
     start,
     pause,
@@ -30,6 +31,7 @@ export function CompactTimerBar() {
     skipBreak,
     setMode,
     setActiveTask,
+    setActiveStep,
     setSettings,
   } = useTimerStore()
 
@@ -41,6 +43,9 @@ export function CompactTimerBar() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const activeTask = tasks.find(t => t.id === activeTaskId)
+  const activeStep = activeStepId && activeTask
+    ? activeTask.steps.find(s => s.id === activeStepId)
+    : null
   const incompleteTasks = tasks.filter(t => !t.completed)
   const todayStr = format(new Date(), 'yyyy-MM-dd')
 
@@ -346,11 +351,20 @@ export function CompactTimerBar() {
           {/* Compact task display or selector */}
           <div className="flex items-center gap-2 mt-0.5">
             {activeTask ? (
-              <p className="text-xs text-muted truncate max-w-[200px]" title={activeTask.title}>
-                {activeTask.title}
-                <span className="ml-1 opacity-60">
-                  ({activeTask.completedPomodoros || 0}/{activeTask.estimatedPomodoros || 1})
-                </span>
+              <p className="text-xs text-muted truncate max-w-[200px]" title={activeStep ? `${activeStep.text} (${activeTask.title})` : activeTask.title}>
+                {activeStep ? (
+                  <>
+                    <span className="text-foreground">{activeStep.text}</span>
+                    <span className="ml-1 opacity-60">• {activeTask.title}</span>
+                  </>
+                ) : (
+                  <>
+                    {activeTask.title}
+                    <span className="ml-1 opacity-60">
+                      ({activeTask.completedPomodoros || 0}/{activeTask.estimatedPomodoros || 1})
+                    </span>
+                  </>
+                )}
               </p>
             ) : (incompleteTasks.length > 0 || scheduledStepsForToday.length > 0) ? (
               <select
@@ -362,10 +376,12 @@ export function CompactTimerBar() {
                     const found = scheduledStepsForToday.find(s => s.step.id === stepId)
                     if (found) {
                       setActiveTask(found.task.id)
+                      setActiveStep(stepId)
                       selectTask(found.task.id)
                     }
                   } else {
                     setActiveTask(value)
+                    setActiveStep(null)
                     selectTask(value)
                   }
                 }}
@@ -516,6 +532,7 @@ export function CompactTimerBar() {
                       <button
                         onClick={() => {
                           setActiveTask(null)
+                          setActiveStep(null)
                           setShowMenu(false)
                         }}
                         className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-border/50 transition-colors text-left text-sm"

@@ -31,6 +31,7 @@ interface TimerState {
   allSessions: TimerSession[]
   pomodoroCount: number // count towards long break
   activeTaskId: string | null
+  activeStepId: string | null // track which specific step is being focused on
   settings: TimerSettings
   // Persistence: store when timer started and initial duration
   startedAt: number | null // timestamp when timer was started
@@ -41,6 +42,8 @@ interface TimerState {
   setCustomTimes: (work: number, breakTime: number) => void
   setSettings: (settings: Partial<TimerSettings>) => void
   setActiveTask: (taskId: string | null) => void
+  setActiveStep: (stepId: string | null) => void
+  startFocusOnStep: (taskId: string, stepId: string) => void
   start: () => void
   pause: () => void
   reset: () => void
@@ -93,6 +96,7 @@ export const useTimerStore = create<TimerState>()(
       allSessions: [],
       pomodoroCount: 0,
       activeTaskId: null,
+      activeStepId: null,
       settings: defaultSettings,
       startedAt: null,
       initialDuration: 25 * 60,
@@ -125,7 +129,36 @@ export const useTimerStore = create<TimerState>()(
         }))
       },
 
-      setActiveTask: (taskId) => set({ activeTaskId: taskId }),
+      setActiveTask: (taskId) => set({ activeTaskId: taskId, activeStepId: null }),
+
+      setActiveStep: (stepId) => set({ activeStepId: stepId }),
+
+      startFocusOnStep: (taskId, stepId) => {
+        const { mode, customWork, isBreak, isLongBreak } = get()
+        const workDuration = getWorkDuration(mode, customWork)
+
+        // If currently in break mode, switch to work mode first
+        const newState: Partial<TimerState> = {
+          activeTaskId: taskId,
+          activeStepId: stepId,
+          isRunning: true,
+          startedAt: Date.now(),
+        }
+
+        if (isBreak || isLongBreak) {
+          // Switch to work mode
+          newState.isBreak = false
+          newState.isLongBreak = false
+          newState.timeRemaining = workDuration
+          newState.initialDuration = workDuration
+        } else {
+          // Already in work mode, just reset and start
+          newState.timeRemaining = workDuration
+          newState.initialDuration = workDuration
+        }
+
+        set(newState)
+      },
 
       start: () => {
         const { timeRemaining } = get()
@@ -272,6 +305,8 @@ export const useTimerStore = create<TimerState>()(
         startedAt: state.startedAt,
         initialDuration: state.initialDuration,
         timeRemaining: state.timeRemaining,
+        activeTaskId: state.activeTaskId,
+        activeStepId: state.activeStepId,
       }),
     }
   )

@@ -143,6 +143,7 @@ export function StepsColumn({
               <StepItem
                 key={step.id}
                 step={step}
+                taskId={task.id}
                 onToggle={() => onToggleStep(step.id)}
                 onUpdate={(updates) => onUpdateStep(step.id, updates)}
                 onDelete={() => onDeleteStep(step.id)}

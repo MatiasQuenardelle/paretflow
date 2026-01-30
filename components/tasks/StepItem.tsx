@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { GripVertical, Trash2, Calendar } from 'lucide-react'
+import { GripVertical, Trash2, Calendar, Play } from 'lucide-react'
 import { format, isToday, isTomorrow, parseISO } from 'date-fns'
 import { Step } from '@/stores/taskStore'
+import { useTimerStore } from '@/stores/timerStore'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { TimeInput } from './TimeInput'
 import { DatePicker } from './DatePicker'
@@ -11,6 +12,7 @@ import { useTranslations } from '@/lib/i18n'
 
 interface StepItemProps {
   step: Step
+  taskId: string
   onToggle: () => void
   onUpdate: (updates: Partial<Step>) => void
   onDelete: () => void
@@ -23,6 +25,7 @@ interface StepItemProps {
 
 export function StepItem({
   step,
+  taskId,
   onToggle,
   onUpdate,
   onDelete,
@@ -38,6 +41,9 @@ export function StepItem({
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const t = useTranslations()
+  const { startFocusOnStep, activeStepId, isRunning } = useTimerStore()
+
+  const isActiveStep = activeStepId === step.id && isRunning
 
   useEffect(() => {
     setText(step.text)
@@ -114,6 +120,12 @@ export function StepItem({
     return format(date, 'MMM d')
   }
 
+  const handleStartFocus = () => {
+    if (step.text) {
+      startFocusOnStep(taskId, step.id)
+    }
+  }
+
   return (
     <div
       draggable={!isEditing}
@@ -184,6 +196,21 @@ export function StepItem({
       </div>
 
       <div className="flex items-center gap-1 md:gap-2 mt-0.5">
+        {/* Start Focus button */}
+        {step.text && !step.completed && (
+          <button
+            onClick={handleStartFocus}
+            className={`p-0.5 md:p-1 rounded-md transition-colors ${
+              isActiveStep
+                ? 'text-blue-500 bg-blue-500/10'
+                : 'text-muted hover:text-blue-500 hover:bg-blue-500/10'
+            }`}
+            title={isActiveStep ? 'Currently focusing on this step' : 'Start focus session'}
+          >
+            <Play size={12} className="md:w-[14px] md:h-[14px]" fill={isActiveStep ? 'currentColor' : 'none'} />
+          </button>
+        )}
+
         <TimeInput
           value={step.scheduledTime}
           onChange={(time) => onUpdate({ scheduledTime: time })}
