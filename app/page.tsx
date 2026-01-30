@@ -12,36 +12,55 @@ import { ListTodo, CheckSquare } from 'lucide-react'
 import { useTranslations } from '@/lib/i18n'
 
 // Debug component to show sync status - tap 5 times on "Tasks" header to show
-function SyncDebug({ taskCount }: { taskCount: number }) {
+function SyncDebug({ taskCount, tasks }: { taskCount: number, tasks: any[] }) {
   const [show, setShow] = useState(false)
   const [tapCount, setTapCount] = useState(0)
   const [debugInfo, setDebugInfo] = useState<any>({})
-  const { mode, isSaving, error } = useTaskStore()
+  const [isForceSyncing, setIsForceSyncing] = useState(false)
+  const { mode, isSaving, error, refreshFromCloud } = useTaskStore()
+
+  const fetchDebug = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data, error: fetchError } = user ? await supabase
+      .from('tasks')
+      .select('data, updated_at')
+      .eq('user_id', user.id)
+      .single() : { data: null, error: null }
+
+    const cloudTasksData = data?.data as any[] | undefined
+
+    setDebugInfo({
+      mode,
+      userId: user?.id?.slice(0, 8) || 'none',
+      email: user?.email || 'none',
+      cloudTasks: cloudTasksData?.length ?? (fetchError?.code === 'PGRST116' ? 0 : 'error: ' + fetchError?.message),
+      cloudTaskNames: cloudTasksData?.map((t: any) => `${t.title} (${t.steps?.length || 0} steps)`).slice(0, 5) || [],
+      localTasks: taskCount,
+      localTaskNames: tasks.map(t => `${t.title} (${t.steps?.length || 0} steps)`).slice(0, 5),
+      cloudUpdatedAt: data?.updated_at ? new Date(data.updated_at).toLocaleString() : 'none',
+      isSaving,
+      error: error || 'none',
+    })
+  }
+
+  const handleForceSync = async () => {
+    if (mode !== 'cloud' || isForceSyncing) return
+    setIsForceSyncing(true)
+    try {
+      await refreshFromCloud()
+      await fetchDebug() // Refresh debug info
+    } catch (e) {
+      console.error('Force sync failed:', e)
+    } finally {
+      setIsForceSyncing(false)
+    }
+  }
 
   useEffect(() => {
     if (tapCount >= 5) {
       setShow(true)
       setTapCount(0)
-      // Fetch debug info
-      const fetchDebug = async () => {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        const { data, error: fetchError } = user ? await supabase
-          .from('tasks')
-          .select('data')
-          .eq('user_id', user.id)
-          .single() : { data: null, error: null }
-
-        setDebugInfo({
-          mode,
-          userId: user?.id?.slice(0, 8) || 'none',
-          email: user?.email || 'none',
-          cloudTasks: data?.data?.length ?? (fetchError?.code === 'PGRST116' ? 0 : 'error: ' + fetchError?.message),
-          localTasks: taskCount,
-          isSaving,
-          error: error || 'none',
-        })
-      }
       fetchDebug()
     }
   }, [tapCount, taskCount, mode, isSaving, error])
@@ -57,15 +76,24 @@ function SyncDebug({ taskCount }: { taskCount: number }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 p-4 text-white text-sm font-mono" onClick={() => setShow(false)}>
-      <div className="bg-gray-900 p-4 rounded-lg" onClick={e => e.stopPropagation()}>
+      <div className="bg-gray-900 p-4 rounded-lg max-w-md max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
         <h3 className="font-bold mb-2">Sync Debug (tap outside to close)</h3>
-        <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-        <button
-          className="mt-4 px-4 py-2 bg-blue-600 rounded"
-          onClick={() => window.location.reload()}
-        >
-          Force Refresh
-        </button>
+        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(debugInfo, null, 2)}</pre>
+        <div className="flex flex-col gap-2 mt-4">
+          <button
+            className="w-full px-4 py-2 bg-green-600 rounded disabled:opacity-50"
+            onClick={handleForceSync}
+            disabled={isForceSyncing || mode !== 'cloud'}
+          >
+            {isForceSyncing ? 'Syncing...' : 'Force Sync from Cloud'}
+          </button>
+          <button
+            className="w-full px-4 py-2 bg-blue-600 rounded"
+            onClick={() => window.location.reload()}
+          >
+            Hard Refresh
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -136,7 +164,7 @@ export default function HomePage() {
   return (
     <div className="h-[calc(100dvh-5rem)] md:h-screen md:p-6 flex flex-col relative">
       {/* Debug - tap 5 times in top-left corner to show */}
-      <SyncDebug taskCount={tasks.length} />
+      <SyncDebug taskCount={tasks.length} tasks={tasks} />
 
       {/* Error banner */}
       {error && (

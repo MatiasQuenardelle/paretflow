@@ -17,9 +17,11 @@ export function TopHeader({ isSyncing = false }: TopHeaderProps) {
   const [loading, setLoading] = useState(true)
   const [showDebug, setShowDebug] = useState(false)
   const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null)
+  const [isForceSyncing, setIsForceSyncing] = useState(false)
   const supabase = createClient()
   const t = useTranslations()
-  const { mode, tasks, error } = useTaskStore()
+  const { mode, tasks, error, refreshFromCloud } = useTaskStore()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -48,19 +50,38 @@ export function TopHeader({ isSyncing = false }: TopHeaderProps) {
     window.location.reload()
   }
 
+  const handleForceSync = async () => {
+    if (mode !== 'cloud' || isForceSyncing) return
+    setIsForceSyncing(true)
+    try {
+      await refreshFromCloud()
+      setLastSyncTime(new Date().toLocaleTimeString())
+    } catch (e) {
+      console.error('Force sync failed:', e)
+    } finally {
+      setIsForceSyncing(false)
+    }
+  }
+
   const handleShowDebug = async () => {
     const { data, error: fetchError } = user ? await supabase
       .from('tasks')
-      .select('data')
+      .select('data, updated_at')
       .eq('user_id', user.id)
       .single() : { data: null, error: null }
+
+    const cloudTasksData = data?.data as any[] | undefined
 
     setDebugInfo({
       mode,
       userId: user?.id?.slice(0, 8) || 'none',
       email: user?.email || 'none',
-      cloudTasks: data?.data?.length ?? (fetchError?.code === 'PGRST116' ? 0 : 'error: ' + fetchError?.message),
+      cloudTasks: cloudTasksData?.length ?? (fetchError?.code === 'PGRST116' ? 0 : 'error: ' + fetchError?.message),
+      cloudTaskNames: cloudTasksData?.map((t: any) => `${t.title} (${t.steps?.length || 0} steps)`).slice(0, 5) || [],
       localTasks: tasks.length,
+      localTaskNames: tasks.map(t => `${t.title} (${t.steps?.length || 0} steps)`).slice(0, 5),
+      cloudUpdatedAt: data?.updated_at ? new Date(data.updated_at).toLocaleString() : 'none',
+      lastSyncTime: lastSyncTime || 'never',
       isSyncing,
       error: error || 'none',
     })
@@ -134,30 +155,42 @@ export function TopHeader({ isSyncing = false }: TopHeaderProps) {
           onClick={() => setShowDebug(false)}
         >
           <div
-            className="bg-gray-900 p-4 rounded-lg max-w-sm w-full text-white text-sm font-mono"
+            className="bg-gray-900 p-4 rounded-lg max-w-sm w-full text-white text-sm font-mono max-h-[80vh] overflow-auto"
             onClick={e => e.stopPropagation()}
           >
             <h3 className="font-bold mb-3">Sync Debug</h3>
             {debugInfo ? (
-              <pre className="text-xs overflow-auto">{JSON.stringify(debugInfo, null, 2)}</pre>
+              <pre className="text-xs overflow-auto whitespace-pre-wrap">{JSON.stringify(debugInfo, null, 2)}</pre>
             ) : (
               <p>Loading...</p>
             )}
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-col gap-2 mt-4">
               <button
-                className="flex-1 px-3 py-2 bg-blue-600 rounded text-sm"
-                onClick={() => {
-                  window.location.reload()
+                className="w-full px-3 py-2 bg-green-600 rounded text-sm disabled:opacity-50"
+                onClick={async () => {
+                  await handleForceSync()
+                  handleShowDebug() // Refresh debug info
                 }}
+                disabled={isForceSyncing || mode !== 'cloud'}
               >
-                Refresh
+                {isForceSyncing ? 'Syncing...' : 'Force Sync from Cloud'}
               </button>
-              <button
-                className="flex-1 px-3 py-2 bg-gray-700 rounded text-sm"
-                onClick={() => setShowDebug(false)}
-              >
-                Close
-              </button>
+              <div className="flex gap-2">
+                <button
+                  className="flex-1 px-3 py-2 bg-blue-600 rounded text-sm"
+                  onClick={() => {
+                    window.location.reload()
+                  }}
+                >
+                  Hard Refresh
+                </button>
+                <button
+                  className="flex-1 px-3 py-2 bg-gray-700 rounded text-sm"
+                  onClick={() => setShowDebug(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
