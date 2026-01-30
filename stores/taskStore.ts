@@ -24,7 +24,21 @@ export interface Task {
   estimatedPomodoros: number
   completedPomodoros: number
   note?: string
+  labels?: string[]
+  order?: number
 }
+
+// Predefined labels that users can choose from
+export const TASK_LABELS = [
+  { id: 'work', name: 'Work', color: 'blue' },
+  { id: 'personal', name: 'Personal', color: 'green' },
+  { id: 'health', name: 'Health', color: 'rose' },
+  { id: 'learning', name: 'Learning', color: 'purple' },
+  { id: 'urgent', name: 'Urgent', color: 'red' },
+  { id: 'errands', name: 'Errands', color: 'orange' },
+] as const
+
+export type TaskLabelId = typeof TASK_LABELS[number]['id']
 
 type Mode = 'loading' | 'cloud' | 'guest'
 
@@ -64,6 +78,10 @@ interface TaskState {
   deleteStep: (taskId: string, stepId: string) => Promise<void>
   toggleStep: (taskId: string, stepId: string) => Promise<void>
   reorderSteps: (taskId: string, stepIds: string[]) => Promise<void>
+
+  // Task reordering and labels
+  reorderTasks: (taskIds: string[]) => Promise<void>
+  updateTaskLabels: (taskId: string, labels: string[]) => Promise<void>
 
   // For clearing error
   clearError: () => void
@@ -438,6 +456,49 @@ export const useTaskStore = create<TaskState>()(
             .filter((s): s is Step => s !== null)
           return { ...t, steps: reorderedSteps }
         })
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
+      },
+
+      reorderTasks: async (taskIds) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const tasksMap = new Map(tasks.map(t => [t.id, t]))
+        const reorderedTasks = taskIds
+          .map((id, index) => {
+            const task = tasksMap.get(id)
+            return task ? { ...task, order: index } : null
+          })
+          .filter((t): t is Task => t !== null)
+
+        // Add any tasks not in taskIds at the end (shouldn't happen but just in case)
+        const reorderedIds = new Set(taskIds)
+        const remainingTasks = tasks.filter(t => !reorderedIds.has(t.id))
+        const newTasks = [...reorderedTasks, ...remainingTasks]
+
+        set({ tasks: newTasks })
+
+        if (mode === 'cloud') {
+          try {
+            await _saveToCloud(newTasks)
+          } catch {
+            set({ tasks })
+          }
+        }
+      },
+
+      updateTaskLabels: async (taskId, labels) => {
+        const { mode, tasks, _saveToCloud } = get()
+        const newTasks = tasks.map(t =>
+          t.id === taskId ? { ...t, labels } : t
+        )
 
         set({ tasks: newTasks })
 

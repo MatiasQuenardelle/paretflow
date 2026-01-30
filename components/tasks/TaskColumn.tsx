@@ -1,13 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Trash2, CheckCircle, Circle, Eye, EyeOff, Timer, Minus, Play, Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Trash2, Eye, EyeOff, Timer, Minus, Play, Calendar, ChevronLeft, ChevronRight, Clock, GripVertical, Tag, X, Filter } from 'lucide-react'
 import { format, addDays, subDays, isToday, isTomorrow, isYesterday } from 'date-fns'
-import { Task } from '@/stores/taskStore'
+import { Task, TASK_LABELS } from '@/stores/taskStore'
 import { useTimerStore } from '@/stores/timerStore'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { DatePicker } from './DatePicker'
+
+const LABEL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  blue: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' },
+  green: { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' },
+  rose: { bg: 'bg-rose-500/20', text: 'text-rose-400', border: 'border-rose-500/30' },
+  purple: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' },
+  red: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' },
+  orange: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30' },
+}
 
 interface TaskColumnProps {
   tasks: Task[]
@@ -23,6 +30,8 @@ interface TaskColumnProps {
   onUpdateEstimate: (id: string, estimate: number) => void
   onClearCompleted?: () => void
   onOpenCalendar?: () => void
+  onReorderTasks?: (taskIds: string[]) => void
+  onUpdateLabels?: (taskId: string, labels: string[]) => void
 }
 
 export function TaskColumn({
@@ -39,14 +48,76 @@ export function TaskColumn({
   onUpdateEstimate,
   onClearCompleted,
   onOpenCalendar,
+  onReorderTasks,
+  onUpdateLabels,
 }: TaskColumnProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [labelFilterId, setLabelFilterId] = useState<string | null>(null)
+  const [showLabelFilter, setShowLabelFilter] = useState(false)
+  const [editingLabelsTaskId, setEditingLabelsTaskId] = useState<string | null>(null)
+
+  // Drag and drop state
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
+  const dragOverTaskId = useRef<string | null>(null)
 
   const { activeTaskId, setActiveTask } = useTimerStore()
 
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
+
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    setDraggedTaskId(taskId)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', taskId)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDragEnter = (taskId: string) => {
+    if (taskId !== draggedTaskId) {
+      dragOverTaskId.current = taskId
+    }
+  }
+
+  const handleDragEnd = () => {
+    if (draggedTaskId && dragOverTaskId.current && onReorderTasks) {
+      const incompleteTasks = tasks.filter(t => !t.completed)
+      const draggedIndex = incompleteTasks.findIndex(t => t.id === draggedTaskId)
+      const dropIndex = incompleteTasks.findIndex(t => t.id === dragOverTaskId.current)
+
+      if (draggedIndex !== -1 && dropIndex !== -1 && draggedIndex !== dropIndex) {
+        const newOrder = [...incompleteTasks]
+        const [draggedTask] = newOrder.splice(draggedIndex, 1)
+        newOrder.splice(dropIndex, 0, draggedTask)
+
+        // Include completed tasks at the end
+        const completedTasks = tasks.filter(t => t.completed)
+        const allTaskIds = [...newOrder, ...completedTasks].map(t => t.id)
+        onReorderTasks(allTaskIds)
+      }
+    }
+
+    setDraggedTaskId(null)
+    dragOverTaskId.current = null
+  }
+
+  const toggleTaskLabel = (taskId: string, labelId: string) => {
+    if (!onUpdateLabels) return
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) return
+
+    const currentLabels = task.labels || []
+    const newLabels = currentLabels.includes(labelId)
+      ? currentLabels.filter(l => l !== labelId)
+      : [...currentLabels, labelId]
+
+    onUpdateLabels(taskId, newLabels)
+  }
 
   // Helper to format the date label
   const getDateLabel = () => {
@@ -65,16 +136,26 @@ export function TaskColumn({
     }
   }
 
-  // Sort tasks: incomplete first, then completed
+  // Sort tasks: incomplete first (in order), then completed
   const sortedTasks = [...tasks].sort((a, b) => {
-    if (a.completed === b.completed) return 0
+    if (a.completed === b.completed) {
+      // Within same completion status, sort by order if available
+      const orderA = a.order ?? Infinity
+      const orderB = b.order ?? Infinity
+      return orderA - orderB
+    }
     return a.completed ? 1 : -1
   })
 
   // Filter out completed if not showing
-  const visibleTasks = showCompleted
+  let visibleTasks = showCompleted
     ? sortedTasks
     : sortedTasks.filter(t => !t.completed)
+
+  // Apply label filter if set
+  if (labelFilterId) {
+    visibleTasks = visibleTasks.filter(t => t.labels?.includes(labelFilterId))
+  }
 
   const completedCount = tasks.filter(t => t.completed).length
   const incompleteTasks = tasks.filter(t => !t.completed)
@@ -135,6 +216,55 @@ export function TaskColumn({
           )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Label filter */}
+          <div className="relative">
+            <button
+              onClick={() => setShowLabelFilter(!showLabelFilter)}
+              className={`p-2 rounded-xl border transition-all duration-300 ${
+                labelFilterId
+                  ? 'bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20'
+                  : 'bg-white/5 border-white/[0.06] text-muted hover:text-foreground hover:bg-white/10'
+              }`}
+              title="Filter by label"
+            >
+              <Filter size={16} className="md:w-[18px] md:h-[18px]" />
+            </button>
+            {showLabelFilter && (
+              <div className="absolute right-0 top-full mt-2 z-50 w-48 p-2 rounded-xl bg-surface/95 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/30">
+                <div className="text-xs text-muted font-medium mb-2 px-2">Filter by label</div>
+                <button
+                  onClick={() => {
+                    setLabelFilterId(null)
+                    setShowLabelFilter(false)
+                  }}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
+                    !labelFilterId ? 'bg-white/10 text-foreground' : 'text-muted hover:bg-white/5'
+                  }`}
+                >
+                  <span className="w-3 h-3 rounded-full border border-white/20" />
+                  All tasks
+                </button>
+                {TASK_LABELS.map(label => {
+                  const colors = LABEL_COLORS[label.color]
+                  return (
+                    <button
+                      key={label.id}
+                      onClick={() => {
+                        setLabelFilterId(label.id)
+                        setShowLabelFilter(false)
+                      }}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
+                        labelFilterId === label.id ? 'bg-white/10 text-foreground' : 'text-muted hover:bg-white/5'
+                      }`}
+                    >
+                      <span className={`w-3 h-3 rounded-full ${colors.bg} ${colors.border} border`} />
+                      {label.name}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
           {onOpenCalendar && (() => {
             const scheduledSteps = tasks.flatMap(t =>
               t.steps.filter(s => s.scheduledDate === selectedDateStr && s.scheduledTime && !s.completed)
@@ -226,10 +356,17 @@ export function TaskColumn({
           const pomodorosTotal = task.estimatedPomodoros || 1
           const stepsCount = task.steps?.length || 0
           const completedSteps = task.steps?.filter(s => s.completed).length || 0
+          const taskLabels = task.labels || []
+          const isDragging = draggedTaskId === task.id
 
           return (
             <div
               key={task.id}
+              draggable={!task.completed && !!onReorderTasks}
+              onDragStart={(e) => handleDragStart(e, task.id)}
+              onDragOver={handleDragOver}
+              onDragEnter={() => handleDragEnter(task.id)}
+              onDragEnd={handleDragEnd}
               onClick={() => onSelectTask(task.id)}
               onTouchEnd={(e) => {
                 // Ensure selection works on mobile touch
@@ -238,6 +375,8 @@ export function TaskColumn({
                 }
               }}
               className={`relative p-3 md:p-4 rounded-2xl cursor-pointer transition-all duration-300 group touch-manipulation overflow-hidden ${
+                isDragging ? 'opacity-50 scale-95' : ''
+              } ${
                 isActive
                   ? 'bg-gradient-to-br from-blue-500/20 via-purple-500/15 to-indigo-500/20 shadow-glow-blue'
                   : isSelected
@@ -272,7 +411,17 @@ export function TaskColumn({
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-2xl blur-xl animate-glow-pulse -z-10" />
               )}
 
-              <div className="relative flex items-start gap-3">
+              <div className="relative flex items-start gap-2">
+                {/* Drag handle - only show for incomplete tasks */}
+                {!task.completed && onReorderTasks && (
+                  <div
+                    className="mt-1 cursor-grab active:cursor-grabbing text-muted/40 hover:text-muted/70 transition-colors flex-shrink-0"
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <GripVertical size={14} className="md:w-4 md:h-4" />
+                  </div>
+                )}
+
                 {/* Premium checkbox */}
                 <button
                   onClick={(e) => {
@@ -307,6 +456,67 @@ export function TaskColumn({
                       </span>
                     )}
                   </div>
+
+                  {/* Labels row */}
+                  {(taskLabels.length > 0 || editingLabelsTaskId === task.id) && (
+                    <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                      {taskLabels.map(labelId => {
+                        const label = TASK_LABELS.find(l => l.id === labelId)
+                        if (!label) return null
+                        const colors = LABEL_COLORS[label.color]
+                        return (
+                          <span
+                            key={labelId}
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium ${colors.bg} ${colors.text} ${colors.border} border`}
+                          >
+                            {label.name}
+                            {editingLabelsTaskId === task.id && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleTaskLabel(task.id, labelId)
+                                }}
+                                className="hover:text-white"
+                              >
+                                <X size={10} />
+                              </button>
+                            )}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Label picker (when editing) */}
+                  {editingLabelsTaskId === task.id && (
+                    <div className="flex flex-wrap items-center gap-1 mt-1.5 p-2 rounded-lg bg-white/5 border border-white/10">
+                      {TASK_LABELS.filter(l => !taskLabels.includes(l.id)).map(label => {
+                        const colors = LABEL_COLORS[label.color]
+                        return (
+                          <button
+                            key={label.id}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleTaskLabel(task.id, label.id)
+                            }}
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium ${colors.bg} ${colors.text} ${colors.border} border opacity-60 hover:opacity-100 transition-opacity`}
+                          >
+                            <Plus size={10} />
+                            {label.name}
+                          </button>
+                        )
+                      })}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingLabelsTaskId(null)
+                        }}
+                        className="ml-auto text-[9px] text-muted hover:text-foreground"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  )}
 
                   {/* Stats row */}
                   {!task.completed && (
@@ -368,6 +578,23 @@ export function TaskColumn({
 
                 {/* Action buttons */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  {/* Label button */}
+                  {onUpdateLabels && !task.completed && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditingLabelsTaskId(editingLabelsTaskId === task.id ? null : task.id)
+                      }}
+                      className={`p-1.5 rounded-lg transition-all duration-200 ${
+                        editingLabelsTaskId === task.id
+                          ? 'bg-purple-500/20 text-purple-400'
+                          : 'hover:bg-purple-500/10 text-muted hover:text-purple-400'
+                      }`}
+                      title="Add labels"
+                    >
+                      <Tag size={12} className="md:w-[14px] md:h-[14px]" />
+                    </button>
+                  )}
                   {!task.completed && !isActive && (
                     <button
                       onClick={(e) => {

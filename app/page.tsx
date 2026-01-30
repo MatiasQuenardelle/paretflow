@@ -105,6 +105,8 @@ export default function HomePage() {
     deleteStep,
     toggleStep,
     reorderSteps,
+    reorderTasks,
+    updateTaskLabels,
     toggleTaskCompleted,
     setShowCompleted,
     updateTaskEstimate,
@@ -195,6 +197,8 @@ export default function HomePage() {
             onUpdateEstimate={updateTaskEstimate}
             onClearCompleted={clearCompletedTasks}
             onOpenCalendar={() => setShowCalendar(true)}
+            onReorderTasks={reorderTasks}
+            onUpdateLabels={updateTaskLabels}
           />
         </div>
 
@@ -235,6 +239,8 @@ export default function HomePage() {
               onUpdateEstimate={updateTaskEstimate}
               onClearCompleted={clearCompletedTasks}
               onOpenCalendar={() => setShowCalendar(true)}
+              onReorderTasks={reorderTasks}
+              onUpdateLabels={updateTaskLabels}
             />
           </div>
         </div>
