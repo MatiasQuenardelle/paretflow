@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { format, isToday } from 'date-fns'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Task, Step, useTaskStore } from '@/stores/taskStore'
 import { useHabitStore, POWER_HABITS, HabitDefinition } from '@/stores/habitStore'
 import { StepDetailPopup } from './StepDetailPopup'
@@ -12,6 +11,9 @@ interface DayViewProps {
   tasks: Task[]
   onToggleStep: (taskId: string, stepId: string) => void
   onSelectTask?: (taskId: string) => void
+  isExpanded?: boolean
+  onToggleExpanded?: () => void
+  onScheduledItemsChange?: (count: number) => void
 }
 
 const START_HOUR = 6
@@ -33,8 +35,9 @@ interface ScheduledHabitItem {
   completed: boolean
 }
 
-export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+export function DayView({ date, tasks, onToggleStep, onSelectTask, isExpanded: isExpandedProp, onToggleExpanded, onScheduledItemsChange }: DayViewProps) {
+  const [isExpandedInternal, setIsExpandedInternal] = useState(true)
+  const isExpanded = isExpandedProp !== undefined ? isExpandedProp : isExpandedInternal
   const [selectedStep, setSelectedStep] = useState<{ step: Step; task: Task } | null>(null)
   const { updateStep } = useTaskStore()
   const { getScheduledForDate, getCompletionsForDate } = useHabitStore()
@@ -183,6 +186,11 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
   const calendarBlocks = getCalendarBlocks()
   const totalScheduledItems = scheduledSteps.length + scheduledHabits.length
 
+  // Report scheduled items count to parent
+  useEffect(() => {
+    onScheduledItemsChange?.(totalScheduledItems)
+  }, [totalScheduledItems, onScheduledItemsChange])
+
   // Hour labels
   const hourLabels = isExpanded
     ? Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i)
@@ -190,20 +198,6 @@ export function DayView({ date, tasks, onToggleStep, onSelectTask }: DayViewProp
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10 dark:border-white/5">
-        <p className="text-sm text-muted">
-          {totalScheduledItems} scheduled {totalScheduledItems === 1 ? 'item' : 'items'}
-        </p>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-all duration-200 px-2 py-1 rounded-lg hover:bg-white/10 active:scale-95"
-        >
-          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          {isExpanded ? 'Compact' : 'Expand'}
-        </button>
-      </div>
-
       {/* Calendar Grid */}
       <div
         className="flex-1 relative rounded-xl overflow-hidden"

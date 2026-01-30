@@ -13,12 +13,50 @@ const colorGradients: Record<string, string> = {
   purple: 'from-purple-500 to-purple-600',
   cyan: 'from-cyan-500 to-cyan-600',
   blue: 'from-blue-500 to-blue-600',
+  red: 'from-red-500 to-red-600',
+  green: 'from-green-500 to-green-600',
+  rose: 'from-rose-500 to-rose-600',
+  orange: 'from-orange-500 to-orange-600',
 }
 
 const colorShadows: Record<string, string> = {
   purple: 'shadow-purple-500/30 hover:shadow-purple-500/50',
   cyan: 'shadow-cyan-500/30 hover:shadow-cyan-500/50',
   blue: 'shadow-blue-500/30 hover:shadow-blue-500/50',
+  red: 'shadow-red-500/30 hover:shadow-red-500/50',
+  green: 'shadow-green-500/30 hover:shadow-green-500/50',
+  rose: 'shadow-rose-500/30 hover:shadow-rose-500/50',
+  orange: 'shadow-orange-500/30 hover:shadow-orange-500/50',
+}
+
+const colorBorders: Record<string, string> = {
+  purple: 'border-purple-500/30',
+  cyan: 'border-cyan-500/30',
+  blue: 'border-blue-500/30',
+  red: 'border-red-500/30',
+  green: 'border-green-500/30',
+  rose: 'border-rose-500/30',
+  orange: 'border-orange-500/30',
+}
+
+const colorBg: Record<string, string> = {
+  purple: 'bg-purple-500/10',
+  cyan: 'bg-cyan-500/10',
+  blue: 'bg-blue-500/10',
+  red: 'bg-red-500/10',
+  green: 'bg-green-500/10',
+  rose: 'bg-rose-500/10',
+  orange: 'bg-orange-500/10',
+}
+
+const colorText: Record<string, string> = {
+  purple: 'text-purple-400',
+  cyan: 'text-cyan-400',
+  blue: 'text-blue-400',
+  red: 'text-red-400',
+  green: 'text-green-400',
+  rose: 'text-rose-400',
+  orange: 'text-orange-400',
 }
 
 function AnimatedCheckbox({
@@ -34,6 +72,20 @@ function AnimatedCheckbox({
     purple: 'bg-purple-500',
     cyan: 'bg-cyan-500',
     blue: 'bg-blue-500',
+    red: 'bg-red-500',
+    green: 'bg-green-500',
+    rose: 'bg-rose-500',
+    orange: 'bg-orange-500',
+  }
+
+  const shadowClasses: Record<string, string> = {
+    purple: 'shadow-purple-500/40',
+    cyan: 'shadow-cyan-500/40',
+    blue: 'shadow-blue-500/40',
+    red: 'shadow-red-500/40',
+    green: 'shadow-green-500/40',
+    rose: 'shadow-rose-500/40',
+    orange: 'shadow-orange-500/40',
   }
 
   return (
@@ -44,7 +96,7 @@ function AnimatedCheckbox({
       }}
       className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 shrink-0 ${
         checked
-          ? `${colorClasses[color] || colorClasses.purple} animate-bounce-in shadow-lg ${color === 'purple' ? 'shadow-purple-500/40' : color === 'blue' ? 'shadow-blue-500/40' : 'shadow-cyan-500/40'}`
+          ? `${colorClasses[color] || colorClasses.purple} animate-bounce-in shadow-lg ${shadowClasses[color] || shadowClasses.purple}`
           : 'border-2 border-white/20 hover:border-white/40 dark:border-white/10 dark:hover:border-white/20'
       }`}
     >
@@ -105,29 +157,51 @@ export function HabitCard({ habit }: HabitCardProps) {
   return (
     <>
       <div
-        className={`rounded-xl border border-white/10 dark:border-white/5 bg-surface/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ${
+        className={`rounded-xl border ${colorBorders[habit.color] || 'border-white/10'} bg-surface/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ${
           isExpanded ? 'shadow-2xl shadow-black/10 dark:shadow-black/30' : 'shadow-lg shadow-black/5 dark:shadow-black/20'
         }`}
       >
-        {/* Always visible: checkbox row */}
+        {/* Always visible: collapsed card */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center gap-3 p-4 text-left"
+          className="w-full flex items-center gap-3 p-3 text-left"
         >
+          {/* Thumbnail image */}
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
+            <img
+              src={habit.illustration}
+              alt={habit.name}
+              className="w-full h-full object-cover"
+            />
+            <div className={`absolute inset-0 ${colorBg[habit.color] || 'bg-white/10'} mix-blend-overlay`} />
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span
+                className={`font-medium transition-all duration-200 truncate ${
+                  completed ? 'line-through text-muted' : ''
+                }`}
+              >
+                {habit.name}
+              </span>
+              <span className={`text-xs px-1.5 py-0.5 rounded-md ${colorBg[habit.color]} ${colorText[habit.color]} font-medium shrink-0`}>
+                +{habit.points}
+              </span>
+            </div>
+            <p className="text-xs text-muted truncate mt-0.5">{habit.description}</p>
+          </div>
+
+          {/* Checkbox */}
           <AnimatedCheckbox
             checked={completed}
             onToggle={handleToggleComplete}
             color={habit.color}
           />
-          <span
-            className={`flex-1 font-medium transition-all duration-200 ${
-              completed ? 'line-through text-muted' : ''
-            }`}
-          >
-            {habit.name}
-          </span>
+
           <ChevronDown
-            className={`w-5 h-5 text-muted transition-transform duration-300 ${
+            className={`w-5 h-5 text-muted transition-transform duration-300 shrink-0 ${
               isExpanded ? 'rotate-180' : ''
             }`}
           />

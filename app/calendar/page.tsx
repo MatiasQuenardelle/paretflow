@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { format, addDays, addWeeks, subDays, subWeeks } from 'date-fns'
-import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, ChevronUp, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useTaskStore } from '@/stores/taskStore'
 import { DayView } from '@/components/calendar/DayView'
@@ -13,6 +13,8 @@ type ViewMode = 'day' | 'week'
 export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('day')
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [isExpanded, setIsExpanded] = useState(true)
+  const [scheduledItemsCount, setScheduledItemsCount] = useState(0)
 
   const { tasks, toggleStep, selectTask, mode, isLoading } = useTaskStore()
 
@@ -48,7 +50,7 @@ export default function CalendarPage() {
   return (
     <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex flex-col">
       {/* Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={handlePrev}>
             <ChevronLeft size={18} />
@@ -61,28 +63,45 @@ export default function CalendarPage() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-1 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-xl p-1">
+        <div className="flex items-center gap-3">
+          {/* Day/Week toggle */}
+          <div className="flex items-center gap-1 bg-surface/60 backdrop-blur-sm border border-white/10 dark:border-white/5 rounded-xl p-1">
+            <button
+              onClick={() => setViewMode('day')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${
+                viewMode === 'day'
+                  ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
+                  : 'text-muted hover:text-foreground hover:bg-white/10'
+              }`}
+            >
+              <CalendarDays size={16} />
+              Day
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${
+                viewMode === 'week'
+                  ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
+                  : 'text-muted hover:text-foreground hover:bg-white/10'
+              }`}
+            >
+              <LayoutGrid size={16} />
+              Week
+            </button>
+          </div>
+
+          {/* Scheduled items count */}
+          <span className="text-xs text-muted hidden sm:block">
+            {scheduledItemsCount} {scheduledItemsCount === 1 ? 'item' : 'items'}
+          </span>
+
+          {/* Compact/Expand toggle */}
           <button
-            onClick={() => setViewMode('day')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${
-              viewMode === 'day'
-                ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
-                : 'text-muted hover:text-foreground hover:bg-white/10'
-            }`}
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-all duration-200 px-2 py-1.5 rounded-lg hover:bg-white/10 active:scale-95 border border-white/10 dark:border-white/5"
           >
-            <CalendarDays size={16} />
-            Day
-          </button>
-          <button
-            onClick={() => setViewMode('week')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${
-              viewMode === 'week'
-                ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
-                : 'text-muted hover:text-foreground hover:bg-white/10'
-            }`}
-          >
-            <LayoutGrid size={16} />
-            Week
+            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            <span className="hidden sm:inline">{isExpanded ? 'Compact' : 'Expand'}</span>
           </button>
         </div>
       </div>
@@ -95,6 +114,9 @@ export default function CalendarPage() {
             tasks={tasks}
             onToggleStep={handleToggleStep}
             onSelectTask={selectTask}
+            isExpanded={isExpanded}
+            onToggleExpanded={() => setIsExpanded(!isExpanded)}
+            onScheduledItemsChange={setScheduledItemsCount}
           />
         ) : (
           <WeekView
