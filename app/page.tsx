@@ -78,6 +78,7 @@ function SyncDebug({ taskCount, tasks }: { taskCount: number, tasks: any[] }) {
   if (!show) {
     return (
       <div
+        data-debug-trigger
         className="absolute top-0 left-0 w-20 h-10 z-50"
         onClick={() => setTapCount(c => c + 1)}
       />
@@ -85,8 +86,8 @@ function SyncDebug({ taskCount, tasks }: { taskCount: number, tasks: any[] }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 p-4 text-white text-sm font-mono" onClick={() => setShow(false)}>
-      <div className="bg-gray-900 p-4 rounded-lg max-w-md max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-black/90 p-2 text-white text-xs font-mono flex items-start justify-center pt-12" onClick={() => setShow(false)}>
+      <div className="bg-gray-900 p-3 rounded-lg w-full max-w-sm max-h-[70vh] overflow-auto" onClick={e => e.stopPropagation()}>
         <h3 className="font-bold mb-2">Sync Debug (tap outside to close)</h3>
         <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(debugInfo, null, 2)}</pre>
         <div className="flex flex-col gap-2 mt-4">
@@ -180,8 +181,22 @@ export default function HomePage() {
 
   return (
     <div className="h-[calc(100dvh-5rem)] md:h-screen md:p-6 flex flex-col relative">
-      {/* Debug - tap 5 times in top-left corner to show */}
+      {/* Debug - tap the bug icon to show sync debug */}
       <SyncDebug taskCount={tasks.length} tasks={tasks} />
+
+      {/* Temporary visible debug button - both mobile and desktop */}
+      <button
+        onClick={() => {
+          // Trigger the debug panel by simulating 5 taps
+          const debugArea = document.querySelector('[data-debug-trigger]') as HTMLElement
+          if (debugArea) {
+            for (let i = 0; i < 5; i++) debugArea.click()
+          }
+        }}
+        className="fixed bottom-28 md:bottom-4 right-4 z-40 p-2 bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-400 text-xs"
+      >
+        🐛
+      </button>
 
       {/* On-screen debug for mobile - shows if there's a task count mismatch */}
       {debugMismatch && (
