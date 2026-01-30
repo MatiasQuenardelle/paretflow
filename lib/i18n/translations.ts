@@ -135,6 +135,28 @@ export const translations = {
       motivationHalf: 'Keep going! Building momentum.',
       motivationAlmost: 'So close to a perfect day!',
       motivationPerfect: 'Perfect day! You crushed it!',
+      // Negative habits
+      avoidedToday: 'Avoided today',
+      daysStrong: 'days strong',
+      markAsAvoided: 'Mark as avoided',
+      habitsAvoided: 'Habits Avoided',
+      trackingToday: 'Tracking today',
+      trackThisHabit: 'Track this habit',
+      markAsAvoidedDaily: 'Mark as avoided each day',
+      startTracking: 'Start Tracking',
+      // Edit mode
+      editHabits: 'Edit',
+      doneEditing: 'Done',
+      enabledForToday: 'Changes apply to today only',
+      enabledGlobally: 'Changes apply to all days',
+      globalSettings: 'Global',
+      todayOnlyScope: 'Today Only',
+      noHabitsEnabled: 'No habits enabled',
+      // Recommended banner
+      startWithEasyWins: 'Start with easy wins',
+      theseHabitsTakeMinimal: 'These habits take minimal effort but build momentum',
+      addToEveryDay: 'Add to Every Day',
+      recommendedHabits: 'Recommended Habits',
     },
     // Power Habits content
     powerHabits: {
@@ -177,6 +199,31 @@ export const translations = {
         name: 'Hit Calorie Goal',
         description: 'Stay within your daily calorie target',
         benefit: 'Calorie balance is the foundation of body composition. For fat loss, a moderate deficit of 300-500 calories preserves muscle while burning fat. For muscle gain, a slight surplus of 200-300 calories with adequate protein (1.6-2.2g/kg) maximizes growth. Combined with strength training, proper nutrition transforms your physique. Track consistently—what gets measured gets managed.',
+      },
+      'no-smoking': {
+        name: 'Avoid Smoking',
+        description: 'Stay smoke-free today',
+        benefit: 'Every day without smoking reduces your risk of heart disease, stroke, and cancer. Within 24 hours, your blood pressure and heart rate begin to normalize. After a few days, your lungs start to clear. Your body has remarkable healing abilities when you give it a break from tobacco.',
+      },
+      'no-alcohol': {
+        name: 'Avoid Alcohol',
+        description: 'Stay alcohol-free today',
+        benefit: 'Skipping alcohol improves sleep quality, mental clarity, and energy levels. Your liver can recover, your skin improves, and you avoid empty calories. Regular alcohol-free days help maintain a healthy relationship with drinking and support long-term health goals.',
+      },
+      'no-junk-food': {
+        name: 'Avoid Junk Food',
+        description: 'No processed or fast food today',
+        benefit: 'Avoiding junk food stabilizes blood sugar, reduces inflammation, and supports gut health. You\'ll have more stable energy throughout the day and avoid the crash that comes from processed foods. Over time, your taste preferences adjust to appreciate whole foods more.',
+      },
+      'no-social-media': {
+        name: 'Limit Social Media',
+        description: 'No mindless scrolling today',
+        benefit: 'Reducing social media improves focus, reduces anxiety, and frees up hours for meaningful activities. Studies link excessive social media use to depression and poor self-esteem. Reclaim your attention and time for things that truly matter to you.',
+      },
+      'no-late-snacking': {
+        name: 'No Late Snacking',
+        description: 'No eating after 8 PM',
+        benefit: 'Avoiding late-night eating improves sleep quality, supports weight management, and gives your digestive system time to rest. Late eating disrupts your circadian rhythm and can lead to acid reflux. A consistent eating window supports metabolic health.',
       },
     },
     // Calendar page
@@ -406,6 +453,28 @@ export const translations = {
       motivationHalf: '¡Sigue así! Construyendo impulso.',
       motivationAlmost: '¡Casi logras un día perfecto!',
       motivationPerfect: '¡Día perfecto! ¡Lo lograste!',
+      // Negative habits
+      avoidedToday: 'Evitado hoy',
+      daysStrong: 'días fuerte',
+      markAsAvoided: 'Marcar como evitado',
+      habitsAvoided: 'Hábitos Evitados',
+      trackingToday: 'Rastreando hoy',
+      trackThisHabit: 'Rastrea este hábito',
+      markAsAvoidedDaily: 'Marca como evitado cada día',
+      startTracking: 'Comenzar a Rastrear',
+      // Edit mode
+      editHabits: 'Editar',
+      doneEditing: 'Listo',
+      enabledForToday: 'Los cambios aplican solo a hoy',
+      enabledGlobally: 'Los cambios aplican a todos los días',
+      globalSettings: 'Global',
+      todayOnlyScope: 'Solo Hoy',
+      noHabitsEnabled: 'No hay hábitos habilitados',
+      // Recommended banner
+      startWithEasyWins: 'Comienza con victorias fáciles',
+      theseHabitsTakeMinimal: 'Estos hábitos requieren mínimo esfuerzo pero generan impulso',
+      addToEveryDay: 'Agregar a Todos los Días',
+      recommendedHabits: 'Hábitos Recomendados',
     },
     // Power Habits content
     powerHabits: {
@@ -448,6 +517,31 @@ export const translations = {
         name: 'Cumplir Meta Calórica',
         description: 'Mantenerse dentro de tu objetivo calórico diario',
         benefit: 'El balance calórico es la base de la composición corporal. Para perder grasa, un déficit moderado de 300-500 calorías preserva el músculo mientras quemas grasa. Para ganar músculo, un ligero superávit de 200-300 calorías con proteína adecuada (1.6-2.2g/kg) maximiza el crecimiento. Combinado con entrenamiento de fuerza, la nutrición adecuada transforma tu físico. Registra consistentemente—lo que se mide se gestiona.',
+      },
+      'no-smoking': {
+        name: 'Evitar Fumar',
+        description: 'Mantente sin fumar hoy',
+        benefit: 'Cada día sin fumar reduce tu riesgo de enfermedades cardíacas, derrames cerebrales y cáncer. Dentro de 24 horas, tu presión arterial y ritmo cardíaco comienzan a normalizarse. Después de unos días, tus pulmones empiezan a limpiarse. Tu cuerpo tiene capacidades de curación notables cuando le das un descanso del tabaco.',
+      },
+      'no-alcohol': {
+        name: 'Evitar Alcohol',
+        description: 'Mantente sin alcohol hoy',
+        benefit: 'Saltarte el alcohol mejora la calidad del sueño, claridad mental y niveles de energía. Tu hígado puede recuperarse, tu piel mejora y evitas calorías vacías. Los días regulares sin alcohol ayudan a mantener una relación saludable con la bebida y apoyan objetivos de salud a largo plazo.',
+      },
+      'no-junk-food': {
+        name: 'Evitar Comida Chatarra',
+        description: 'Sin comida procesada o rápida hoy',
+        benefit: 'Evitar la comida chatarra estabiliza el azúcar en sangre, reduce la inflamación y apoya la salud intestinal. Tendrás energía más estable durante el día y evitarás el bajón que viene de los alimentos procesados. Con el tiempo, tus preferencias de sabor se ajustan para apreciar más los alimentos enteros.',
+      },
+      'no-social-media': {
+        name: 'Limitar Redes Sociales',
+        description: 'Sin desplazamiento sin sentido hoy',
+        benefit: 'Reducir las redes sociales mejora el enfoque, reduce la ansiedad y libera horas para actividades significativas. Los estudios vinculan el uso excesivo de redes sociales con depresión y baja autoestima. Recupera tu atención y tiempo para las cosas que realmente te importan.',
+      },
+      'no-late-snacking': {
+        name: 'Sin Snacks Nocturnos',
+        description: 'Sin comer después de las 8 PM',
+        benefit: 'Evitar comer tarde en la noche mejora la calidad del sueño, apoya el control de peso y da tiempo a tu sistema digestivo para descansar. Comer tarde interrumpe tu ritmo circadiano y puede provocar acidez. Una ventana de alimentación consistente apoya la salud metabólica.',
       },
     },
     // Calendar page

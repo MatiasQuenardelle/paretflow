@@ -2,22 +2,31 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { format } from 'date-fns'
-import { Flame } from 'lucide-react'
+import { Flame, ShieldCheck } from 'lucide-react'
 import { POWER_HABITS, useHabitStore } from '@/stores/habitStore'
 import { useTranslations } from '@/lib/i18n'
 
 export function PowerScorePanel() {
-  const { getTodayScore, completions } = useHabitStore()
+  const { getTodayScore, completions, getNegativeStreak, getEnabledForDate } = useHabitStore()
   const t = useTranslations()
 
   const today = format(new Date(), 'yyyy-MM-dd')
   const todayScore = getTodayScore()
-  const maxPossibleScore = POWER_HABITS.reduce((sum, h) => sum + h.points, 0)
+  const enabledHabits = getEnabledForDate(today)
+  const enabledPowerHabits = POWER_HABITS.filter(h => enabledHabits.includes(h.id))
+  const maxPossibleScore = enabledPowerHabits.reduce((sum, h) => sum + h.points, 0)
   const todayCompletions = completions.filter(c => c.date === today)
   const completedCount = todayCompletions.length
-  const totalHabits = POWER_HABITS.length
-  const completionPercent = (completedCount / totalHabits) * 100
-  const scorePercent = (todayScore / maxPossibleScore) * 100
+  const totalHabits = enabledPowerHabits.length
+  const completionPercent = totalHabits > 0 ? (completedCount / totalHabits) * 100 : 0
+  const scorePercent = maxPossibleScore > 0 ? (todayScore / maxPossibleScore) * 100 : 0
+
+  // Get negative habits with streaks
+  const negativeHabits = enabledPowerHabits.filter(h => h.type === 'negative')
+  const negativeHabitsWithStreaks = negativeHabits.map(h => ({
+    habit: h,
+    streak: getNegativeStreak(h.id),
+  })).filter(item => item.streak > 0)
 
   // Track score changes for animation
   const [animateScore, setAnimateScore] = useState(false)
@@ -159,6 +168,33 @@ export function PowerScorePanel() {
         <p className="mt-6 text-center text-sm text-muted italic">
           "{getMotivationalMessage()}"
         </p>
+
+        {/* Negative habits streaks section */}
+        {negativeHabitsWithStreaks.length > 0 && (
+          <div className="mt-6 w-full">
+            <div className="flex items-center gap-2 mb-3">
+              <ShieldCheck className="w-4 h-4 text-slate-400" />
+              <span className="text-sm font-medium text-slate-400">{t.habits.habitsAvoided}</span>
+            </div>
+            <div className="space-y-2">
+              {negativeHabitsWithStreaks.map(({ habit, streak }) => {
+                const habitTranslation = t.powerHabits[habit.id as keyof typeof t.powerHabits]
+                const habitName = habitTranslation?.name || habit.name
+                return (
+                  <div
+                    key={habit.id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-slate-500/10 border border-slate-500/20"
+                  >
+                    <span className="text-sm text-slate-300">{habitName}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-400">
+                      {streak} {t.habits.daysStrong}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { format, addDays, startOfWeek, getDay } from 'date-fns'
-import { ChevronDown, Clock, X, CalendarPlus, Check, CalendarDays, CalendarRange, GripVertical } from 'lucide-react'
+import { ChevronDown, Clock, X, CalendarPlus, Check, CalendarDays, CalendarRange, GripVertical, ShieldCheck } from 'lucide-react'
 import { HabitDefinition, useHabitStore } from '@/stores/habitStore'
 import { useTranslations } from '@/lib/i18n'
 
@@ -39,6 +39,7 @@ const colorGradients: Record<string, string> = {
   rose: 'from-rose-500 to-rose-600',
   orange: 'from-orange-500 to-orange-600',
   amber: 'from-amber-500 to-amber-600',
+  slate: 'from-slate-500 to-slate-600',
 }
 
 const colorShadows: Record<string, string> = {
@@ -50,6 +51,7 @@ const colorShadows: Record<string, string> = {
   rose: 'shadow-rose-500/30 hover:shadow-rose-500/50',
   orange: 'shadow-orange-500/30 hover:shadow-orange-500/50',
   amber: 'shadow-amber-500/30 hover:shadow-amber-500/50',
+  slate: 'shadow-slate-500/30 hover:shadow-slate-500/50',
 }
 
 const colorBorders: Record<string, string> = {
@@ -61,6 +63,7 @@ const colorBorders: Record<string, string> = {
   rose: 'border-rose-500/30',
   orange: 'border-orange-500/30',
   amber: 'border-amber-500/30',
+  slate: 'border-slate-500/30',
 }
 
 const colorBg: Record<string, string> = {
@@ -72,6 +75,7 @@ const colorBg: Record<string, string> = {
   rose: 'bg-rose-500/10',
   orange: 'bg-orange-500/10',
   amber: 'bg-amber-500/10',
+  slate: 'bg-slate-500/10',
 }
 
 const colorText: Record<string, string> = {
@@ -83,6 +87,7 @@ const colorText: Record<string, string> = {
   rose: 'text-rose-400',
   orange: 'text-orange-400',
   amber: 'text-amber-400',
+  slate: 'text-slate-400',
 }
 
 function AnimatedCheckbox({
@@ -103,6 +108,7 @@ function AnimatedCheckbox({
     rose: 'bg-rose-500',
     orange: 'bg-orange-500',
     amber: 'bg-amber-500',
+    slate: 'bg-slate-500',
   }
 
   const shadowClasses: Record<string, string> = {
@@ -114,6 +120,7 @@ function AnimatedCheckbox({
     rose: 'shadow-rose-500/40',
     orange: 'shadow-orange-500/40',
     amber: 'shadow-amber-500/40',
+    slate: 'shadow-slate-500/40',
   }
 
   return (
@@ -140,6 +147,32 @@ function AnimatedCheckbox({
         >
           <polyline points="20 6 9 17 4 12" className="animate-checkmark" />
         </svg>
+      )}
+    </button>
+  )
+}
+
+function AnimatedNegativeCheckbox({
+  checked,
+  onToggle,
+}: {
+  checked: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation()
+        onToggle()
+      }}
+      className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-200 shrink-0 ${
+        checked
+          ? 'bg-slate-500 animate-bounce-in shadow-lg shadow-slate-500/40'
+          : 'border-2 border-white/20 hover:border-white/40 dark:border-white/10 dark:hover:border-white/20'
+      }`}
+    >
+      {checked && (
+        <ShieldCheck className="w-4 h-4 text-white animate-checkmark" />
       )}
     </button>
   )
@@ -176,7 +209,11 @@ export function HabitCard({
     scheduleHabit,
     scheduleHabitForDays,
     getScheduledForDate,
+    getNegativeStreak,
   } = useHabitStore()
+
+  const isNegativeHabit = habit.type === 'negative'
+  const negativeStreak = isNegativeHabit ? getNegativeStreak(habit.id) : 0
 
   const today = format(new Date(), 'yyyy-MM-dd')
   const completed = isCompletedToday(habit.id)
@@ -305,6 +342,12 @@ export function HabitCard({
                 <span className={`text-xs px-1.5 py-0.5 rounded-md ${colorBg[habit.color]} ${colorText[habit.color]} font-medium shrink-0`}>
                   +{habit.points}
                 </span>
+                {isNegativeHabit && negativeStreak > 0 && (
+                  <span className="text-xs px-1.5 py-0.5 rounded-md bg-slate-500/20 text-slate-400 font-medium shrink-0 flex items-center gap-1">
+                    <ShieldCheck size={12} />
+                    {negativeStreak} {t.habits.daysStrong}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-muted truncate mt-0.5">{habitDescription}</p>
             </div>
@@ -317,11 +360,18 @@ export function HabitCard({
           </button>
 
           {/* Checkbox - outside button so it doesn't trigger expand */}
-          <AnimatedCheckbox
-            checked={completed}
-            onToggle={handleToggleComplete}
-            color={habit.color}
-          />
+          {isNegativeHabit ? (
+            <AnimatedNegativeCheckbox
+              checked={completed}
+              onToggle={handleToggleComplete}
+            />
+          ) : (
+            <AnimatedCheckbox
+              checked={completed}
+              onToggle={handleToggleComplete}
+              color={habit.color}
+            />
+          )}
         </div>
 
         {/* Expandable content */}
@@ -361,16 +411,24 @@ export function HabitCard({
             <div className="rounded-xl overflow-hidden border border-white/10 dark:border-white/5">
               {scheduledToday.length > 0 ? (
                 // Already scheduled state
-                <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10">
+                <div className={`p-4 ${isNegativeHabit ? 'bg-gradient-to-r from-slate-500/10 to-gray-500/10' : 'bg-gradient-to-r from-green-500/10 to-emerald-500/10'}`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <Check className="w-5 h-5 text-green-500" />
+                    <div className={`w-10 h-10 rounded-full ${isNegativeHabit ? 'bg-slate-500/20' : 'bg-green-500/20'} flex items-center justify-center`}>
+                      {isNegativeHabit ? (
+                        <ShieldCheck className="w-5 h-5 text-slate-500" />
+                      ) : (
+                        <Check className="w-5 h-5 text-green-500" />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-green-400">{t.habits.scheduledForToday}</p>
-                      <p className="text-xs text-muted">
-                        {scheduledToday.map(s => formatTimeDisplay(s.time)).join(', ')}
+                      <p className={`text-sm font-medium ${isNegativeHabit ? 'text-slate-400' : 'text-green-400'}`}>
+                        {isNegativeHabit ? t.habits.trackingToday : t.habits.scheduledForToday}
                       </p>
+                      {!isNegativeHabit && (
+                        <p className="text-xs text-muted">
+                          {scheduledToday.map(s => formatTimeDisplay(s.time)).join(', ')}
+                        </p>
+                      )}
                     </div>
                     <button
                       onClick={(e) => {
@@ -385,14 +443,27 @@ export function HabitCard({
                 </div>
               ) : (
                 // Not scheduled - CTA state
-                <div className="p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
+                <div className={`p-4 ${isNegativeHabit ? 'bg-gradient-to-r from-slate-500/10 to-gray-500/10' : 'bg-gradient-to-r from-amber-500/10 to-orange-500/10'}`}>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-amber-500" />
+                    <div className={`w-10 h-10 rounded-full ${isNegativeHabit ? 'bg-slate-500/20' : 'bg-amber-500/20'} flex items-center justify-center`}>
+                      {isNegativeHabit ? (
+                        <ShieldCheck className={`w-5 h-5 text-slate-500`} />
+                      ) : (
+                        <Clock className="w-5 h-5 text-amber-500" />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{t.habits.bestTime} {formatTimeDisplay(habit.suggestedTime)}</p>
-                      <p className="text-xs text-muted">{t.habits.scheduleToConsistency}</p>
+                      {isNegativeHabit ? (
+                        <>
+                          <p className="text-sm font-medium">{t.habits.trackThisHabit}</p>
+                          <p className="text-xs text-muted">{t.habits.markAsAvoidedDaily}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium">{t.habits.bestTime} {formatTimeDisplay(habit.suggestedTime)}</p>
+                          <p className="text-xs text-muted">{t.habits.scheduleToConsistency}</p>
+                        </>
+                      )}
                     </div>
                   </div>
                   <button
@@ -402,8 +473,17 @@ export function HabitCard({
                     }}
                     className={`w-full py-3 px-4 rounded-xl bg-gradient-to-r ${colorGradients[habit.color] || colorGradients.purple} text-white font-medium text-sm shadow-lg ${colorShadows[habit.color] || colorShadows.purple} transition-all active:scale-[0.98] flex items-center justify-center gap-2`}
                   >
-                    <CalendarPlus size={18} />
-                    {t.habits.addToTodayCalendar}
+                    {isNegativeHabit ? (
+                      <>
+                        <ShieldCheck size={18} />
+                        {t.habits.startTracking}
+                      </>
+                    ) : (
+                      <>
+                        <CalendarPlus size={18} />
+                        {t.habits.addToTodayCalendar}
+                      </>
+                    )}
                   </button>
                 </div>
               )}

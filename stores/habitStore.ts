@@ -12,6 +12,9 @@ export interface HabitDefinition {
   color: string // tailwind color
   points: number
   illustration: string // URL for illustration image
+  type: 'positive' | 'negative' // distinguish habit types
+  difficulty: 'easy' | 'medium' | 'hard' // for recommended logic
+  isRecommended: boolean // mark as part of recommended set
 }
 
 // Type for translated habit content
@@ -36,6 +39,7 @@ export interface ScheduledHabit {
 
 // Predefined Pareto Power Habits
 export const POWER_HABITS: HabitDefinition[] = [
+  // Positive habits
   {
     id: 'wake-early',
     name: 'Wake Up Early',
@@ -46,6 +50,9 @@ export const POWER_HABITS: HabitDefinition[] = [
     color: 'amber',
     points: 10,
     illustration: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=800&q=80',
+    type: 'positive',
+    difficulty: 'medium',
+    isRecommended: false,
   },
   {
     id: 'meditation',
@@ -57,6 +64,9 @@ export const POWER_HABITS: HabitDefinition[] = [
     color: 'purple',
     points: 10,
     illustration: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
+    type: 'positive',
+    difficulty: 'easy',
+    isRecommended: true,
   },
   {
     id: 'magnesium',
@@ -68,6 +78,9 @@ export const POWER_HABITS: HabitDefinition[] = [
     color: 'cyan',
     points: 5,
     illustration: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&q=80',
+    type: 'positive',
+    difficulty: 'easy',
+    isRecommended: true,
   },
   {
     id: 'omega3',
@@ -79,6 +92,9 @@ export const POWER_HABITS: HabitDefinition[] = [
     color: 'blue',
     points: 5,
     illustration: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
+    type: 'positive',
+    difficulty: 'easy',
+    isRecommended: true,
   },
   {
     id: 'gym',
@@ -90,6 +106,9 @@ export const POWER_HABITS: HabitDefinition[] = [
     color: 'red',
     points: 15,
     illustration: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',
+    type: 'positive',
+    difficulty: 'hard',
+    isRecommended: false,
   },
   {
     id: 'steps',
@@ -101,6 +120,9 @@ export const POWER_HABITS: HabitDefinition[] = [
     color: 'green',
     points: 10,
     illustration: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=80',
+    type: 'positive',
+    difficulty: 'medium',
+    isRecommended: true,
   },
   {
     id: 'cardio',
@@ -112,6 +134,9 @@ export const POWER_HABITS: HabitDefinition[] = [
     color: 'rose',
     points: 10,
     illustration: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=800&q=80',
+    type: 'positive',
+    difficulty: 'hard',
+    isRecommended: false,
   },
   {
     id: 'calories',
@@ -123,6 +148,80 @@ export const POWER_HABITS: HabitDefinition[] = [
     color: 'orange',
     points: 15,
     illustration: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80',
+    type: 'positive',
+    difficulty: 'hard',
+    isRecommended: false,
+  },
+  // Negative habits (habits to avoid)
+  {
+    id: 'no-smoking',
+    name: 'Avoid Smoking',
+    description: 'Stay smoke-free today',
+    benefit: 'Every day without smoking reduces your risk of heart disease, stroke, and cancer. Within 24 hours, your blood pressure and heart rate begin to normalize. After a few days, your lungs start to clear. Your body has remarkable healing abilities when you give it a break from tobacco.',
+    suggestedTime: '00:00',
+    icon: 'ShieldCheck',
+    color: 'slate',
+    points: 15,
+    illustration: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800&q=80',
+    type: 'negative',
+    difficulty: 'hard',
+    isRecommended: false,
+  },
+  {
+    id: 'no-alcohol',
+    name: 'Avoid Alcohol',
+    description: 'Stay alcohol-free today',
+    benefit: 'Skipping alcohol improves sleep quality, mental clarity, and energy levels. Your liver can recover, your skin improves, and you avoid empty calories. Regular alcohol-free days help maintain a healthy relationship with drinking and support long-term health goals.',
+    suggestedTime: '00:00',
+    icon: 'ShieldCheck',
+    color: 'slate',
+    points: 10,
+    illustration: 'https://images.unsplash.com/photo-1569937756447-1d44f657dc69?w=800&q=80',
+    type: 'negative',
+    difficulty: 'medium',
+    isRecommended: false,
+  },
+  {
+    id: 'no-junk-food',
+    name: 'Avoid Junk Food',
+    description: 'No processed or fast food today',
+    benefit: 'Avoiding junk food stabilizes blood sugar, reduces inflammation, and supports gut health. You\'ll have more stable energy throughout the day and avoid the crash that comes from processed foods. Over time, your taste preferences adjust to appreciate whole foods more.',
+    suggestedTime: '00:00',
+    icon: 'ShieldCheck',
+    color: 'slate',
+    points: 10,
+    illustration: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=800&q=80',
+    type: 'negative',
+    difficulty: 'medium',
+    isRecommended: false,
+  },
+  {
+    id: 'no-social-media',
+    name: 'Limit Social Media',
+    description: 'No mindless scrolling today',
+    benefit: 'Reducing social media improves focus, reduces anxiety, and frees up hours for meaningful activities. Studies link excessive social media use to depression and poor self-esteem. Reclaim your attention and time for things that truly matter to you.',
+    suggestedTime: '00:00',
+    icon: 'ShieldCheck',
+    color: 'slate',
+    points: 5,
+    illustration: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&q=80',
+    type: 'negative',
+    difficulty: 'easy',
+    isRecommended: false,
+  },
+  {
+    id: 'no-late-snacking',
+    name: 'No Late Snacking',
+    description: 'No eating after 8 PM',
+    benefit: 'Avoiding late-night eating improves sleep quality, supports weight management, and gives your digestive system time to rest. Late eating disrupts your circadian rhythm and can lead to acid reflux. A consistent eating window supports metabolic health.',
+    suggestedTime: '20:00',
+    icon: 'ShieldCheck',
+    color: 'slate',
+    points: 5,
+    illustration: 'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=800&q=80',
+    type: 'negative',
+    difficulty: 'easy',
+    isRecommended: false,
   },
 ]
 
@@ -130,6 +229,9 @@ interface HabitState {
   completions: HabitCompletion[]
   scheduledHabits: ScheduledHabit[]
   habitOrder: Record<string, string[]> // date -> habitIds in order
+  enabledHabits: string[] // global default enabled habits (all by default)
+  dailyHabitOverrides: Record<string, string[]> // date -> enabled habit IDs for that day
+  recommendedBannerDismissed: boolean // track if user dismissed the banner
 
   // Actions
   completeHabit: (habitId: string) => void
@@ -138,6 +240,10 @@ interface HabitState {
   scheduleHabitForDays: (habitId: string, dates: string[], time: string) => void
   unscheduleHabit: (habitId: string, date: string) => void
   reorderHabits: (date: string, habitIds: string[]) => void
+  setEnabledHabits: (habitIds: string[]) => void
+  setDailyOverride: (date: string, habitIds: string[]) => void
+  clearDailyOverride: (date: string) => void
+  dismissRecommendedBanner: () => void
 
   // Selectors
   isCompletedToday: (habitId: string) => boolean
@@ -146,6 +252,8 @@ interface HabitState {
   getOrderedScheduledForDate: (date: string) => ScheduledHabit[]
   getTodayScore: () => number
   getTotalCompletions: (habitId: string) => number
+  getEnabledForDate: (date: string) => string[]
+  getNegativeStreak: (habitId: string) => number
 }
 
 export const useHabitStore = create<HabitState>()(
@@ -154,6 +262,9 @@ export const useHabitStore = create<HabitState>()(
       completions: [],
       scheduledHabits: [],
       habitOrder: {},
+      enabledHabits: POWER_HABITS.map(h => h.id), // all habits enabled by default
+      dailyHabitOverrides: {},
+      recommendedBannerDismissed: false,
 
       completeHabit: (habitId) => {
         const today = format(new Date(), 'yyyy-MM-dd')
@@ -226,6 +337,31 @@ export const useHabitStore = create<HabitState>()(
         }))
       },
 
+      setEnabledHabits: (habitIds) => {
+        set({ enabledHabits: habitIds })
+      },
+
+      setDailyOverride: (date, habitIds) => {
+        set(state => ({
+          dailyHabitOverrides: {
+            ...state.dailyHabitOverrides,
+            [date]: habitIds,
+          },
+        }))
+      },
+
+      clearDailyOverride: (date) => {
+        set(state => {
+          const newOverrides = { ...state.dailyHabitOverrides }
+          delete newOverrides[date]
+          return { dailyHabitOverrides: newOverrides }
+        })
+      },
+
+      dismissRecommendedBanner: () => {
+        set({ recommendedBannerDismissed: true })
+      },
+
       isCompletedToday: (habitId) => {
         const today = format(new Date(), 'yyyy-MM-dd')
         return get().completions.some(
@@ -274,6 +410,41 @@ export const useHabitStore = create<HabitState>()(
 
       getTotalCompletions: (habitId) => {
         return get().completions.filter(c => c.habitId === habitId).length
+      },
+
+      getEnabledForDate: (date) => {
+        const override = get().dailyHabitOverrides[date]
+        if (override) return override
+        return get().enabledHabits
+      },
+
+      getNegativeStreak: (habitId) => {
+        const completions = get().completions
+        const habit = POWER_HABITS.find(h => h.id === habitId)
+        if (!habit || habit.type !== 'negative') return 0
+
+        // For negative habits, streak counts consecutive days marked as "avoided"
+        let streak = 0
+        const today = format(new Date(), 'yyyy-MM-dd')
+        let checkDate = new Date()
+
+        while (true) {
+          const dateStr = format(checkDate, 'yyyy-MM-dd')
+          const hasCompletion = completions.some(
+            c => c.habitId === habitId && c.date === dateStr
+          )
+
+          if (hasCompletion) {
+            streak++
+            checkDate.setDate(checkDate.getDate() - 1)
+          } else if (dateStr === today) {
+            // Today is not yet marked, continue checking
+            checkDate.setDate(checkDate.getDate() - 1)
+          } else {
+            break
+          }
+        }
+        return streak
       },
     }),
     {
