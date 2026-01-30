@@ -255,14 +255,22 @@ export default function HabitsPage() {
       ? (dailyHabitOverrides[today] || effectiveEnabledHabits)
       : effectiveEnabledHabits
 
-    const newEnabled = currentEnabled.includes(habitId)
-      ? currentEnabled.filter(id => id !== habitId)
-      : [...currentEnabled, habitId]
+    const isEnabling = !currentEnabled.includes(habitId)
+    const newEnabled = isEnabling
+      ? [...currentEnabled, habitId]
+      : currentEnabled.filter(id => id !== habitId)
 
     if (editScope === 'today') {
       setDailyOverride(today, newEnabled)
     } else {
+      // Update global
       setEnabledHabits(newEnabled)
+
+      // If disabling globally and there's a today override, also remove from today
+      if (!isEnabling && dailyHabitOverrides[today]) {
+        const todayEnabled = dailyHabitOverrides[today].filter(id => id !== habitId)
+        setDailyOverride(today, todayEnabled)
+      }
     }
   }
 
