@@ -162,11 +162,12 @@ export default function HomePage() {
     !t.completed || t.scheduledDate === selectedDateStr
   )
 
-  // Debug: Log if there's a count mismatch
-  if (typeof window !== 'undefined' && tasks.length !== tasksForDate.length) {
-    console.log('[TaskFilter] Total tasks:', tasks.length, 'Visible tasks:', tasksForDate.length)
-    console.log('[TaskFilter] Hidden tasks:', tasks.filter(t => t.completed && t.scheduledDate !== selectedDateStr).map(t => ({ title: t.title, completed: t.completed, scheduledDate: t.scheduledDate })))
-  }
+  // Debug info for mobile (visible on screen)
+  const debugMismatch = tasks.length !== tasksForDate.length ? {
+    total: tasks.length,
+    visible: tasksForDate.length,
+    hidden: tasks.filter(t => t.completed && t.scheduledDate !== selectedDateStr).map(t => t.title)
+  } : null
 
   // Show loading state
   if (mode === 'loading' || isLoading) {
@@ -181,6 +182,16 @@ export default function HomePage() {
     <div className="h-[calc(100dvh-5rem)] md:h-screen md:p-6 flex flex-col relative">
       {/* Debug - tap 5 times in top-left corner to show */}
       <SyncDebug taskCount={tasks.length} tasks={tasks} />
+
+      {/* On-screen debug for mobile - shows if there's a task count mismatch */}
+      {debugMismatch && (
+        <div className="mx-2 mb-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-xs text-yellow-300">
+          <div className="font-bold">Task Mismatch Debug:</div>
+          <div>Total in store: {debugMismatch.total}</div>
+          <div>Visible after filter: {debugMismatch.visible}</div>
+          <div>Hidden (completed, other days): {debugMismatch.hidden.join(', ') || 'none'}</div>
+        </div>
+      )}
 
       {/* Error banner */}
       {error && (

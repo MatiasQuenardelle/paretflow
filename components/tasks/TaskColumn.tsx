@@ -272,9 +272,15 @@ export function TaskColumn({
           {incompleteTasks.length > 0 && (
             <div className="flex items-center gap-2 mt-0.5">
               <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-500" />
+                <span className="text-[10px] md:text-xs text-muted font-medium">
+                  {incompleteTasks.length} tasks
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-400 to-rose-500" />
                 <span className="text-[10px] md:text-xs text-muted font-medium">
-                  {completedPomodoros}/{totalPomodoros}
+                  {completedPomodoros}/{totalPomodoros} pom
                 </span>
               </div>
             </div>
