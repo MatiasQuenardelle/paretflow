@@ -144,6 +144,7 @@ export default function CalendarPage() {
               setViewMode('day')
             }}
             onSelectTask={selectTask}
+            isExpanded={isExpanded}
           />
         )}
       </div>

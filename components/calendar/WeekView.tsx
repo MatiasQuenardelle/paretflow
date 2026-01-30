@@ -11,6 +11,7 @@ interface WeekViewProps {
   onToggleStep: (taskId: string, stepId: string) => void
   onSelectDay: (date: Date) => void
   onSelectTask?: (taskId: string) => void
+  isExpanded?: boolean
 }
 
 interface ScheduledStep {
@@ -22,9 +23,10 @@ interface ScheduledStep {
 
 const START_HOUR = 6
 const END_HOUR = 23
-const HOUR_HEIGHT = 48
+const HOUR_HEIGHT_EXPANDED = 48
+const HOUR_HEIGHT_COLLAPSED = 24 // Compact height to fit all hours without scrolling
 
-export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask }: WeekViewProps) {
+export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask, isExpanded = true }: WeekViewProps) {
   const [selectedStep, setSelectedStep] = useState<{ step: Step; task: Task } | null>(null)
   const { updateStep, toggleStep } = useTaskStore()
   const weekStart = startOfWeek(date, { weekStartsOn: 1 }) // Monday start
@@ -33,6 +35,9 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask 
   const now = new Date()
   const currentHour = now.getHours()
   const currentMinute = now.getMinutes()
+
+  // Dynamic hour height based on expanded state
+  const hourHeight = isExpanded ? HOUR_HEIGHT_EXPANDED : HOUR_HEIGHT_COLLAPSED
 
   const getStepsForDay = (day: Date): ScheduledStep[] => {
     const dateStr = format(day, 'yyyy-MM-dd')
@@ -60,7 +65,7 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask 
   }
 
   const getTimePosition = (hour: number, minute: number = 0) => {
-    return ((hour - START_HOUR) * 60 + minute) / 60 * HOUR_HEIGHT
+    return ((hour - START_HOUR) * 60 + minute) / 60 * hourHeight
   }
 
   const formatHour = (hour: number) => {
@@ -70,8 +75,11 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask 
     return `${hour} AM`
   }
 
-  const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT
-  const hourLabels = [6, 8, 10, 12, 14, 16, 18, 20, 22]
+  const totalHeight = (END_HOUR - START_HOUR) * hourHeight
+  // Show fewer hour labels when collapsed for cleaner look
+  const hourLabels = isExpanded
+    ? [6, 8, 10, 12, 14, 16, 18, 20, 22]
+    : [6, 9, 12, 15, 18, 21]
 
   // Check if today is in the current week
   const todayInWeek = days.find(day => isToday(day))
@@ -136,10 +144,10 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask 
           })}
         </div>
 
-        {/* Scrollable time grid */}
+        {/* Scrollable time grid (no scroll needed when collapsed) */}
         <div
-          className="overflow-y-auto"
-          style={{ maxHeight: 'calc(100vh - 320px)' }}
+          className={isExpanded ? "overflow-y-auto" : "overflow-hidden"}
+          style={isExpanded ? { maxHeight: 'calc(100vh - 320px)' } : undefined}
         >
           <div className="flex" style={{ height: totalHeight }}>
             {/* Time Labels */}
@@ -200,7 +208,7 @@ export function WeekView({ date, tasks, onToggleStep, onSelectDay, onSelectTask 
                   {stepsForDay.map(({ step, task, hour, minute }) => {
                     const top = getTimePosition(hour, minute)
                     const duration = 45 // Default 45 minutes
-                    const height = Math.max((duration / 60) * HOUR_HEIGHT, 28)
+                    const height = Math.max((duration / 60) * hourHeight, isExpanded ? 28 : 18)
 
                     return (
                       <button
