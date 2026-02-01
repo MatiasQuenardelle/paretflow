@@ -32,8 +32,6 @@ export default function HomePage() {
   const t = useTranslations()
 
   const {
-    mode,
-    isLoading,
     error,
     tasks,
     selectedTaskId,
@@ -62,15 +60,6 @@ export default function HomePage() {
   const tasksForDate = tasks.filter(t =>
     !t.completed || t.scheduledDate === selectedDateStr
   )
-
-  // Show loading state
-  if (mode === 'loading' || isLoading) {
-    return (
-      <div className="h-[calc(100dvh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
-        <div className="text-muted">{t.common.loading}</div>
-      </div>
-    )
-  }
 
   return (
     <div className="h-[calc(100dvh-5rem)] md:h-screen md:p-6 flex flex-col relative">

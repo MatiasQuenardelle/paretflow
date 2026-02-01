@@ -10,18 +10,9 @@ import { useTranslations, useI18n } from '@/lib/i18n'
 
 export default function ProgressPage() {
   const { sessionsToday, allSessions, mode: timerMode, customWork } = useTimerStore()
-  const { tasks, mode, isLoading } = useTaskStore()
+  const { tasks } = useTaskStore()
   const t = useTranslations()
   const { locale } = useI18n()
-
-  // Show loading state
-  if (mode === 'loading' || isLoading) {
-    return (
-      <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
-        <div className="text-muted">{t.common.loading}</div>
-      </div>
-    )
-  }
 
   // Today's stats
   const today = new Date().toDateString()

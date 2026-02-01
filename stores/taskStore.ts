@@ -144,8 +144,10 @@ export const useTaskStore = create<TaskState>()(
 
       // Initialize for logged-in user (cloud mode)
       initializeCloud: async () => {
-        // Clear tasks immediately to prevent showing stale data during loading
-        set({ tasks: [], mode: 'loading', isLoading: true, error: null })
+        // Don't clear tasks - allow user to interact while loading
+        // Track tasks created locally during loading to merge with cloud data
+        const tasksBeforeLoad = get().tasks
+        set({ mode: 'loading', isLoading: true, error: null })
 
         try {
           // Check localStorage for potential guest-to-cloud migration
@@ -168,22 +170,43 @@ export const useTaskStore = create<TaskState>()(
           // Fetch cloud tasks
           const cloudTasks = await taskService.fetchTasks()
 
+          // Get current tasks - user may have added some during loading
+          const currentTasks = get().tasks
+          const cloudTaskIds = new Set(cloudTasks.map(t => t.id))
+          const tasksBeforeLoadIds = new Set(tasksBeforeLoad.map(t => t.id))
+
+          // Find tasks created locally during loading (not in cloud and not from before load)
+          const newLocalTasks = currentTasks.filter(t =>
+            !cloudTaskIds.has(t.id) && !tasksBeforeLoadIds.has(t.id)
+          )
+
           if (cloudTasks.length > 0) {
-            // Cloud has tasks - use them (cloud is source of truth)
-            set({ tasks: cloudTasks, mode: 'cloud', isLoading: false })
+            // Cloud has tasks - merge with any new local tasks
+            const mergedTasks = [...newLocalTasks, ...cloudTasks]
+            set({ tasks: mergedTasks, mode: 'cloud', isLoading: false })
+
+            // If we have new local tasks, save them to cloud
+            if (newLocalTasks.length > 0) {
+              await taskService.saveTasks(mergedTasks)
+            }
           } else if (localGuestTasks.length > 0) {
             // No cloud tasks but guest tasks exist (guest-to-login transition)
-            // Upload guest tasks to cloud
-            await taskService.saveTasks(localGuestTasks)
-            set({ tasks: localGuestTasks, mode: 'cloud', isLoading: false })
+            // Merge with any new local tasks
+            const mergedTasks = [...newLocalTasks, ...localGuestTasks]
+            await taskService.saveTasks(mergedTasks)
+            set({ tasks: mergedTasks, mode: 'cloud', isLoading: false })
+          } else if (newLocalTasks.length > 0) {
+            // Only new local tasks - save them to cloud
+            await taskService.saveTasks(newLocalTasks)
+            set({ tasks: newLocalTasks, mode: 'cloud', isLoading: false })
           } else {
             // No tasks anywhere
             set({ tasks: [], mode: 'cloud', isLoading: false })
           }
         } catch (error) {
           console.error('[TaskStore] Cloud initialization failed:', error)
+          // Keep any local tasks on error
           set({
-            tasks: [],
             mode: 'cloud',
             isLoading: false,
             error: error instanceof Error ? error.message : 'Failed to load tasks'

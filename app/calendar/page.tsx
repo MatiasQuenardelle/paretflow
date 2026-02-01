@@ -18,18 +18,9 @@ export default function CalendarPage() {
   const [showHabits, setShowHabits] = useState(true)
   const [scheduledItemsCount, setScheduledItemsCount] = useState(0)
 
-  const { tasks, toggleStep, selectTask, mode, isLoading } = useTaskStore()
+  const { tasks, toggleStep, selectTask } = useTaskStore()
   const t = useTranslations()
   const { locale } = useI18n()
-
-  // Show loading state
-  if (mode === 'loading' || isLoading) {
-    return (
-      <div className="h-[calc(100vh-5rem)] md:h-screen p-4 md:p-6 flex items-center justify-center">
-        <div className="text-muted">{t.common.loading}</div>
-      </div>
-    )
-  }
 
   const handlePrev = () => {
     if (viewMode === 'day') {
