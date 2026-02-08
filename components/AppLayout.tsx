@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { Navigation } from './Navigation'
 import { TopHeader } from './TopHeader'
 import { useTaskStore } from '@/stores/taskStore'
+import { usePlanStore } from '@/stores/planStore'
 import { useUIStore } from '@/stores/uiStore'
 import { getCurrentUser, onAuthStateChange } from '@/lib/supabase/sync'
 import { I18nProvider } from '@/lib/i18n'
@@ -14,16 +15,23 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { isSaving, initializeCloud, initializeGuest, refreshFromCloud, mode } = useTaskStore()
+  const {
+    initializeCloud: initializePlanCloud,
+    initializeGuest: initializePlanGuest,
+    refreshFromCloud: refreshPlanFromCloud,
+    mode: planMode,
+  } = usePlanStore()
   const { sidebarCollapsed } = useUIStore()
 
-  // Initialize task store based on auth state
+  // Initialize task + plan stores based on auth state
   useEffect(() => {
     const init = async () => {
       const user = await getCurrentUser()
       if (user) {
-        await initializeCloud()
+        await Promise.all([initializeCloud(), initializePlanCloud()])
       } else {
         initializeGuest()
+        initializePlanGuest()
       }
     }
     init()
@@ -31,27 +39,31 @@ export function AppLayout({ children }: AppLayoutProps) {
     // Listen for auth changes
     const { data: { subscription } } = onAuthStateChange(async (user) => {
       if (user) {
-        await initializeCloud()
+        await Promise.all([initializeCloud(), initializePlanCloud()])
       } else {
         initializeGuest()
+        initializePlanGuest()
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [initializeCloud, initializeGuest])
+  }, [initializeCloud, initializeGuest, initializePlanCloud, initializePlanGuest])
 
-  // Sync tasks when returning to the app (visibility change or focus)
+  // Sync tasks + plans when returning to the app (visibility change or focus)
   useEffect(() => {
-    if (mode !== 'cloud') return
+    const isCloud = mode === 'cloud' || planMode === 'cloud'
+    if (!isCloud) return
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        refreshFromCloud()
+        if (mode === 'cloud') refreshFromCloud()
+        if (planMode === 'cloud') refreshPlanFromCloud()
       }
     }
 
     const handleFocus = () => {
-      refreshFromCloud()
+      if (mode === 'cloud') refreshFromCloud()
+      if (planMode === 'cloud') refreshPlanFromCloud()
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
@@ -61,7 +73,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [mode, refreshFromCloud])
+  }, [mode, planMode, refreshFromCloud, refreshPlanFromCloud])
 
   return (
     <I18nProvider>

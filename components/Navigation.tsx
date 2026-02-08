@@ -11,7 +11,7 @@ import { useTaskStore } from '@/stores/taskStore'
 import { useTranslations } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase/client'
 
-type NavKey = 'tasks' | 'habits' | 'calendar' | 'progress' | 'timer'
+type NavKey = 'tasks' | 'habits' | 'plans' | 'calendar' | 'progress' | 'timer'
 
 const navItemsConfig: { href: string; key: NavKey; icon: (active: boolean) => React.ReactNode }[] = [
   {
@@ -31,6 +31,19 @@ const navItemsConfig: { href: string; key: NavKey; icon: (active: boolean) => Re
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" strokeWidth={active ? 2 : 1.5}>
         <path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5L12 2Z" stroke="currentColor" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.2 : 0} strokeLinejoin="round" />
+      </svg>
+    )
+  },
+  {
+    href: '/plans',
+    key: 'plans',
+    icon: (active: boolean) => (
+      <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" strokeWidth={active ? 2 : 1.5}>
+        <path d="M3 6h18M3 12h18M3 18h12" stroke="currentColor" strokeLinecap="round" />
+        <circle cx="7" cy="6" r="1.5" fill={active ? "currentColor" : "none"} stroke="currentColor" />
+        <circle cx="7" cy="12" r="1.5" fill={active ? "currentColor" : "none"} stroke="currentColor" />
+        <circle cx="7" cy="18" r="1.5" fill={active ? "currentColor" : "none"} stroke="currentColor" />
+        {active && <path d="M19 15l2 2-2 2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeOpacity={0.5} />}
       </svg>
     )
   },
@@ -230,7 +243,7 @@ export function Navigation() {
                     )}
 
                     {/* Button content */}
-                    <div className={`relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all duration-300 ${
+                    <div className={`relative flex flex-col items-center gap-0.5 px-2 py-2 rounded-xl transition-all duration-300 ${
                       isActive
                         ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
                         : 'text-muted hover:text-foreground hover:bg-white/5 active:scale-95'
